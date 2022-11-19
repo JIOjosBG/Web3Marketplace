@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Marketplace is Ownable {
-    
+
     struct Market{
         address addedBy;
         string name;
@@ -13,22 +13,29 @@ contract Marketplace is Ownable {
         uint addedValue;
     }
 
-    Market[] markets;
+    address[] marketAddresses;
     uint marketCount;
-    mapping(address => uint) addressToIndex;
-    mapping(string => uint) nameToIndex; 
+    mapping(address => Market) markets;
+
+    receive() external payable {
+        if(markets[msg.sender].contractAddress!=address(0)){
+            markets[msg.sender].addedValue+=msg.value;
+        }else{
+            ( payable(msg.sender) ).transfer(msg.value);
+        }
+    }
 
     function addContract(address contractAddress, string calldata name) public onlyOwner {
         require(contractAddress!=address(0));
         require(bytes(name).length != 0);
-        for(uint i = 0; i < markets.length; i++){
-            require(contractAddress != markets[i].contractAddress);
-            //checks is hashes of strings are the same (cant comapare types string calldata and string storage with == or !=)
-            require(keccak256(abi.encodePacked((name))) != keccak256(abi.encodePacked((markets[i].name))));
+        require(markets[contractAddress].contractAddress == address(0));
+        for(uint i = 0; i < marketCount; i++){
+            //checks if hashes of strings are the same (cant comapare types string calldata and string storage with == or !=)
+            require(keccak256(abi.encodePacked((name))) != keccak256(abi.encodePacked((markets[marketAddresses[i]].name))));
         }
-        markets.push(Market(msg.sender,name,contractAddress,block.timestamp,0));
-        addressToIndex[contractAddress] = marketCount;
-        nameToIndex[name] = marketCount;
+        markets[msg.sender] = ( Market(msg.sender,name,contractAddress,block.timestamp,0));
+        marketAddresses.push(msg.sender);
         marketCount+=1;
     }
+
 }
