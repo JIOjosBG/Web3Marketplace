@@ -32,5 +32,9 @@ contract SimpleSeller is Ownable{
         require(marketplace != address(0),"Address shouldn't be 0 ");
         ownerMarketplace = marketplace;
     }
-    
+
+    function transferFunds() public onlyOwner{
+        require(ownerMarketplace!=address(0),"Doesn't have owner marketplace");
+        payable(ownerMarketplace).transfer(address(this).balance);
+    }
 }
