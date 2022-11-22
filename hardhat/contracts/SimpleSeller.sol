@@ -26,20 +26,21 @@ contract SimpleSeller is Ownable{
     mapping(address => mapping(uint => uint)) private owedMoneyToSellers;
     mapping(address => mapping(uint => uint)) private owedMoneyToBuyers;
 
-    uint numberOfProducts=0;
+    uint public productCount=0;
 
     //TODO: createProductInstance(string,uint,link,hashofdata)
 
     function productInit(string calldata name, uint price, string calldata link, bytes32 marketHashOfData) private view returns(Product memory){
-        return Product(name,price,price*100 / 99,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false);
+        return Product(name,price,price*99 / 100,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false);
 
     }
 
     function addProduct(string calldata name, uint price, string calldata link, bytes32 marketHashOfData) public {
         require(bytes(name).length != 0,"Name shouldn't be empty");
-        require(price>2000000);
-        products[numberOfProducts]=productInit(name, price, link, marketHashOfData);
-        numberOfProducts+=1;
+        require(price>=2000000,"Price should be >=2000000");
+        products[productCount]=productInit(name, price, link, marketHashOfData);
+        sellerToProductIndexes[msg.sender].push(productCount);
+        productCount+=1;
     }
 
     function joinMarketplace(address marketplace) public onlyOwner{
