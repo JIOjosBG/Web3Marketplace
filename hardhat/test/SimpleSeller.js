@@ -4,7 +4,9 @@ describe("SimpleSeller", function () {
 
     let simpleSeller;
     const oneETH = ethers.utils.parseEther("1");
+    const twoETHs = ethers.utils.parseEther("2");
     const oneETHAfterFee = ethers.utils.parseEther("0.99");
+    const twoETHsAfterFee = ethers.utils.parseEther("1.98");
     let hashedData;
     describe("Deployment", async function () {
         beforeEach(async function ()  {
@@ -29,7 +31,7 @@ describe("SimpleSeller", function () {
             accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
             simpleSeller = await SimpleSeller.deploy();
-            hashedData = ethers.utils.formatBytes32String("")
+            hashedData = ethers.utils.formatBytes32String("");
         });
 
 
@@ -77,66 +79,64 @@ describe("SimpleSeller", function () {
             expect( await simpleSeller.productCount()).equal(0);
         });
 
-
-
-        // });
-
-        // it("Gets the address of the added contract", async function () {
-        //     expect(  await marketplace.addContract(simpleSeller1.address,"SimpleSeller1")).to.not.throw;
-        //     expect( (await marketplace.getMarketAddresses()).length).equal(1);
-        //     expect( (await marketplace.getMarketAddresses())[0]).equal(simpleSeller1.address);
-        // });
-
-        // it("Thrwos error on 0 address", async function () {
-        //     await expect(marketplace.addContract("0x0000000000000000000000000000000000000000","SimpleSeller1"))
-        // .to.be.revertedWith("Address shouldn't be 0");
-        //     expect( (await marketplace.getMarketAddresses()).length).equal(0);
-        // });
-
-        // it("Tries to double add a contract", async function () {
-        //     await expect(marketplace.addContract(simpleSeller1.address,"SimpleSeller1")).to.not.throw;
-        //     await expect(marketplace.addContract(simpleSeller1.address,"SimpleSeller2")).to.be.revertedWith("Market already added");
-        //     expect( (await marketplace.getMarketAddresses()).length).equal(1);
-        //     await expect(marketplace.addContract(simpleSeller2.address,"SimpleSeller2")).to.not.throw;
-        //     expect( (await marketplace.getMarketAddresses()).length).equal(2);
-        //     await expect(marketplace.addContract(simpleSeller2.address,"SimpleSeller2")).to.be.revertedWith("Market already added");
-        //     expect( (await marketplace.getMarketAddresses()).length).equal(2);
-        // });
     });
-    // describe("Pays to marketplace",async function() {
-    //     beforeEach(async function ()  {
-    //         accounts = await ethers.getSigners();
-    //         const Marketplace = await ethers.getContractFactory("Marketplace");
-    //         marketplace = await Marketplace.deploy();
+    describe("Pay product",async function(){
+        let acceptableTreansactionFee;
 
-    //         await ethers.provider.getBalance(accounts[0].address)
+        beforeEach(async function ()  {
+            accounts = await ethers.getSigners();
+            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
+            simpleSeller = await SimpleSeller.deploy();
+            hashedData = ethers.utils.formatBytes32String("");
+            expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
+            expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
+            const product1 = await simpleSeller.products(0);
+            const product2 = await simpleSeller.products(1);
+            acceptableTreansactionFee = ethers.utils.parseEther("0.001");
+        });
+
+        it("Pays products",async function(){
+            expect( (await simpleSeller.products(0)).paid).to.be.false;
+            expect(await simpleSeller.connect(accounts[1]).payProduct(0,{value:oneETH})).to.not.throw;
+            expect( (await simpleSeller.products(0)).paid).to.be.true;
+            expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
+
+            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
             
-    //     });
+        });
 
-    //     it("Tries to pay as a contract", async function () {
-    //         //add user as contract
-    //         await expect(marketplace.addContract(accounts[0].address,"SimpleSeller1")).to.not.throw;
-    //         await expect((await marketplace.getMarketAddresses()).length).equal(1);
-    //         const balance0Before = await ethers.provider.getBalance(accounts[0].address);
-    //         // console.log(balance0Before)
-    //         await expect(await marketplace.connect(accounts[0]).payAsMarket({value: oneETH})).to.not.throw;
-    //         const balance0After = await ethers.provider.getBalance(accounts[0].address);
-    //         // console.log(balance0After)
-    //         expect(balance0Before).to.be.greaterThan(balance0After);
-    //     });
+        it("No such product",async function(){
+            await expect(simpleSeller.payProduct(3,{value:oneETH})).to.be.revertedWith("No such product");
+            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,3)).equal(0);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,3)).equal(0);
+        });
 
-    //     it("Tries to pay as a non-market", async function () {
-    //         //add user as contract
-    //         await expect(marketplace.addContract(accounts[0].address,"SimpleSeller1")).to.not.throw;
-    //         await expect((await marketplace.getMarketAddresses()).length).equal(1);
+        it("Product already bought",async function(){
+            expect(await simpleSeller.connect(accounts[1]).payProduct(0,{value:oneETH})).to.not.throw;
+            await expect(simpleSeller.connect(accounts[2]).payProduct(0,{value:oneETH})).to.be.revertedWith("Product already bought");
+            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[2].address,0)).equal(0);
+            expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
+        });
 
-    //         const balance1Before = await ethers.provider.getBalance(accounts[1].address);
-    //         await expect(marketplace.connect(accounts[1]).payAsMarket({value: oneETH})).to.be.revertedWith("Market is not added");
-    //         const balance1After = await ethers.provider.getBalance(accounts[1].address);
+        it("Not enough eth",async function(){
+            await expect(simpleSeller.connect(accounts[1]).payProduct(1,{value:oneETH})).to.be.revertedWith("Not enough eth");
+            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,1)).equal(0);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,1)).equal(0);
+            expect( (await simpleSeller.products(0)).buyer).equal(ethers.constants.AddressZero);
+        });
+        it("Too much eth",async function(){
+            const oldBalance = await ethers.provider.getBalance(accounts[1].address);
+            expect(await simpleSeller.connect(accounts[1]).payProduct(0,{value:twoETHs})).to.not.throw;
+            const newBalance = await ethers.provider.getBalance(accounts[1].address);
             
-    //         expect(balance1Before-balance1After).to.be.lessThan(ethers.utils.parseEther("0.00003"));
-    //     });
-
-    // });
-
+            expect(newBalance.add(oneETH)).greaterThan(oldBalance.sub(acceptableTreansactionFee));
+            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
+            expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
+        });
+ 
+    });
 });

@@ -23,8 +23,8 @@ contract SimpleSeller is Ownable{
     mapping(uint => Product) public products;
     mapping(address => uint[]) public sellerToProductIndexes;
     //seller to (product to money)
-    mapping(address => mapping(uint => uint)) private owedMoneyToSellers;
-    mapping(address => mapping(uint => uint)) private owedMoneyToBuyers;
+    mapping(address => mapping(uint => uint)) public owedMoneyToSellers;
+    mapping(address => mapping(uint => uint)) public owedMoneyToBuyers;
 
     uint public productCount=0;
 
@@ -54,7 +54,7 @@ contract SimpleSeller is Ownable{
     }
 
     function payProduct(uint index) public payable{
-        Product memory p = products[index];
+        Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==false,"Product already bought");
         require(msg.value>=p.price, "Not enough eth");
@@ -63,6 +63,9 @@ contract SimpleSeller is Ownable{
         owedMoneyToSellers[p.seller][index] = p.sellerGets;
         owedMoneyToBuyers[msg.sender][index] = p.price;
         products[index].buyer = msg.sender;
+        if(msg.value>p.price){
+            payable(msg.sender).transfer(msg.value-p.price);
+        }
 
     }
 
