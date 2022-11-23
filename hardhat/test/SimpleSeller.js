@@ -4,6 +4,7 @@ describe("SimpleSeller", function () {
 
     let simpleSeller;
     const oneETH = ethers.utils.parseEther("1");
+    const oneETHAfterFee = ethers.utils.parseEther("0.99");
     let hashedData;
     describe("Deployment", async function () {
         beforeEach(async function ()  {
@@ -21,7 +22,6 @@ describe("SimpleSeller", function () {
 
         it("Should start with 0 values", async function () {
             expect(await simpleSeller.productCount()).equal(0);
-
         });
     });
     describe("Add product", async function(){
@@ -33,11 +33,36 @@ describe("SimpleSeller", function () {
         });
 
 
-        it("Adds market products same user", async function () {
-            expect(await simpleSeller.addProduct("Product1",oneETH,"asd",hashedData)).to.not.throw;
-            expect(await simpleSeller.addProduct("Product2",oneETH,"asd",hashedData)).to.not.throw;
+        it("Adds products ", async function () {
+            expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
+            expect(await simpleSeller.addProduct("Product2",oneETH,"asd2",hashedData)).to.not.throw;
+
             const product1 = await simpleSeller.products(0);
-            console.log(product1);
+            const product2 = await simpleSeller.products(1);
+
+            //console.log(product1);
+            expect(product1.name).equal("Product1");
+            expect(product1.price).equal(oneETH);
+            expect(product1.sellerGets).equal(oneETHAfterFee);
+            expect(product1.seller).equal(accounts[0].address);
+            expect(product1.buyer).equal(ethers.constants.AddressZero);
+            expect(product1.linkForMedia).equal("asd1");
+            expect(product1.marketHashOfData).equal(hashedData);
+            expect(product1.approved).to.be.false;
+            expect(product1.paid).to.be.false;
+            expect(product1.received).to.be.false;
+
+            expect(product2.name).equal("Product2");
+            expect(product2.price).equal(oneETH);
+            expect(product2.sellerGets).equal(oneETHAfterFee);
+            expect(product2.seller).equal(accounts[0].address);
+            expect(product2.buyer).equal(ethers.constants.AddressZero);
+            expect(product2.linkForMedia).equal("asd2");
+            expect(product2.marketHashOfData).equal(hashedData);
+            expect(product2.approved).to.be.false;
+            expect(product2.paid).to.be.false;
+            expect(product2.received).to.be.false;
+
             expect( await simpleSeller.productCount()).equal(2);
         });
 
@@ -52,17 +77,6 @@ describe("SimpleSeller", function () {
             expect( await simpleSeller.productCount()).equal(0);
         });
 
-
-        // it("Has correct market address", async function () {
-        //     expect(await marketplace.addContract(simpleSeller1.address,"SimpleSeller1")).to.not.throw;
-        //     expect(await marketplace.addContract(simpleSeller2.address,"SimpleSeller2")).to.not.throw;
-        //     expect(await marketplace.addContract(simpleSeller3.address,"SimpleSeller3")).to.not.throw;
-        //     expect( (await marketplace.getMarketAddresses()).length).equal(3);
-        //     expect( await marketplace.marketCount()).equal(3);
-            
-        //     expect((await marketplace.markets(simpleSeller1.address)).addedBy).equal(accounts[0].address);
-        //     expect((await marketplace.markets(simpleSeller1.address)).addedBy).equal(accounts[0].address);
-        //     expect((await marketplace.markets(simpleSeller1.address)).addedBy).equal(accounts[0].address);
 
 
         // });
