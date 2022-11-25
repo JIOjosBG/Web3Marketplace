@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Marketplace.sol";
-
+import "hardhat/console.sol";
 contract SimpleSeller is Ownable{
     struct Product{
         string name;
@@ -16,7 +16,7 @@ contract SimpleSeller is Ownable{
         bytes32 marketHashOfData;
         bool approved;
         bool paid;
-        bool received; 
+        bool delivered; 
     }
     address public  ownerMarketplace;
 
@@ -43,8 +43,12 @@ contract SimpleSeller is Ownable{
         productCount+=1;
     }
 
+    function getIndexesFromSellerAddress(address seller) public view returns(uint[] memory indexes){
+        return sellerToProductIndexes[seller];
+    }
+
     function joinMarketplace(address marketplace) public onlyOwner{
-        require(marketplace != address(0),"Address shouldn't be 0 ");
+        require(marketplace != address(0),"Address shouldn't be 0");
         ownerMarketplace = marketplace;
     }
 
@@ -69,16 +73,15 @@ contract SimpleSeller is Ownable{
 
     }
 
-    function deliverProduct(uint index) public /* onlyDelivery */{
+    function deliverProduct(uint index) public  /* onlyDelivery */{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==true,"Product not paid");
-        require(p.received==false,"Product alredy received");
+        require(p.delivered==false,"Product already delivered");
         uint pay = owedMoneyToSellers[p.seller][index];
         owedMoneyToSellers[p.seller][index] = 0;
         owedMoneyToBuyers[p.buyer][index] = 0;
-
-        products[index].received=true;
+        products[index].delivered=true;
         payable(p.seller).transfer(pay);
     }
 

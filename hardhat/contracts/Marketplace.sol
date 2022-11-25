@@ -35,5 +35,6 @@ contract Marketplace is Ownable {
         marketAddresses.push(contractAddress);
         marketCount+=1;
     }
-
+    
+    receive() external  payable {}
 }
