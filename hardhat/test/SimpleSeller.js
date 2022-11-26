@@ -1,12 +1,28 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 describe("SimpleSeller", function () {
+    function stringToHex(str){
+        var arr1 = ['0','x'];
+        for (var n = 0, l = str.length; n < l; n ++){
+            var hex = Number(str.charCodeAt(n)).toString(16);
+            arr1.push(hex);
+        }
+        return arr1.join('');
+    }
 
+    function hexToString(hexx) {
+        var hex = hexx.toString().slice(2);//force conversion
+        var str = '';
+        for (var i = 0; i < hex.length; i += 2)
+            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+        return str;
+    }
     let simpleSeller;
     const oneETH = ethers.utils.parseEther("1");
     const twoETHs = ethers.utils.parseEther("2");
     const oneETHAfterFee = ethers.utils.parseEther("0.99");
     const acceptableTreansactionFee = ethers.utils.parseEther("0.001");
+    console.log(stringToHex("asdasdas"));
 
     // const twoETHsAfterFee = ethers.utils.parseEther("1.98");
     let hashedData;
@@ -58,6 +74,8 @@ describe("SimpleSeller", function () {
             expect(product1.approved).to.be.false;
             expect(product1.paid).to.be.false;
             expect(product1.delivered).to.be.false;
+            expect(product1.deliveryInstructions).equal("0x");
+
 
             expect(product2.name).equal("Product2");
             expect(product2.price).equal(oneETH);
@@ -69,6 +87,8 @@ describe("SimpleSeller", function () {
             expect(product2.approved).to.be.false;
             expect(product2.paid).to.be.false;
             expect(product2.delivered).to.be.false;
+            expect(product2.deliveryInstructions).equal("0x");
+
 
             expect( await simpleSeller.productCount()).equal(2);
         });
@@ -99,9 +119,12 @@ describe("SimpleSeller", function () {
 
         it("Pays products",async function(){
             expect( (await simpleSeller.products(0)).paid).to.be.false;
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,{value:oneETH})).to.not.throw;
+            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
             expect( (await simpleSeller.products(0)).paid).to.be.true;
             expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
+            const rawdeliveryInstructions = (await simpleSeller.products(0)).deliveryInstructions;
+            const deliveryInstructions = hexToString(rawdeliveryInstructions);
+            expect( deliveryInstructions).equal("Deliver here");
 
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
@@ -109,14 +132,14 @@ describe("SimpleSeller", function () {
         });
 
         it("No such product",async function(){
-            await expect(simpleSeller.payProduct(3,{value:oneETH})).to.be.revertedWith("No such product");
+            await expect(simpleSeller.payProduct(3,stringToHex("Deliver here"),{value:oneETH})).to.be.revertedWith("No such product");
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,3)).equal(0);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,3)).equal(0);
         });
 
         it("Product already bought",async function(){
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,{value:oneETH})).to.not.throw;
-            await expect(simpleSeller.connect(accounts[2]).payProduct(0,{value:oneETH})).to.be.revertedWith("Product already bought");
+            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
+            await expect(simpleSeller.connect(accounts[2]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.be.revertedWith("Product already bought");
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[2].address,0)).equal(0);
@@ -124,14 +147,14 @@ describe("SimpleSeller", function () {
         });
 
         it("Not enough eth",async function(){
-            await expect(simpleSeller.connect(accounts[1]).payProduct(1,{value:oneETH})).to.be.revertedWith("Not enough eth");
+            await expect(simpleSeller.connect(accounts[1]).payProduct(1,stringToHex("Deliver here"),{value:oneETH})).to.be.revertedWith("Not enough eth");
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,1)).equal(0);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,1)).equal(0);
             expect( (await simpleSeller.products(0)).buyer).equal(ethers.constants.AddressZero);
         });
         it("Too much eth",async function(){
             const oldBalance = await ethers.provider.getBalance(accounts[1].address);
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,{value:twoETHs})).to.not.throw;
+            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:twoETHs})).to.not.throw;
             const newBalance = await ethers.provider.getBalance(accounts[1].address);
             
             expect(newBalance.add(oneETH)).greaterThan(oldBalance.sub(acceptableTreansactionFee));
@@ -182,7 +205,7 @@ describe("SimpleSeller", function () {
             expect(await simpleSeller.owedMoneyToBuyers(accounts[0].address,0)).equal(0);
 
 
-            expect(await simpleSeller.payProduct(0,{value:oneETH})).to.not.throw;
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
             expect((await simpleSeller.products(0)).delivered).to.be.false;
             
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
@@ -204,7 +227,7 @@ describe("SimpleSeller", function () {
         });
 
         it("Product already delivered",async function(){
-            expect(await simpleSeller.payProduct(0,{value:oneETH})).to.not.throw;
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
             await expect(simpleSeller.deliverProduct(0)).to.not.throw;
             await expect(simpleSeller.deliverProduct(0)).to.be.revertedWith("Product already delivered");
         });
@@ -214,7 +237,7 @@ describe("SimpleSeller", function () {
             const oldBalance0 = await ethers.provider.getBalance(accounts[0].address);
             const oldBalance1 = await ethers.provider.getBalance(accounts[1].address);
 
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,{value:oneETH})).to.not.throw;
+            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
             expect(await simpleSeller.deliverProduct(0)).to.not.throw;
             const newContractBalance = await ethers.provider.getBalance(simpleSeller.address);
             expect( newContractBalance.sub(oldContractBalance)).equal(oneETH.sub(oneETHAfterFee));
@@ -241,7 +264,7 @@ describe("SimpleSeller", function () {
 
 
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
-            expect(await simpleSeller.connect(accounts[0]).payProduct(0,{value:oneETH})).to.not.throw;
+            expect(await simpleSeller.connect(accounts[0]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
             expect(await simpleSeller.deliverProduct(0)).to.not.throw;
 
         });

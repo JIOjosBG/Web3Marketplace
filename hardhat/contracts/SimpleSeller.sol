@@ -16,7 +16,8 @@ contract SimpleSeller is Ownable{
         bytes32 marketHashOfData;
         bool approved;
         bool paid;
-        bool delivered; 
+        bool delivered;
+        bytes deliveryInstructions; 
     }
     address public  ownerMarketplace;
 
@@ -31,7 +32,7 @@ contract SimpleSeller is Ownable{
     //TODO: createProductInstance(string,uint,link,hashofdata)
 
     function productInit(string calldata name, uint price, string calldata link, bytes32 marketHashOfData) private view returns(Product memory){
-        return Product(name,price,price*99 / 100,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false);
+        return Product(name,price,price*99 / 100,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false,"");
 
     }
 
@@ -57,12 +58,14 @@ contract SimpleSeller is Ownable{
         payable(ownerMarketplace).transfer(address(this).balance);
     }
 
-    function payProduct(uint index) public payable{
+    function payProduct(uint index, bytes calldata deliveryInstructions) public payable{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==false,"Product already bought");
         require(msg.value>=p.price, "Not enough eth");
+        require(deliveryInstructions.length!=0, "No delivery information");
 
+        p.deliveryInstructions = deliveryInstructions;
         p.paid=true;
         owedMoneyToSellers[p.seller][index] = p.sellerGets;
         owedMoneyToBuyers[msg.sender][index] = p.price;
