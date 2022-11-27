@@ -63,7 +63,7 @@ contract SimpleSeller is Ownable{
         require(p.seller!=address(0), "No such product");
         require(p.paid==false,"Product already bought");
         require(msg.value>=p.price, "Not enough eth");
-        require(deliveryInstructions.length!=0, "No delivery information");
+        require(deliveryInstructions.length!=0, "No delivery instructions");
 
         p.deliveryInstructions = deliveryInstructions;
         p.paid=true;

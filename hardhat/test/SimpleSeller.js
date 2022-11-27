@@ -22,7 +22,7 @@ describe("SimpleSeller", function () {
     const twoETHs = ethers.utils.parseEther("2");
     const oneETHAfterFee = ethers.utils.parseEther("0.99");
     const acceptableTreansactionFee = ethers.utils.parseEther("0.001");
-    console.log(stringToHex("asdasdas"));
+    //console.log(stringToHex("asdasdas"));
 
     // const twoETHsAfterFee = ethers.utils.parseEther("1.98");
     let hashedData;
@@ -162,6 +162,19 @@ describe("SimpleSeller", function () {
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
             expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
         });
+
+        it("No delivery instructions",async function(){
+            expect( (await simpleSeller.products(0)).paid).to.be.false;
+            await expect(simpleSeller.connect(accounts[1]).payProduct(0,stringToHex(""),{value:oneETH})).to.be.revertedWith("No delivery instructions");
+            expect( (await simpleSeller.products(0)).paid).to.be.false;
+            expect( (await simpleSeller.products(0)).buyer).equal(ethers.constants.AddressZero);
+            const rawdeliveryInstructions = (await simpleSeller.products(0)).deliveryInstructions;
+            const deliveryInstructions = hexToString(rawdeliveryInstructions);
+            expect( deliveryInstructions).equal("");
+
+            
+        });
+
     });
 
     describe("Join marketplace", async function(){
