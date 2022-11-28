@@ -1,2 +1,5 @@
 за сигнатури
 https://programtheblockchain.com/posts/2018/02/17/signing-and-verifying-messages-in-ethereum/
+
+за верифициране
+https://docs.ethers.io/v4/api-utils.html

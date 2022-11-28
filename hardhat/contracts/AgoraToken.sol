@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
-contract AGRToken is ERC20 {
+contract AgoraToken is ERC20 {
     mapping(uint => bool) nonces;
     constructor() ERC20("AgoraToken", "AGR") {
         //_mint(msg.sender, initialSupply);
@@ -17,7 +17,7 @@ contract AGRToken is ERC20 {
 
     function sellTokens(uint amount) external {
         require(amount>0,"Amount must be >0");
-        require(this.balanceOf(msg.sender)>amount,"Your balance is < amount you want to sell");
+        require(this.balanceOf(msg.sender)>=amount,"Your balance is < amount you want to sell");
         _burn(msg.sender, amount);
         payable(msg.sender).transfer(amount);
     }
@@ -51,7 +51,7 @@ contract AGRToken is ERC20 {
 
         require(expectedFrom == from, "Signature from wrong user (from!=signature creator)");
         nonces[nonce]=true;
-
+        
         _transfer(from, to, amount);
     }
 }
