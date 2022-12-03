@@ -35,8 +35,8 @@ describe("AgoraToken", function () {
 
         });
         it("Buying tokens with 0 eth",async function() {
-            await expect(agoraToken.buyTokens()).to.be.rejectedWith("Should send some eth");
-            await expect(agoraToken.buyTokens({value:0})).to.be.rejectedWith("Should send some eth");
+            await expect(agoraToken.buyTokens()).to.be.revertedWith("Should send some eth");
+            await expect(agoraToken.buyTokens({value:0})).to.be.revertedWith("Should send some eth");
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect( await agoraToken.totalSupply()).equal(0);
 
@@ -66,6 +66,15 @@ describe("AgoraToken", function () {
             const oldBalance = await ethers.provider.getBalance(accounts[0].address);
             expect( await agoraToken.totalSupply()).equal(oneETH);
             await expect(agoraToken.sellTokens(twoETH)).to.be.revertedWith("Your balance is < amount you want to sell");
+            expect(await agoraToken.balanceOf(accounts[0].address)).equal(oneETH);
+            const newBalance = await ethers.provider.getBalance(accounts[0].address);
+            expect(newBalance.sub(oldBalance)).lessThan(acceptableTreansactionFee);
+        });
+
+        it("Try to sell 0",async function() {
+            const oldBalance = await ethers.provider.getBalance(accounts[0].address);
+            expect( await agoraToken.totalSupply()).equal(oneETH);
+            await expect(agoraToken.sellTokens(0)).to.be.revertedWith("Amount must be >0");
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(oneETH);
             const newBalance = await ethers.provider.getBalance(accounts[0].address);
             expect(newBalance.sub(oldBalance)).lessThan(acceptableTreansactionFee);
@@ -191,7 +200,7 @@ describe("AgoraToken", function () {
         });
 
         
-        it("Wrong signature",async function() {
+        it("Bad arguments for signature",async function() {
             const expiration  =Math.floor(Date.now()/1000)+100;
             const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             //switching from and to to make the message different from the passed arguments
@@ -201,6 +210,20 @@ describe("AgoraToken", function () {
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
             await expect(agoraToken.transactiWithSignature(expiration,nonce,oneETH,accounts[1].address,accounts[0].address,signature)).to.be.revertedWith("Wrong arguments (recoveredAddress!=from)");
+            expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
+            expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
+        });
+        it("Bad signature",async function() {
+            const expiration  =Math.floor(Date.now()/1000)+100;
+            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
+            const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,oneETH,accounts[1].address,accounts[0].address]);
+            const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
+            let signature = ( await accounts[1].signMessage(hashedMessage));
+            signature+="aa"
+            console.log(signature);
+            expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
+            expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
+            await expect(agoraToken.transactiWithSignature(expiration,nonce,oneETH,accounts[1].address,accounts[0].address,signature)).to.be.revertedWith("Signature has bad length");
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
         });

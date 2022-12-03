@@ -29,7 +29,7 @@ contract AgoraToken is ERC20 {
     }
     function splitSignature(bytes memory sig) internal pure returns (uint8 v, bytes32 r, bytes32 s)
     {
-        require(sig.length == 65);
+        require(sig.length == 65,"Signature has bad length");
 
         assembly {
             // first 32 bytes, after the length prefix.
@@ -52,7 +52,6 @@ contract AgoraToken is ERC20 {
     function transactiWithSignature(uint expiration, bytes32 nonce, uint amount, address from, address to, bytes memory signature ) public{
 
         require(expiration>block.timestamp,"Signature expired");
-
         require(nonces[nonce]==false,"Nonce used");
         require(amount>0,"Amount should be >0");
         require(from!=address(0),"From can't be address(0)");
@@ -60,10 +59,8 @@ contract AgoraToken is ERC20 {
         require(amount<=balanceOf(from),"Not enough tokens");
 
         bytes32 message = keccak256(abi.encodePacked(expiration,nonce,amount,from,to));
-        //bytes32 prefixedHashMessage = keccak256(abi.encodePacked(prefix, message));
-
         address signer = getMsgSigner(message,signature);
-        
+
         require(signer==from,"Wrong arguments (recoveredAddress!=from)");
         nonces[nonce] = true;
         _transfer(from, to, amount );
