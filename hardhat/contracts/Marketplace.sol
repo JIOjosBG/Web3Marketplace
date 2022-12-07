@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./AgoraToken.sol";
+
 contract Marketplace is Ownable {
 
     struct Market{
@@ -12,14 +14,14 @@ contract Marketplace is Ownable {
         uint addedValue;
     }
 
+    address public  myToken;
     address[] public marketAddresses;
     uint public marketCount;
     mapping(address => Market) public markets;
 
-
-    function payAsMarket() public payable{
-        require(markets[msg.sender].contractAddress!=address(0),"Market is not added");
-         payable(msg.sender).transfer(msg.value);
+    function setToken(address _token) public {
+        require(_token!=address(0),"Token address shouldn't be address(0)");
+        myToken = (_token);
     }
 
     function getMarketAddresses() public view returns(address[] memory){

@@ -6,7 +6,6 @@ const {signMessage} = require("../helperFunctions/signing.js");
 describe("AgoraToken", function () {
     const oneETH = ethers.utils.parseEther("1");
     const twoETH = ethers.utils.parseEther("2");
-
     const acceptableTreansactionFee = ethers.utils.parseEther("0.001");
 
     describe("Deploy contract", async function () {

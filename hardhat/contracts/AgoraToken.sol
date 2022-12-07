@@ -60,9 +60,9 @@ contract AgoraToken is ERC20 {
 
         bytes32 message = keccak256(abi.encodePacked(expiration,nonce,amount,from,to));
         address signer = getMsgSigner(message,signature);
-
         require(signer==from,"Wrong arguments (recoveredAddress!=from)");
         nonces[nonce] = true;
         _transfer(from, to, amount );
+
     }
 }

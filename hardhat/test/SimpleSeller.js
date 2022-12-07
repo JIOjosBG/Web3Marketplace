@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const {generateSignatureStructure} = require("../helperFunctions/signing");
 describe("SimpleSeller", function () {
     function stringToHex(str){
         var arr1 = ['0','x'];
@@ -9,9 +10,8 @@ describe("SimpleSeller", function () {
         }
         return arr1.join('');
     }
-
     function hexToString(hexx) {
-        var hex = hexx.toString().slice(2);//force conversion
+        var hex = hexx.toString().slice(2);
         var str = '';
         for (var i = 0; i < hex.length; i += 2)
             str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
@@ -22,10 +22,8 @@ describe("SimpleSeller", function () {
     const twoETHs = ethers.utils.parseEther("2");
     const oneETHAfterFee = ethers.utils.parseEther("0.99");
     const acceptableTreansactionFee = ethers.utils.parseEther("0.001");
-    //console.log(stringToHex("asdasdas"));
-
-    // const twoETHsAfterFee = ethers.utils.parseEther("1.98");
     let hashedData;
+    
     describe("Deployment", async function () {
         beforeEach(async function ()  {
             accounts = await ethers.getSigners();
@@ -106,22 +104,46 @@ describe("SimpleSeller", function () {
 
     });
     describe("Pay product",async function(){
+        let sigData;
         beforeEach(async function ()  {
             accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
+            const AgoraToken = await ethers.getContractFactory("AgoraToken");
+            const Marketplace = await ethers.getContractFactory("Marketplace");
             simpleSeller = await SimpleSeller.deploy();
+            agoraToken = await AgoraToken.deploy();
+            marketplace = await Marketplace.deploy();
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
+
             hashedData = ethers.utils.formatBytes32String("");
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
+            expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
+
+
             const product1 = await simpleSeller.products(0);
             const product2 = await simpleSeller.products(1);
+            sigData = {
+                "currentTime": Math.floor(Date.now()/1000),
+                "futureTime":  Math.floor(Date.now()/1000)+1000,
+                "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
+                "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
+            }
+
         });
 
         it("Pays products",async function(){
             expect( (await simpleSeller.products(0)).paid).to.be.false;
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
+
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
+
             expect( (await simpleSeller.products(0)).paid).to.be.true;
             expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
+
             const rawdeliveryInstructions = (await simpleSeller.products(0)).deliveryInstructions;
             const deliveryInstructions = hexToString(rawdeliveryInstructions);
             expect( deliveryInstructions).equal("Deliver here");
@@ -132,14 +154,23 @@ describe("SimpleSeller", function () {
         });
 
         it("No such product",async function(){
-            await expect(simpleSeller.payProduct(3,stringToHex("Deliver here"),{value:oneETH})).to.be.revertedWith("No such product");
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            await expect(simpleSeller.payProduct(3,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.be.revertedWith("No such product");
+
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,3)).equal(0);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,3)).equal(0);
         });
 
         it("Product already bought",async function(){
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
-            await expect(simpleSeller.connect(accounts[2]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.be.revertedWith("Product already bought");
+            const message1 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature1 = accounts[1].signMessage(message1);
+            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature1)).to.not.throw;
+
+            const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[2].address,simpleSeller.address])));
+            const signature2 = accounts[2].signMessage(message2);
+            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[2].address,signature2)).to.be.revertedWith("Product already bought");
+
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[2].address,0)).equal(0);
@@ -147,17 +178,26 @@ describe("SimpleSeller", function () {
         });
 
         it("Not enough eth",async function(){
-            await expect(simpleSeller.connect(accounts[1]).payProduct(1,stringToHex("Deliver here"),{value:oneETH})).to.be.revertedWith("Not enough eth");
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            await expect(simpleSeller.payProduct(1,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.be.revertedWith("Not enough eth");
+            
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,1)).equal(0);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,1)).equal(0);
             expect( (await simpleSeller.products(0)).buyer).equal(ethers.constants.AddressZero);
         });
+
         it("Too much eth",async function(){
-            const oldBalance = await ethers.provider.getBalance(accounts[1].address);
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:twoETHs})).to.not.throw;
-            const newBalance = await ethers.provider.getBalance(accounts[1].address);
+
+            const oldBalance = await agoraToken.balanceOf(accounts[1].address);
             
-            expect(newBalance.add(oneETH)).greaterThan(oldBalance.sub(acceptableTreansactionFee));
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,twoETHs,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,twoETHs,accounts[1].address,signature)).to.not.throw;
+            
+            const newBalance = await agoraToken.balanceOf(accounts[1].address);
+
+            expect(newBalance.add(oneETH)).equal(oldBalance);
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
             expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
@@ -165,14 +205,17 @@ describe("SimpleSeller", function () {
 
         it("No delivery instructions",async function(){
             expect( (await simpleSeller.products(0)).paid).to.be.false;
-            await expect(simpleSeller.connect(accounts[1]).payProduct(0,stringToHex(""),{value:oneETH})).to.be.revertedWith("No delivery instructions");
+            
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            await expect(simpleSeller.payProduct(0,stringToHex(""),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.be.revertedWith("No delivery instructions");
+            
+
             expect( (await simpleSeller.products(0)).paid).to.be.false;
             expect( (await simpleSeller.products(0)).buyer).equal(ethers.constants.AddressZero);
             const rawdeliveryInstructions = (await simpleSeller.products(0)).deliveryInstructions;
             const deliveryInstructions = hexToString(rawdeliveryInstructions);
             expect( deliveryInstructions).equal("");
-
-            
         });
 
     });
@@ -203,12 +246,30 @@ describe("SimpleSeller", function () {
     describe("Deliver product", async function(){
 
         beforeEach(async function ()  {
+
             accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
+            const AgoraToken = await ethers.getContractFactory("AgoraToken");
+            const Marketplace = await ethers.getContractFactory("Marketplace");
             simpleSeller = await SimpleSeller.deploy();
+            agoraToken = await AgoraToken.deploy();
+            marketplace = await Marketplace.deploy();
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
+
             hashedData = ethers.utils.formatBytes32String("");
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
+            expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
+
+            sigData = {
+                "currentTime": Math.floor(Date.now()/1000),
+                "futureTime":  Math.floor(Date.now()/1000)+1000,
+                "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
+                "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
+            }
+
 
         });
         it("Deliver product",async function(){
@@ -217,18 +278,25 @@ describe("SimpleSeller", function () {
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
             expect(await simpleSeller.owedMoneyToBuyers(accounts[0].address,0)).equal(0);
 
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
 
-            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
+
             expect((await simpleSeller.products(0)).delivered).to.be.false;
             
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
-            expect(await simpleSeller.owedMoneyToBuyers(accounts[0].address,0)).equal(oneETH);
+            expect(await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
 
             expect(await simpleSeller.deliverProduct(0)).to.not.throw;
             expect((await simpleSeller.products(0)).delivered).to.be.true;
 
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
-            expect(await simpleSeller.owedMoneyToBuyers(accounts[0].address,0)).equal(0);
+            expect(await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
+
+            expect(await agoraToken.balanceOf(accounts[0].address)).equal(oneETH.add(oneETHAfterFee)); //started with 1
+            expect(await agoraToken.balanceOf(accounts[1].address)).equal(oneETH); //stareted with 2
+
         });
         
         it("No such product",async function(){
@@ -240,26 +308,31 @@ describe("SimpleSeller", function () {
         });
 
         it("Product already delivered",async function(){
-            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
+
             await expect(simpleSeller.deliverProduct(0)).to.not.throw;
             await expect(simpleSeller.deliverProduct(0)).to.be.revertedWith("Product already delivered");
         });
 
-        it("Repaing correctly the product",async function(){
-            const oldContractBalance = await ethers.provider.getBalance(simpleSeller.address);
-            const oldBalance0 = await ethers.provider.getBalance(accounts[0].address);
-            const oldBalance1 = await ethers.provider.getBalance(accounts[1].address);
+        it("Repaying correctly the product",async function(){
+            const oldContractBalance = await agoraToken.balanceOf(simpleSeller.address);
+            const oldBalance0 = await agoraToken.balanceOf(accounts[0].address);
+            const oldBalance1 = await agoraToken.balanceOf(accounts[1].address);
 
-            expect(await simpleSeller.connect(accounts[1]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
+
             expect(await simpleSeller.deliverProduct(0)).to.not.throw;
-            const newContractBalance = await ethers.provider.getBalance(simpleSeller.address);
+            const newContractBalance = await agoraToken.balanceOf(simpleSeller.address);
             expect( newContractBalance.sub(oldContractBalance)).equal(oneETH.sub(oneETHAfterFee));
-
-            const newBalance0 = await ethers.provider.getBalance(accounts[0].address);
-            const newBalance1 = await ethers.provider.getBalance(accounts[1].address);    
-            
-            expect( oldBalance1.sub(newBalance1)).greaterThan(oneETH.sub(acceptableTreansactionFee));
-            expect( newBalance0.sub(oldBalance0)).greaterThan(oneETHAfterFee.sub(acceptableTreansactionFee));
+            const newBalance0 = await agoraToken.balanceOf(accounts[0].address);
+            const newBalance1 = await agoraToken.balanceOf(accounts[1].address);
+ 
+            expect( oldBalance1.sub(newBalance1)).equal(oneETH)
+            expect( newBalance0.sub(oldBalance0)).equal(oneETHAfterFee);
        
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
@@ -270,52 +343,82 @@ describe("SimpleSeller", function () {
         beforeEach(async function ()  {
             accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            simpleSeller = await SimpleSeller.deploy();
-
+            const AgoraToken = await ethers.getContractFactory("AgoraToken");
             const Marketplace = await ethers.getContractFactory("Marketplace");
+            simpleSeller = await SimpleSeller.deploy();
+            agoraToken = await AgoraToken.deploy();
             marketplace = await Marketplace.deploy();
 
+            hashedData = ethers.utils.formatBytes32String("");
 
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
-            expect(await simpleSeller.connect(accounts[0]).payProduct(0,stringToHex("Deliver here"),{value:oneETH})).to.not.throw;
-            expect(await simpleSeller.deliverProduct(0)).to.not.throw;
+            expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
 
+            expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
+            
+            expect(await agoraToken.connect(accounts[1]).transfer(simpleSeller.address,oneETH.sub(oneETHAfterFee)));
+        
         });
 
         it("Simple transfer",async function(){
-            expect(simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
 
-            const oldSimpleSellerBalance = await ethers.provider.getBalance(simpleSeller.address);
-            const oldMarketplaceBalance = await ethers.provider.getBalance(marketplace.address);
+            const oldSimpleSellerBalance = await await agoraToken.balanceOf(simpleSeller.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
             
             expect(oldSimpleSellerBalance).equal(oneETH.sub(oneETHAfterFee));
             expect(oldMarketplaceBalance).equal(0);
 
             expect(await simpleSeller.transferFunds()).to.not.throw;
 
-            const newSimpleSellerBalance = await ethers.provider.getBalance(simpleSeller.address);
-            const newMarketplaceBalance = await ethers.provider.getBalance(marketplace.address);
+            const newSimpleSellerBalance = await agoraToken.balanceOf(simpleSeller.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
 
             expect(newSimpleSellerBalance).equal(0);
             expect(newMarketplaceBalance).equal(oneETH.sub(oneETHAfterFee));
         
         });
         it("No owner marketplace",async function(){
-            const oldSimpleSellerBalance = await ethers.provider.getBalance(simpleSeller.address);
-            const oldMarketplaceBalance = await ethers.provider.getBalance(marketplace.address);
+            expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
+
+            const oldSimpleSellerBalance = await await agoraToken.balanceOf(simpleSeller.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            
+            expect(oldSimpleSellerBalance).equal(oneETH.sub(oneETHAfterFee));
+            expect(oldMarketplaceBalance).equal(0);
+
+            await expect(simpleSeller.transferFunds()).to.be.revertedWith("No token specified");
+
+            const newSimpleSellerBalance = await agoraToken.balanceOf(simpleSeller.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+
+            expect(newSimpleSellerBalance).equal(oneETH.sub(oneETHAfterFee));
+            expect(newMarketplaceBalance).equal(0);
+        
+        });
+
+        it("No owner marketplace",async function(){
+
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+
+            const oldSimpleSellerBalance = await await agoraToken.balanceOf(simpleSeller.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
             
             expect(oldSimpleSellerBalance).equal(oneETH.sub(oneETHAfterFee));
             expect(oldMarketplaceBalance).equal(0);
 
             await expect(simpleSeller.transferFunds()).to.be.revertedWith("Doesn't have owner marketplace");
 
-            const newSimpleSellerBalance = await ethers.provider.getBalance(simpleSeller.address);
-            const newMarketplaceBalance = await ethers.provider.getBalance(marketplace.address);
+            const newSimpleSellerBalance = await agoraToken.balanceOf(simpleSeller.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
 
             expect(newSimpleSellerBalance).equal(oneETH.sub(oneETHAfterFee));
             expect(newMarketplaceBalance).equal(0);
         
         });
+
     });
 
 });
