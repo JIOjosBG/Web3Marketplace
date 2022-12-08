@@ -42,7 +42,7 @@ describe("SimpleSeller", function () {
             expect(await simpleSeller.productCount()).equal(0);
         });
     });
-    describe("Add product", async function(){
+    describe("addProduct()", async function(){
         beforeEach(async function ()  {
             accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
@@ -51,7 +51,7 @@ describe("SimpleSeller", function () {
         });
 
 
-        it("Adds products ", async function () {
+        it("Adds products successfully", async function () {
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",oneETH,"asd2",hashedData)).to.not.throw;
 
@@ -103,7 +103,7 @@ describe("SimpleSeller", function () {
         });
 
     });
-    describe("Pay product",async function(){
+    describe("payProduct with marketplace",async function(){
         let sigData;
         beforeEach(async function ()  {
             accounts = await ethers.getSigners();
@@ -134,7 +134,7 @@ describe("SimpleSeller", function () {
 
         });
 
-        it("Pays products",async function(){
+        it("Pays products successfully",async function(){
             expect( (await simpleSeller.products(0)).paid).to.be.false;
 
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
@@ -187,7 +187,7 @@ describe("SimpleSeller", function () {
             expect( (await simpleSeller.products(0)).buyer).equal(ethers.constants.AddressZero);
         });
 
-        it("Too much eth",async function(){
+        it("Too much eth (if case)",async function(){
 
             const oldBalance = await agoraToken.balanceOf(accounts[1].address);
             
@@ -218,8 +218,83 @@ describe("SimpleSeller", function () {
             expect( deliveryInstructions).equal("");
         });
 
-    });
+        it("Wrong nonce",async function(){
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce1,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce1,oneETH,accounts[1].address,signature)).to.be.revertedWith("Wrong nonce");
 
+            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,3)).equal(0);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,3)).equal(0);
+        });
+
+
+        it("Expired signature",async function(){
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.currentTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.currentTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.be.revertedWith("Signature expired");
+
+            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
+            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
+            expect( (await simpleSeller.products(0)).buyer).equal(ethers.constants.AddressZero);
+        });
+
+
+    });
+    describe("payProduct without marketplace ot token",async function (){
+        let sigData;
+        beforeEach(async function ()  {
+            accounts = await ethers.getSigners();
+            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
+            const AgoraToken = await ethers.getContractFactory("AgoraToken");
+            const Marketplace = await ethers.getContractFactory("Marketplace");
+            simpleSeller = await SimpleSeller.deploy();
+
+            hashedData = ethers.utils.formatBytes32String("");
+            expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
+            expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
+            expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
+
+
+            const product1 = await simpleSeller.products(0);
+            const product2 = await simpleSeller.products(1);
+            sigData = {
+                "currentTime": Math.floor(Date.now()/1000),
+                "futureTime":  Math.floor(Date.now()/1000)+1000,
+                "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
+                "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
+            }
+
+        });
+        it("Without marketplace or token",async function(){
+            expect( (await simpleSeller.products(0)).paid).to.be.false;
+
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.be.revertedWith("No marketplace");
+            expect( (await simpleSeller.products(0)).paid).to.be.false;
+            expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
+            expect(await simpleSeller.owedMoneyToBuyers(accounts[0].address,0)).equal(0);
+            expect(await simpleSeller.owedMoneyToSellers(accounts[1].address,0)).equal(0);
+            expect(await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
+        });
+        it("Without token with marketplace",async function(){
+            const Marketplace = await ethers.getContractFactory("Marketplace");
+            marketplace = await Marketplace.deploy();
+            expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
+
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.be.revertedWith("No token specified");
+            expect( (await simpleSeller.products(0)).paid).to.be.false;
+            expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
+            expect(await simpleSeller.owedMoneyToBuyers(accounts[0].address,0)).equal(0);
+            expect(await simpleSeller.owedMoneyToSellers(accounts[1].address,0)).equal(0);
+            expect(await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
+
+
+        });
+    });
     describe("Join marketplace", async function(){
 
         beforeEach(async function ()  {
@@ -236,6 +311,14 @@ describe("SimpleSeller", function () {
             expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
             expect(await simpleSeller.ownerMarketplace()).equal(marketplace.address);
         });
+
+        it("Joins marketplace not owner",async function(){
+            expect(await simpleSeller.ownerMarketplace()).equal(ethers.constants.AddressZero);
+            await expect(simpleSeller.connect(accounts[1]).joinMarketplace(marketplace.address)).to.be.revertedWith("Ownable: caller is not the owner");
+            expect(await simpleSeller.ownerMarketplace()).equal(ethers.constants.AddressZero);
+        });
+
+
         it("Joins 0 address marketplace",async function(){
             expect(await simpleSeller.ownerMarketplace()).equal(ethers.constants.AddressZero);
             await expect(simpleSeller.joinMarketplace(ethers.constants.AddressZero)).to.be.revertedWith("Address shouldn't be 0");
@@ -243,7 +326,7 @@ describe("SimpleSeller", function () {
         });
     });
 
-    describe("Deliver product", async function(){
+    describe("deliverProduct", async function(){
 
         beforeEach(async function ()  {
 
@@ -272,7 +355,7 @@ describe("SimpleSeller", function () {
 
 
         });
-        it("Deliver product",async function(){
+        it("Deliver product successfully",async function(){
             expect((await simpleSeller.products(0)).delivered).to.be.false;
 
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
@@ -315,31 +398,9 @@ describe("SimpleSeller", function () {
             await expect(simpleSeller.deliverProduct(0)).to.not.throw;
             await expect(simpleSeller.deliverProduct(0)).to.be.revertedWith("Product already delivered");
         });
-
-        it("Repaying correctly the product",async function(){
-            const oldContractBalance = await agoraToken.balanceOf(simpleSeller.address);
-            const oldBalance0 = await agoraToken.balanceOf(accounts[0].address);
-            const oldBalance1 = await agoraToken.balanceOf(accounts[1].address);
-
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
-            const signature = accounts[1].signMessage(message);
-            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
-
-            expect(await simpleSeller.deliverProduct(0)).to.not.throw;
-            const newContractBalance = await agoraToken.balanceOf(simpleSeller.address);
-            expect( newContractBalance.sub(oldContractBalance)).equal(oneETH.sub(oneETHAfterFee));
-            const newBalance0 = await agoraToken.balanceOf(accounts[0].address);
-            const newBalance1 = await agoraToken.balanceOf(accounts[1].address);
- 
-            expect( oldBalance1.sub(newBalance1)).equal(oneETH)
-            expect( newBalance0.sub(oldBalance0)).equal(oneETHAfterFee);
-       
-            expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
-            expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
-        });
     });
 
-    describe("Transfer funds", async function(){
+    describe("transferFunds", async function(){
         beforeEach(async function ()  {
             accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
@@ -380,7 +441,25 @@ describe("SimpleSeller", function () {
             expect(newMarketplaceBalance).equal(oneETH.sub(oneETHAfterFee));
         
         });
-        it("No owner marketplace",async function(){
+
+        it("Simple transfer not owner",async function(){
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
+
+            const oldSimpleSellerBalance = await await agoraToken.balanceOf(simpleSeller.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            
+            await expect(simpleSeller.connect(accounts[1]).transferFunds()).to.be.rejectedWith('Ownable: caller is not the owner');
+
+            const newSimpleSellerBalance = await agoraToken.balanceOf(simpleSeller.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+
+            expect(newSimpleSellerBalance).equal(oldSimpleSellerBalance);
+            expect(newMarketplaceBalance).equal(oldMarketplaceBalance);
+        
+        });
+
+        it("No token specified",async function(){
             expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
 
             const oldSimpleSellerBalance = await await agoraToken.balanceOf(simpleSeller.address);

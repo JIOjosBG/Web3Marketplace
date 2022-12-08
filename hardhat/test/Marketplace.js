@@ -42,6 +42,11 @@ describe("Marketplace", function () {
             expect(await marketplace.addContract(simpleSeller1.address,"SimpleSeller1")).to.not.throw;
             expect( (await marketplace.getMarketAddresses()).length).equal(1);
         });
+
+        it("Not owner add contract", async function () {
+            await expect(marketplace.connect(accounts[1]).addContract(simpleSeller1.address,"SimpleSeller1")).to.be.revertedWith('Ownable: caller is not the owner');
+            expect( (await marketplace.getMarketAddresses()).length).equal(0);
+        });
         it("Adds multiple market contract", async function () {
             expect(await marketplace.addContract(simpleSeller1.address,"SimpleSeller1")).to.not.throw;
             expect(await marketplace.addContract(simpleSeller2.address,"SimpleSeller2")).to.not.throw;
@@ -93,6 +98,26 @@ describe("Marketplace", function () {
             expect( (await marketplace.getMarketAddresses()).length).equal(2);
             await expect(marketplace.addContract(simpleSeller2.address,"SimpleSeller2")).to.be.revertedWith("Market already added");
             expect( (await marketplace.getMarketAddresses()).length).equal(2);
+        });
+    });
+    describe("setToken",async function(){
+        let agoraToken;
+        let marketplace;
+        beforeEach(async function ()  {
+            accounts = await ethers.getSigners();
+            const Marketplace = await ethers.getContractFactory("Marketplace");
+            marketplace = await Marketplace.deploy();
+            const AgoraToken = await ethers.getContractFactory("AgoraToken");
+            agoraToken = await AgoraToken.connect(accounts[0]).deploy();
+        });
+        it("Correct address from owner",async function(){
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+        });
+        it("Correct address not from owner",async function(){
+            await expect(marketplace.connect(accounts[1]).setToken(agoraToken.address)).to.be.revertedWith('Ownable: caller is not the owner');
+        });
+        it("Correct address from owner",async function(){
+            await expect(marketplace.setToken(ethers.constants.AddressZero)).to.be.revertedWith("Token address shouldn't be address(0)");
         });
     });
 });

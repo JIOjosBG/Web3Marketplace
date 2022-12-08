@@ -19,7 +19,7 @@ contract Marketplace is Ownable {
     uint public marketCount;
     mapping(address => Market) public markets;
 
-    function setToken(address _token) public {
+    function setToken(address _token) public onlyOwner {
         require(_token!=address(0),"Token address shouldn't be address(0)");
         myToken = (_token);
     }
@@ -37,6 +37,6 @@ contract Marketplace is Ownable {
         marketAddresses.push(contractAddress);
         marketCount+=1;
     }
-    
+
     receive() external  payable {}
 }

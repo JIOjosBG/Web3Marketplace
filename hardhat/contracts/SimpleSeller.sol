@@ -72,9 +72,8 @@ contract SimpleSeller is Ownable{
         require(p.paid==false,"Product already bought");
         require(amount>=p.price, "Not enough eth");
         require(deliveryInstructions.length!=0, "No delivery instructions");
-        require(nonce==keccak256(abi.encodePacked(address(this),index)),"wrong nonce");
-        require(expiration>block.timestamp,"expired signature");
-        require(address(ownerMarketplace)!=address(0),"no marketplace");
+        require(nonce==keccak256(abi.encodePacked(address(this),index)),"Wrong nonce");
+        require(address(ownerMarketplace)!=address(0),"No marketplace");
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
 
         p.deliveryInstructions = deliveryInstructions;
