@@ -1,32 +1,31 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const {generateSignatureStructure} = require("../helperFunctions/signing");
-describe("SimpleSeller", function () {
-    function stringToHex(str){
-        var arr1 = ['0','x'];
-        for (var n = 0, l = str.length; n < l; n ++){
-            var hex = Number(str.charCodeAt(n)).toString(16);
-            arr1.push(hex);
-        }
-        return arr1.join('');
+
+function stringToHex(str){
+    var arr1 = ['0','x'];
+    for (var n = 0, l = str.length; n < l; n ++){
+        var hex = Number(str.charCodeAt(n)).toString(16);
+        arr1.push(hex);
     }
-    function hexToString(hexx) {
-        var hex = hexx.toString().slice(2);
-        var str = '';
-        for (var i = 0; i < hex.length; i += 2)
-            str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-        return str;
-    }
+    return arr1.join('');
+}
+function hexToString(hexx) {
+    var hex = hexx.toString().slice(2);
+    var str = '';
+    for (var i = 0; i < hex.length; i += 2)
+        str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+    return str;
+}
+
+describe("SimpleSeller", async function () {
     let simpleSeller;
-    const oneETH = ethers.utils.parseEther("1");
-    const twoETHs = ethers.utils.parseEther("2");
-    const oneETHAfterFee = ethers.utils.parseEther("0.99");
-    const acceptableTreansactionFee = ethers.utils.parseEther("0.001");
     let hashedData;
+
     
+
     describe("Deployment", async function () {
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
             simpleSeller = await SimpleSeller.deploy();
 
@@ -44,7 +43,6 @@ describe("SimpleSeller", function () {
     });
     describe("addProduct()", async function(){
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
             simpleSeller = await SimpleSeller.deploy();
             hashedData = ethers.utils.formatBytes32String("");
@@ -61,7 +59,6 @@ describe("SimpleSeller", function () {
             expect((await simpleSeller.getIndexesFromSellerAddress(accounts[0].address))[0]).equal(0);
             expect((await simpleSeller.getIndexesFromSellerAddress(accounts[0].address))[1]).equal(1);
 
-            //console.log(product1);
             expect(product1.name).equal("Product1");
             expect(product1.price).equal(oneETH);
             expect(product1.sellerGets).equal(oneETHAfterFee);
@@ -106,10 +103,14 @@ describe("SimpleSeller", function () {
     describe("payProduct with marketplace",async function(){
         let sigData;
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
+            const oneETH = ethers.utils.parseEther("1");
+            const twoETHs = ethers.utils.parseEther("2");
+            const oneETHAfterFee = ethers.utils.parseEther("0.99");
+            const accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
             const AgoraToken = await ethers.getContractFactory("AgoraToken");
             const Marketplace = await ethers.getContractFactory("Marketplace");
+    
             simpleSeller = await SimpleSeller.deploy();
             agoraToken = await AgoraToken.deploy();
             marketplace = await Marketplace.deploy();
@@ -243,10 +244,13 @@ describe("SimpleSeller", function () {
     describe("payProduct without marketplace ot token",async function (){
         let sigData;
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
+
+            const oneETH = ethers.utils.parseEther("1");
+            const twoETHs = ethers.utils.parseEther("2");
+            const oneETHAfterFee = ethers.utils.parseEther("0.99");
+            const accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            const Marketplace = await ethers.getContractFactory("Marketplace");
+
             simpleSeller = await SimpleSeller.deploy();
 
             hashedData = ethers.utils.formatBytes32String("");
@@ -298,11 +302,10 @@ describe("SimpleSeller", function () {
     describe("Join marketplace", async function(){
 
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            simpleSeller = await SimpleSeller.deploy();
-
             const Marketplace = await ethers.getContractFactory("Marketplace");
+
+            simpleSeller = await SimpleSeller.deploy();
             marketplace = await Marketplace.deploy();
 
         });
@@ -329,11 +332,14 @@ describe("SimpleSeller", function () {
     describe("deliverProduct", async function(){
 
         beforeEach(async function ()  {
-
-            accounts = await ethers.getSigners();
+            const oneETH = ethers.utils.parseEther("1");
+            const twoETHs = ethers.utils.parseEther("2");
+            const oneETHAfterFee = ethers.utils.parseEther("0.99");
+            const accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
             const AgoraToken = await ethers.getContractFactory("AgoraToken");
             const Marketplace = await ethers.getContractFactory("Marketplace");
+
             simpleSeller = await SimpleSeller.deploy();
             agoraToken = await AgoraToken.deploy();
             marketplace = await Marketplace.deploy();
@@ -402,10 +408,14 @@ describe("SimpleSeller", function () {
 
     describe("transferFunds", async function(){
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
+            const oneETH = ethers.utils.parseEther("1");
+            const twoETHs = ethers.utils.parseEther("2");
+            const oneETHAfterFee = ethers.utils.parseEther("0.99");
+            const accounts = await ethers.getSigners();
             const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
             const AgoraToken = await ethers.getContractFactory("AgoraToken");
             const Marketplace = await ethers.getContractFactory("Marketplace");
+
             simpleSeller = await SimpleSeller.deploy();
             agoraToken = await AgoraToken.deploy();
             marketplace = await Marketplace.deploy();
