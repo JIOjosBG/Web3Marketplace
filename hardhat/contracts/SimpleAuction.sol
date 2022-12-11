@@ -1,0 +1,123 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.13;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Marketplace.sol";
+import "hardhat/console.sol";
+import "./AgoraToken.sol";
+
+contract SimpleAuction is Ownable{
+    struct Product{
+        string name;
+        uint minimalPrice;
+        address seller;
+        uint addDate;
+        string linkForMedia;
+        bytes32 marketHashOfData;
+        bool approved;
+        bool delivered;
+        bytes deliveryInstructions;
+
+        address currentBidder;
+        uint bidAdmount;
+        uint startDate;
+        uint finishDate; 
+    }
+
+
+    Marketplace public  ownerMarketplace;
+
+    mapping(uint => Product) public products;
+    mapping(address => uint[]) public sellerToProductIndexes;
+    //seller to (product to money)
+    mapping(address => mapping(uint => uint)) public owedMoneyToBidders;
+
+    uint public productCount=0;
+
+    //TODO: createProductInstance(string,uint,link,hashofdata)
+    function productInit(
+        string calldata name,
+        uint minimalPrice,
+        string calldata linkForMedia,
+        bytes32 marketHashOfData,
+        uint startDate,
+        uint endDate
+        )private view returns(Product memory){
+            return Product(
+                name,minimalPrice,msg.sender,block.timestamp,linkForMedia,marketHashOfData, false,false,"",
+                address(0),0,startDate,endDate
+            );
+    }
+
+    function addProduct(string calldata name, uint minimalPrice, string calldata link, bytes32 marketHashOfData,uint startDate,uint finishDate) public {
+        require(bytes(name).length != 0,"Name shouldn't be empty");
+        require(minimalPrice>=2000000,"Price should be >=2000000");
+        require(startDate>=block.timestamp,"Start should be in the future");
+        require(finishDate>=block.timestamp,"End should be in the future");
+        require(startDate<finishDate,"Start should be before end");
+        products[productCount]=productInit(name, minimalPrice, link, marketHashOfData,startDate,finishDate);
+        sellerToProductIndexes[msg.sender].push(productCount);
+        productCount+=1;
+    }
+
+    function getIndexesFromSellerAddress(address seller) public view returns(uint[] memory indexes){
+        return sellerToProductIndexes[seller];
+    }
+
+    function joinMarketplace(Marketplace marketplace) public onlyOwner{
+        require(address(marketplace) != address(0),"Address shouldn't be 0");
+        ownerMarketplace =Marketplace(marketplace);
+    }
+    //TODO: CHECK CORRECT AMOUNT OF TOKENS TO BE TRANSFERED
+    //NOT ALL IN THE CONTRACT BELONG TO IT (SOME ARE FROM UNFINISHED AUCTIONS(BIDS ARE DEPOSITS))
+    function transferFunds() public onlyOwner{
+        require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
+        //payable(ownerMarketplace).transfer(address(this).balance);
+        AgoraToken token = AgoraToken(ownerMarketplace.myToken());
+        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
+        token.transfer(address(ownerMarketplace),token.balanceOf(address(this)));
+    }
+
+    function bidForProduct(uint index,bytes calldata deliveryInstructions,uint expiration, bytes32 nonce, uint amount, address from,bytes memory sig) public payable{
+        Product storage p = products[index];
+        require(p.seller!=address(0), "No such product");
+        require(p.finishDate>block.timestamp,"Auction already finished");
+        require(p.startDate<block.timestamp,"Auction hasnt started");
+        require(amount>=p.minimalPrice, "Bid must be larger");
+        require(amount>=p.bidAdmount, "Bid must be larger");
+
+        require(deliveryInstructions.length!=0, "No delivery instructions");
+        require(nonce==keccak256(abi.encodePacked(address(this),index)),"Wrong nonce");
+
+        require(address(ownerMarketplace)!=address(0),"No marketplace");
+        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
+
+        p.deliveryInstructions = deliveryInstructions;
+
+        AgoraToken token = AgoraToken(ownerMarketplace.myToken());
+
+        token.transactiWithSignature(expiration,nonce,amount,from,address(this),sig);
+        //RETURN PREV BID MONEY
+        if(p.currentBidder!=address(0)){
+            owedMoneyToBidders[from][index] = 0;
+            token.transfer(p.currentBidder,p.bidAdmount);
+        }
+        
+        owedMoneyToBidders[p.seller][index] = amount;
+        p.bidAdmount=amount;
+        p.currentBidder=from;
+
+    }
+
+    function deliverProduct(uint index) public  /* onlyDelivery */{
+        Product memory p = products[index];
+        require(p.seller!=address(0), "No such product");
+        require(p.finishDate<block.timestamp,"Product not paid");
+        require(p.delivered==false,"Product already delivered");
+        uint pay = owedMoneyToBidders[p.currentBidder][index] *99/100;
+        owedMoneyToBidders[p.currentBidder][index] = 0;
+        products[index].delivered=true;
+        AgoraToken(ownerMarketplace.myToken()).transfer(p.seller,pay);
+    }
+
+}
