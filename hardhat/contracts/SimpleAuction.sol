@@ -19,7 +19,7 @@ contract SimpleAuction is Ownable{
         bytes deliveryInstructions;
 
         address currentBidder;
-        uint bidAdmount;
+        uint bidAmount;
         //uint startDate;
         uint finishDate; 
     }
@@ -49,12 +49,12 @@ contract SimpleAuction is Ownable{
             );
     }
 
-    function addProduct(string calldata name, uint minimalPrice, string calldata link, bytes32 marketHashOfData,uint startDate,uint finishDate) public {
+    function addProduct(string calldata name, uint minimalPrice, string calldata link, bytes32 marketHashOfData,/*uint startDate,*/ uint finishDate) public {
         require(bytes(name).length != 0,"Name shouldn't be empty");
         require(minimalPrice>=2000000,"Price should be >=2000000");
-        require(startDate>=block.timestamp,"Start should be in the future");
+        //require(startDate>=block.timestamp,"Start should be in the future");
         require(finishDate>=block.timestamp,"End should be in the future");
-        require(startDate<finishDate,"Start should be before end");
+        //require(startDate<finishDate,"Start should be before end");
         products[productCount]=productInit(name, minimalPrice, link, marketHashOfData,/*startDate,*/finishDate);
         sellerToProductIndexes[msg.sender].push(productCount);
         productCount+=1;
@@ -83,10 +83,10 @@ contract SimpleAuction is Ownable{
         require(p.finishDate>block.timestamp,"Auction already finished");
         //require(p.startDate<block.timestamp,"Auction hasnt started");
         require(amount>=p.minimalPrice, "Bid must be larger");
-        require(amount>=p.bidAdmount, "Bid must be larger");
+        require(amount>p.bidAmount, "Bid must be larger");
 
         require(deliveryInstructions.length!=0, "No delivery instructions");
-        require(nonce==keccak256(abi.encodePacked(address(this),index)),"Wrong nonce");
+        require(nonce==keccak256(abi.encodePacked(address(this),index,amount)),"Wrong nonce");
 
         require(address(ownerMarketplace)!=address(0),"No marketplace");
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
@@ -98,12 +98,12 @@ contract SimpleAuction is Ownable{
         token.transactiWithSignature(expiration,nonce,amount,from,address(this),sig);
         //RETURN PREV BID MONEY
         if(p.currentBidder!=address(0)){
-            owedMoneyToBidders[from][index] = 0;
-            token.transfer(p.currentBidder,p.bidAdmount);
+            owedMoneyToBidders[p.currentBidder][index] = 0;
+            token.transfer(p.currentBidder,p.bidAmount);
         }
 
-        owedMoneyToBidders[p.seller][index] = amount;
-        p.bidAdmount=amount;
+        owedMoneyToBidders[from][index] = amount;
+        p.bidAmount=amount;
         p.currentBidder=from;
 
     }
