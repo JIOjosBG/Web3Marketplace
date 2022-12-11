@@ -20,12 +20,13 @@ contract SimpleAuction is Ownable{
 
         address currentBidder;
         uint bidAdmount;
-        uint startDate;
+        //uint startDate;
         uint finishDate; 
     }
 
 
     Marketplace public  ownerMarketplace;
+
 
     mapping(uint => Product) public products;
     mapping(address => uint[]) public sellerToProductIndexes;
@@ -40,12 +41,11 @@ contract SimpleAuction is Ownable{
         uint minimalPrice,
         string calldata linkForMedia,
         bytes32 marketHashOfData,
-        uint startDate,
         uint endDate
         )private view returns(Product memory){
             return Product(
                 name,minimalPrice,msg.sender,block.timestamp,linkForMedia,marketHashOfData, false,false,"",
-                address(0),0,startDate,endDate
+                address(0),0,/*startDate,*/endDate
             );
     }
 
@@ -55,7 +55,7 @@ contract SimpleAuction is Ownable{
         require(startDate>=block.timestamp,"Start should be in the future");
         require(finishDate>=block.timestamp,"End should be in the future");
         require(startDate<finishDate,"Start should be before end");
-        products[productCount]=productInit(name, minimalPrice, link, marketHashOfData,startDate,finishDate);
+        products[productCount]=productInit(name, minimalPrice, link, marketHashOfData,/*startDate,*/finishDate);
         sellerToProductIndexes[msg.sender].push(productCount);
         productCount+=1;
     }
@@ -72,7 +72,6 @@ contract SimpleAuction is Ownable{
     //NOT ALL IN THE CONTRACT BELONG TO IT (SOME ARE FROM UNFINISHED AUCTIONS(BIDS ARE DEPOSITS))
     function transferFunds() public onlyOwner{
         require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
-        //payable(ownerMarketplace).transfer(address(this).balance);
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
         token.transfer(address(ownerMarketplace),token.balanceOf(address(this)));
@@ -82,7 +81,7 @@ contract SimpleAuction is Ownable{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.finishDate>block.timestamp,"Auction already finished");
-        require(p.startDate<block.timestamp,"Auction hasnt started");
+        //require(p.startDate<block.timestamp,"Auction hasnt started");
         require(amount>=p.minimalPrice, "Bid must be larger");
         require(amount>=p.bidAdmount, "Bid must be larger");
 
@@ -102,7 +101,7 @@ contract SimpleAuction is Ownable{
             owedMoneyToBidders[from][index] = 0;
             token.transfer(p.currentBidder,p.bidAdmount);
         }
-        
+
         owedMoneyToBidders[p.seller][index] = amount;
         p.bidAdmount=amount;
         p.currentBidder=from;
