@@ -20,16 +20,46 @@ function hexToString(hexx) {
 
 describe("SimpleSeller", async function () {
     let simpleSeller;
-    let hashedData;
+    let agoraToken;
+    let marketplace;
 
+    let AgoraToken
+    let Marketplace;
+    let SimpleSeller;
+
+    let hashedData;
+    let sigData;
+    let oneETH;
+    let twoETHs;
+    let oneETHAfterFee;
+    let accounts;
+    
+
+    beforeEach(async function(){
+        accounts = await ethers.getSigners();
+        oneETH = ethers.utils.parseEther("1");
+        twoETHs = ethers.utils.parseEther("2");
+        oneETHAfterFee = ethers.utils.parseEther("0.99");
+        hashedData = ethers.utils.formatBytes32String("");
+        
+        SimpleSeller = await ethers.getContractFactory("SimpleSeller");
+        AgoraToken = await ethers.getContractFactory("AgoraToken");
+        Marketplace = await ethers.getContractFactory("Marketplace");
+
+        simpleSeller = await SimpleSeller.deploy();
+        agoraToken = await AgoraToken.deploy();
+        marketplace = await Marketplace.deploy();
+
+        sigData = {
+            "currentTime": Math.floor(Date.now()/1000),
+            "futureTime":  Math.floor(Date.now()/1000)+1000,
+            "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
+            "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
+        }
+    });
     
 
     describe("Deployment", async function () {
-        beforeEach(async function ()  {
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            simpleSeller = await SimpleSeller.deploy();
-
-        });
 
         it("Should have the correct owner", async function () {
             const addressOfOwnerOfSimpleSeller = await simpleSeller.owner();
@@ -42,13 +72,6 @@ describe("SimpleSeller", async function () {
         });
     });
     describe("addProduct()", async function(){
-        beforeEach(async function ()  {
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            simpleSeller = await SimpleSeller.deploy();
-            hashedData = ethers.utils.formatBytes32String("");
-        });
-
-
         it("Adds products successfully", async function () {
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",oneETH,"asd2",hashedData)).to.not.throw;
@@ -101,38 +124,14 @@ describe("SimpleSeller", async function () {
 
     });
     describe("payProduct with marketplace",async function(){
-        let sigData;
         beforeEach(async function ()  {
-            const oneETH = ethers.utils.parseEther("1");
-            const twoETHs = ethers.utils.parseEther("2");
-            const oneETHAfterFee = ethers.utils.parseEther("0.99");
-            const accounts = await ethers.getSigners();
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-    
-            simpleSeller = await SimpleSeller.deploy();
-            agoraToken = await AgoraToken.deploy();
-            marketplace = await Marketplace.deploy();
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
             expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
 
-            hashedData = ethers.utils.formatBytes32String("");
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
             expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
-
-
-            const product1 = await simpleSeller.products(0);
-            const product2 = await simpleSeller.products(1);
-            sigData = {
-                "currentTime": Math.floor(Date.now()/1000),
-                "futureTime":  Math.floor(Date.now()/1000)+1000,
-                "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
-                "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
-            }
-
         });
 
         it("Pays products successfully",async function(){
@@ -242,34 +241,13 @@ describe("SimpleSeller", async function () {
 
     });
     describe("payProduct without marketplace ot token",async function (){
-        let sigData;
         beforeEach(async function ()  {
-
-            const oneETH = ethers.utils.parseEther("1");
-            const twoETHs = ethers.utils.parseEther("2");
-            const oneETHAfterFee = ethers.utils.parseEther("0.99");
-            const accounts = await ethers.getSigners();
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-
-            simpleSeller = await SimpleSeller.deploy();
-
-            hashedData = ethers.utils.formatBytes32String("");
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
             expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
-
-
-            const product1 = await simpleSeller.products(0);
-            const product2 = await simpleSeller.products(1);
-            sigData = {
-                "currentTime": Math.floor(Date.now()/1000),
-                "futureTime":  Math.floor(Date.now()/1000)+1000,
-                "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
-                "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
-            }
-
         });
+
         it("Without marketplace or token",async function(){
             expect( (await simpleSeller.products(0)).paid).to.be.false;
 
@@ -283,8 +261,6 @@ describe("SimpleSeller", async function () {
             expect(await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
         });
         it("Without token with marketplace",async function(){
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-            marketplace = await Marketplace.deploy();
             expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
 
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
@@ -301,14 +277,6 @@ describe("SimpleSeller", async function () {
     });
     describe("Join marketplace", async function(){
 
-        beforeEach(async function ()  {
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-
-            simpleSeller = await SimpleSeller.deploy();
-            marketplace = await Marketplace.deploy();
-
-        });
         it("Joins marketplace",async function(){
             expect(await simpleSeller.ownerMarketplace()).equal(ethers.constants.AddressZero);
             expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
@@ -332,33 +300,13 @@ describe("SimpleSeller", async function () {
     describe("deliverProduct", async function(){
 
         beforeEach(async function ()  {
-            const oneETH = ethers.utils.parseEther("1");
-            const twoETHs = ethers.utils.parseEther("2");
-            const oneETHAfterFee = ethers.utils.parseEther("0.99");
-            const accounts = await ethers.getSigners();
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-
-            simpleSeller = await SimpleSeller.deploy();
-            agoraToken = await AgoraToken.deploy();
-            marketplace = await Marketplace.deploy();
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
             expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
 
-            hashedData = ethers.utils.formatBytes32String("");
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
             expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
-
-            sigData = {
-                "currentTime": Math.floor(Date.now()/1000),
-                "futureTime":  Math.floor(Date.now()/1000)+1000,
-                "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
-                "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
-            }
-
 
         });
         it("Deliver product successfully",async function(){
@@ -408,20 +356,6 @@ describe("SimpleSeller", async function () {
 
     describe("transferFunds", async function(){
         beforeEach(async function ()  {
-            const oneETH = ethers.utils.parseEther("1");
-            const twoETHs = ethers.utils.parseEther("2");
-            const oneETHAfterFee = ethers.utils.parseEther("0.99");
-            const accounts = await ethers.getSigners();
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-
-            simpleSeller = await SimpleSeller.deploy();
-            agoraToken = await AgoraToken.deploy();
-            marketplace = await Marketplace.deploy();
-
-            hashedData = ethers.utils.formatBytes32String("");
-
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
             expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
 
