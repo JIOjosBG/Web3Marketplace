@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const {signMessage} = require("../helperFunctions/signing.js");
 
-
+//TODO: refactor tests to prevent repetition of code (initialisation of shared variables)
 describe("AgoraToken", function () {
     const oneETH = ethers.utils.parseEther("1");
     const twoETH = ethers.utils.parseEther("2");
@@ -218,8 +218,7 @@ describe("AgoraToken", function () {
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,oneETH,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             let signature = ( await accounts[1].signMessage(hashedMessage));
-            signature+="aa"
-            console.log(signature);
+            signature+="aa";
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
             await expect(agoraToken.transactiWithSignature(expiration,nonce,oneETH,accounts[1].address,accounts[0].address,signature)).to.be.revertedWith("Signature has bad length");

@@ -81,8 +81,6 @@ contract SimpleSeller is Ownable{
         owedMoneyToSellers[p.seller][index] = p.sellerGets;
         owedMoneyToBuyers[from][index] = p.price;
         products[index].buyer = from;
-        //address addressOfToken = 
-        //sconsole.log(ownerMarketplace.myToken());
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
         token.transactiWithSignature(expiration,nonce,amount,from,address(this),sig);
 

@@ -111,7 +111,7 @@ contract SimpleAuction is Ownable{
     function deliverProduct(uint index) public  /* onlyDelivery */{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
-        require(p.finishDate<block.timestamp,"Product not paid");
+        require(p.finishDate<block.timestamp,"Auction not finished");
         require(p.delivered==false,"Product already delivered");
         uint pay = owedMoneyToBidders[p.currentBidder][index] *99/100;
         owedMoneyToBidders[p.currentBidder][index] = 0;

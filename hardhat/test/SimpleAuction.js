@@ -318,215 +318,169 @@ describe("SimpleAuction", async function () {
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
         });
-    // });
-    // describe("Join marketplace", async function(){
+    });
+    describe("Join marketplace", async function(){
+        it("Joins marketplace",async function(){
+            expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
+            expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+            expect(await simpleAuction.ownerMarketplace()).equal(marketplace.address);
+        });
 
-    //     beforeEach(async function ()  {
-    //         const simpleAuction = await ethers.getContractFactory("simpleAuction");
-    //         const Marketplace = await ethers.getContractFactory("Marketplace");
-
-    //         simpleAuction = await simpleAuction.deploy();
-    //         marketplace = await Marketplace.deploy();
-
-    //     });
-    //     it("Joins marketplace",async function(){
-    //         expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
-    //         expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
-    //         expect(await simpleAuction.ownerMarketplace()).equal(marketplace.address);
-    //     });
-
-    //     it("Joins marketplace not owner",async function(){
-    //         expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
-    //         await expect(simpleAuction.connect(accounts[1]).joinMarketplace(marketplace.address)).to.be.revertedWith("Ownable: caller is not the owner");
-    //         expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
-    //     });
+        it("Joins marketplace not owner",async function(){
+            expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
+            await expect(simpleAuction.connect(accounts[1]).joinMarketplace(marketplace.address)).to.be.revertedWith("Ownable: caller is not the owner");
+            expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
+        });
 
 
-    //     it("Joins 0 address marketplace",async function(){
-    //         expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
-    //         await expect(simpleAuction.joinMarketplace(ethers.constants.AddressZero)).to.be.revertedWith("Address shouldn't be 0");
-    //         expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
-    //     });
-    // });
+        it("Joins 0 address marketplace",async function(){
+            expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
+            await expect(simpleAuction.joinMarketplace(ethers.constants.AddressZero)).to.be.revertedWith("Address shouldn't be 0");
+            expect(await simpleAuction.ownerMarketplace()).equal(ethers.constants.AddressZero);
+        });
+    });
 
-    // describe("deliverProduct", async function(){
+    describe("deliverProduct", async function(){
 
-    //     beforeEach(async function ()  {
-    //         const oneETH = ethers.utils.parseEther("1");
-    //         const twoETHs = ethers.utils.parseEther("2");
-    //         const oneETHAfterFee = ethers.utils.parseEther("0.99");
-    //         const accounts = await ethers.getSigners();
-    //         const simpleAuction = await ethers.getContractFactory("simpleAuction");
-    //         const AgoraToken = await ethers.getContractFactory("AgoraToken");
-    //         const Marketplace = await ethers.getContractFactory("Marketplace");
+        beforeEach(async function ()  {
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
 
-    //         simpleAuction = await simpleAuction.deploy();
-    //         agoraToken = await AgoraToken.deploy();
-    //         marketplace = await Marketplace.deploy();
-    //         expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
-    //         expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
-
-    //         hashedData = ethers.utils.formatBytes32String("");
-    //         expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
-    //         expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
-    //         expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
-    //         expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
-
-    //         sigData = {
-    //             "currentTime": Math.floor(Date.now()/1000),
-    //             "futureTime":  Math.floor(Date.now()/1000)+1000,
-    //             "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleAuction.address,0])),
-    //             "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleAuction.address,1])),  
-    //         }
-
-
-    //     });
-    //     it("Deliver product successfully",async function(){
-    //         expect((await simpleAuction.products(0)).delivered).to.be.false;
-
-    //         expect(await simpleAuction.owedMoneyToSellers(accounts[0].address,0)).equal(0);
-    //         expect(await simpleAuction.owedMoneyToBuyers(accounts[0].address,0)).equal(0);
-
-    //         const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
-    //         const signature = accounts[1].signMessage(message);
-    //         expect(await simpleAuction.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
-
-
-    //         expect((await simpleAuction.products(0)).delivered).to.be.false;
+            expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
+            expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData,finishDate)).to.not.throw;
+            expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
+            expect((await simpleAuction.products(0)).delivered).to.be.false;
             
-    //         expect(await simpleAuction.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
-    //         expect(await simpleAuction.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
-
-    //         expect(await simpleAuction.deliverProduct(0)).to.not.throw;
-    //         expect((await simpleAuction.products(0)).delivered).to.be.true;
-
-    //         expect(await simpleAuction.owedMoneyToSellers(accounts[0].address,0)).equal(0);
-    //         expect(await simpleAuction.owedMoneyToBuyers(accounts[1].address,0)).equal(0);
-
-    //         expect(await agoraToken.balanceOf(accounts[0].address)).equal(oneETH.add(oneETHAfterFee)); //started with 1
-    //         expect(await agoraToken.balanceOf(accounts[1].address)).equal(oneETH); //stareted with 2
-
-    //     });
-        
-    //     it("No such product",async function(){
-    //         await expect(simpleAuction.deliverProduct(2)).to.be.revertedWith("No such product");
-    //     });
-
-    //     it("Product not paid",async function(){
-    //         await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Product not paid");
-    //     });
-
-    //     it("Product already delivered",async function(){
-    //         const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
-    //         const signature = accounts[1].signMessage(message);
-    //         expect(await simpleAuction.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
-
-    //         await expect(simpleAuction.deliverProduct(0)).to.not.throw;
-    //         await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Product already delivered");
-    //     });
-    // });
-
-    // describe("transferFunds", async function(){
-    //     beforeEach(async function ()  {
-    //         const oneETH = ethers.utils.parseEther("1");
-    //         const twoETHs = ethers.utils.parseEther("2");
-    //         const oneETHAfterFee = ethers.utils.parseEther("0.99");
-    //         const accounts = await ethers.getSigners();
-    //         const simpleAuction = await ethers.getContractFactory("simpleAuction");
-    //         const AgoraToken = await ethers.getContractFactory("AgoraToken");
-    //         const Marketplace = await ethers.getContractFactory("Marketplace");
-
-    //         simpleAuction = await simpleAuction.deploy();
-    //         agoraToken = await AgoraToken.deploy();
-    //         marketplace = await Marketplace.deploy();
-
-    //         hashedData = ethers.utils.formatBytes32String("");
-
-    //         expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
-    //         expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
-
-    //         expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
-    //         expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
+            expect(await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(oneETH);
             
-    //         expect(await agoraToken.connect(accounts[1]).transfer(simpleAuction.address,oneETH.sub(oneETHAfterFee)));
-        
-    //     });
+        });
 
-    //     it("Simple transfer",async function(){
-    //         expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
-    //         expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+        it("Deliver product successfully",async function(){
 
-    //         const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
-    //         const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            await network.provider.send("evm_increaseTime", [3600])
+            expect(await simpleAuction.deliverProduct(0)).to.not.throw;
+            expect((await simpleAuction.products(0)).delivered).to.be.true;
+
+            expect(await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
+
+            expect(await agoraToken.balanceOf(accounts[0].address)).equal(oneETH.add(oneETHAfterFee)); //started with 1
+            expect(await agoraToken.balanceOf(accounts[1].address)).equal(oneETH); //started with two
+
+            await network.provider.send("evm_increaseTime", [-3600])
             
-    //         expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-    //         expect(oldMarketplaceBalance).equal(0);
-
-    //         expect(await simpleAuction.transferFunds()).to.not.throw;
-
-    //         const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
-    //         const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
-
-    //         expect(newsimpleAuctionBalance).equal(0);
-    //         expect(newMarketplaceBalance).equal(oneETH.sub(oneETHAfterFee));
+        });
         
-    //     });
+        it("No such product",async function(){
+            await expect(simpleAuction.deliverProduct(2)).to.be.revertedWith("No such product");
+        });
 
-    //     it("Simple transfer not owner",async function(){
-    //         expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
-    //         expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+        it("Auction not finished",async function(){
+            await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Auction not finished");
+        });
 
-    //         const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
-    //         const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+        it("Product already delivered",async function(){
+            await network.provider.send("evm_increaseTime", [3600])
+            await expect(simpleAuction.deliverProduct(0)).to.not.throw;
+            await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Product already delivered");
+            await network.provider.send("evm_increaseTime", [-3600])
+
+        });
+    
+    });
+
+    describe("transferFunds", async function(){
+        beforeEach(async function ()  {
+
+            expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
+            expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData,finishDate)).to.not.throw;
+
+            expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
             
-    //         await expect(simpleAuction.connect(accounts[1]).transferFunds()).to.be.rejectedWith('Ownable: caller is not the owner');
-
-    //         const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
-    //         const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
-
-    //         expect(newsimpleAuctionBalance).equal(oldsimpleAuctionBalance);
-    //         expect(newMarketplaceBalance).equal(oldMarketplaceBalance);
+            //CAUTION: Simple transfer of tokens to contract (not buying things)
+            expect(await agoraToken.connect(accounts[1]).transfer(simpleAuction.address,oneETH.sub(oneETHAfterFee)));
         
-    //     });
+        });
 
-    //     it("No token specified",async function(){
-    //         expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+        it("Simple transfer",async function(){
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
 
-    //         const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
-    //         const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
             
-    //         expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-    //         expect(oldMarketplaceBalance).equal(0);
+            expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
+            expect(oldMarketplaceBalance).equal(0);
 
-    //         await expect(simpleAuction.transferFunds()).to.be.revertedWith("No token specified");
+            expect(await simpleAuction.transferFunds()).to.not.throw;
 
-    //         const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
-    //         const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
 
-    //         expect(newsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-    //         expect(newMarketplaceBalance).equal(0);
+            expect(newsimpleAuctionBalance).equal(0);
+            expect(newMarketplaceBalance).equal(oneETH.sub(oneETHAfterFee));
         
-    //     });
+        });
 
-    //     it("No owner marketplace",async function(){
+        it("Simple transfer not owner",async function(){
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
 
-    //         expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
-
-    //         const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
-    //         const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
             
-    //         expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-    //         expect(oldMarketplaceBalance).equal(0);
+            await expect(simpleAuction.connect(accounts[1]).transferFunds()).to.be.rejectedWith('Ownable: caller is not the owner');
 
-    //         await expect(simpleAuction.transferFunds()).to.be.revertedWith("Doesn't have owner marketplace");
+            const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
 
-    //         const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
-    //         const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
-
-    //         expect(newsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-    //         expect(newMarketplaceBalance).equal(0);
+            expect(newsimpleAuctionBalance).equal(oldsimpleAuctionBalance);
+            expect(newMarketplaceBalance).equal(oldMarketplaceBalance);
         
-    //     });
+        });
+
+        it("No token specified",async function(){
+            expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+
+            const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            
+            expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
+            expect(oldMarketplaceBalance).equal(0);
+
+            await expect(simpleAuction.transferFunds()).to.be.revertedWith("No token specified");
+
+            const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+
+            expect(newsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
+            expect(newMarketplaceBalance).equal(0);
+        
+        });
+
+        it("No owner marketplace",async function(){
+
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+
+            const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
+            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+            
+            expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
+            expect(oldMarketplaceBalance).equal(0);
+
+            await expect(simpleAuction.transferFunds()).to.be.revertedWith("Doesn't have owner marketplace");
+
+            const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
+            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
+
+            expect(newsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
+            expect(newMarketplaceBalance).equal(0);
+        
+        });
 
     });
 
