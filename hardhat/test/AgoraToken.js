@@ -1,29 +1,26 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const {signMessage} = require("../helperFunctions/signing.js");
 
 //TODO: refactor tests to prevent repetition of code (initialisation of shared variables)
 describe("AgoraToken", function () {
-    const oneETH = ethers.utils.parseEther("1");
-    const twoETH = ethers.utils.parseEther("2");
-    const acceptableTreansactionFee = ethers.utils.parseEther("0.001");
+    let oneETH;
+    let twoETH;
+    let acceptableTreansactionFee;
 
-    describe("Deploy contract", async function () {
-            it("Deploying",async function() {
-                accounts = await ethers.getSigners();
-                const AgoraToken = await ethers.getContractFactory("AgoraToken");
-                let agoraToken = await AgoraToken.deploy();
-            });
+    let accounts;
+    let AgoraToken;
+    let agoraToken;
+    this.beforeEach(async function(){
+        oneETH = ethers.utils.parseEther("1");
+        twoETH = ethers.utils.parseEther("2");
+        acceptableTreansactionFee = ethers.utils.parseEther("0.001");
+        accounts = await ethers.getSigners();
+        AgoraToken = await ethers.getContractFactory("AgoraToken");
+        agoraToken = await AgoraToken.deploy();
     });
 
+
     describe("Buying Tokens", async function () {
-        let accounts;
-        let agoraToken;
-        beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            agoraToken = await AgoraToken.deploy();
-        });
         
         it("Buying tokens successfully",async function() {
             expect( await agoraToken.totalSupply()).equal(0);
@@ -43,12 +40,7 @@ describe("AgoraToken", function () {
     });
 
     describe("Selling Tokens", async function () {
-        let accounts;
-        let agoraToken;
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            agoraToken = await AgoraToken.deploy();
             expect(await agoraToken.buyTokens({value:oneETH})).to.not.throw;
 
         });
@@ -81,19 +73,21 @@ describe("AgoraToken", function () {
     });
 
     describe("Working with pre-signed transactions", async function () {
-        let accounts;
-        let agoraToken;
+        let expiration;
+        let expirationNow;
+
+        let nonce;
+
         beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            agoraToken = await AgoraToken.deploy();
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETH})).to.not.throw;
+            expiration  =Math.floor(Date.now()/1000)+100;
+            expirationNow  =Math.floor(Date.now()/1000)-1;
+
+            nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
 
         });
         
         it("Transacting tokens successfully via pre-signed transaction",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,oneETH,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
@@ -105,22 +99,18 @@ describe("AgoraToken", function () {
         });
 
         it("Expired",async function() {
-            const expiration  =Math.floor(Date.now()/1000)-1;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
-            const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,oneETH,accounts[1].address,accounts[0].address]);
+            const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expirationNow,nonce,oneETH,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
             
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
-            await expect(agoraToken.transactiWithSignature(expiration,nonce,oneETH,accounts[1].address,accounts[0].address,signature)).to.be.revertedWith("Signature expired");
+            await expect(agoraToken.transactiWithSignature(expirationNow,nonce,oneETH,accounts[1].address,accounts[0].address,signature)).to.be.revertedWith("Signature expired");
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
         });
 
         it("Used nonce",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,oneETH,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
@@ -134,8 +124,6 @@ describe("AgoraToken", function () {
         });
 
         it("Amount should be > 0",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,0,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
@@ -148,8 +136,6 @@ describe("AgoraToken", function () {
         });
 
         it("No enough tokens",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,twoETH,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
@@ -171,8 +157,6 @@ describe("AgoraToken", function () {
         });
 
         it("From=addres(0)",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,twoETH,ethers.constants.AddressZero,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
@@ -185,8 +169,6 @@ describe("AgoraToken", function () {
         });
 
         it("To=addres(0)",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,twoETH,accounts[1].address,ethers.constants.AddressZero]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
@@ -200,8 +182,6 @@ describe("AgoraToken", function () {
 
         
         it("Bad arguments for signature",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             //switching from and to to make the message different from the passed arguments
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,oneETH,accounts[0].address,accounts[1].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
@@ -213,8 +193,6 @@ describe("AgoraToken", function () {
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
         });
         it("Bad signature",async function() {
-            const expiration  =Math.floor(Date.now()/1000)+100;
-            const nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
             const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,oneETH,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             let signature = ( await accounts[1].signMessage(hashedMessage));

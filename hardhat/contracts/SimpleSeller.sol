@@ -22,6 +22,7 @@ contract SimpleSeller is Ownable{
         bytes deliveryInstructions; 
     }
 
+    uint belongsToContract=0;
 
     Marketplace public  ownerMarketplace;
 
@@ -62,7 +63,7 @@ contract SimpleSeller is Ownable{
         //payable(ownerMarketplace).transfer(address(this).balance);
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
-        token.transfer(address(ownerMarketplace),token.balanceOf(address(this)));
+        token.transfer(address(ownerMarketplace),belongsToContract);
 
     }
 
@@ -97,6 +98,7 @@ contract SimpleSeller is Ownable{
         require(p.paid==true,"Product not paid");
         require(p.delivered==false,"Product already delivered");
         uint pay = owedMoneyToSellers[p.seller][index];
+        belongsToContract+=p.price-pay;
         owedMoneyToSellers[p.seller][index] = 0;
         owedMoneyToBuyers[p.buyer][index] = 0;
         products[index].delivered=true;

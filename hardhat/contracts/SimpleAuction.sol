@@ -26,7 +26,7 @@ contract SimpleAuction is Ownable{
 
 
     Marketplace public  ownerMarketplace;
-
+    uint public belongsToContract=0;
 
     mapping(uint => Product) public products;
     mapping(address => uint[]) public sellerToProductIndexes;
@@ -74,7 +74,7 @@ contract SimpleAuction is Ownable{
         require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
-        token.transfer(address(ownerMarketplace),token.balanceOf(address(this)));
+        token.transfer(address(ownerMarketplace),belongsToContract);
     }
 
     function bidForProduct(uint index,bytes calldata deliveryInstructions,uint expiration, bytes32 nonce, uint amount, address from,bytes memory sig) public payable{
@@ -114,9 +114,9 @@ contract SimpleAuction is Ownable{
         require(p.finishDate<block.timestamp,"Auction not finished");
         require(p.delivered==false,"Product already delivered");
         uint pay = owedMoneyToBidders[p.currentBidder][index] *99/100;
+        belongsToContract += p.bidAmount/100;
         owedMoneyToBidders[p.currentBidder][index] = 0;
         products[index].delivered=true;
         AgoraToken(ownerMarketplace.myToken()).transfer(p.seller,pay);
     }
-
 }

@@ -3,14 +3,33 @@ const { ethers } = require("hardhat");
 describe("Marketplace", function () {
 
     let marketplace;
-    const oneETH = ethers.utils.parseEther("1");
-    describe("Deployment", async function () {
-        beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-            marketplace = await Marketplace.deploy();
+    let Marketplace;
+    let agoraToken;
+    let AgoraToken;
 
-        });
+    let accounts;
+
+    let SimpleSeller;
+    let simpleSeller1;
+    let simpleSeller2;
+    let simpleSeller3;
+
+    beforeEach(async function ()  {
+        accounts = await ethers.getSigners();
+        Marketplace = await ethers.getContractFactory("Marketplace");
+        marketplace = await Marketplace.deploy();
+        AgoraToken = await ethers.getContractFactory("AgoraToken");
+        agoraToken = await AgoraToken.deploy();
+
+        SimpleSeller = await ethers.getContractFactory("SimpleSeller");
+
+        simpleSeller1 = await SimpleSeller.deploy();
+        simpleSeller2 = await SimpleSeller.deploy();
+        simpleSeller3 = await SimpleSeller.deploy();
+    });
+    
+    describe("Deployment", async function () {
+        
 
         it("Should have the correct owner", async function () {
             const addressOfOwnerOfMarketplace = await marketplace.owner();
@@ -25,18 +44,6 @@ describe("Marketplace", function () {
         });
     });
     describe("Add contracts", async function(){
-        beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-            marketplace = await Marketplace.deploy();
-
-            const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
-
-            simpleSeller1 = await SimpleSeller.deploy();
-            simpleSeller2 = await SimpleSeller.deploy();
-            simpleSeller3 = await SimpleSeller.deploy();
-
-        });
 
         it("Adds one market contract", async function () {
             expect(await marketplace.addContract(simpleSeller1.address,"SimpleSeller1")).to.not.throw;
@@ -80,8 +87,7 @@ describe("Marketplace", function () {
         });
 
         it("Thrwos error on 0 address", async function () {
-            await expect(marketplace.addContract("0x0000000000000000000000000000000000000000","SimpleSeller1"))
-        .to.be.revertedWith("Address shouldn't be 0");
+            await expect(marketplace.addContract(await ethers.constants.AddressZero,"SimpleSeller1")).to.be.revertedWith("Address shouldn't be 0");
             expect( (await marketplace.getMarketAddresses()).length).equal(0);
         });
 
@@ -101,15 +107,6 @@ describe("Marketplace", function () {
         });
     });
     describe("setToken",async function(){
-        let agoraToken;
-        let marketplace;
-        beforeEach(async function ()  {
-            accounts = await ethers.getSigners();
-            const Marketplace = await ethers.getContractFactory("Marketplace");
-            marketplace = await Marketplace.deploy();
-            const AgoraToken = await ethers.getContractFactory("AgoraToken");
-            agoraToken = await AgoraToken.connect(accounts[0]).deploy();
-        });
         it("Correct address from owner",async function(){
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
         });

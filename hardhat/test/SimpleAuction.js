@@ -1,6 +1,5 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const {generateSignatureStructure} = require("../helperFunctions/signing");
 
 function stringToHex(str){
     var arr1 = ['0','x'];
@@ -391,7 +390,7 @@ describe("SimpleAuction", async function () {
         });
     
     });
-
+    //TODO: da se dobavi proverka za belongs to contract ( i za deliver testovete)
     describe("transferFunds", async function(){
         beforeEach(async function ()  {
 
