@@ -142,7 +142,7 @@ describe("SimpleAuction", async function () {
             expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData,finishDate)).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[2]).buyTokens({value:twoETHs})).to.not.throw;
-
+            expect(await simpleAuction.belongsToContract()).equal(0);
         });
 
         it("Bids for product successfully",async function(){
@@ -179,6 +179,7 @@ describe("SimpleAuction", async function () {
             
             expect( await agoraToken.balanceOf(accounts[1].address)).equal(oneETH);
             expect( await agoraToken.balanceOf(accounts[2].address)).equal(0);
+            expect(await simpleAuction.belongsToContract()).equal(0);
 
         
         });
@@ -189,6 +190,8 @@ describe("SimpleAuction", async function () {
             await expect(simpleAuction.bidForProduct(3,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.be.revertedWith("No such product");
 
             expect( await simpleAuction.owedMoneyToBidders(accounts[0].address,3)).equal(0);
+            expect(await simpleAuction.belongsToContract()).equal(0);
+            
         });
 
         it("Auction finished",async function(){
@@ -304,6 +307,8 @@ describe("SimpleAuction", async function () {
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
+            expect(await simpleAuction.belongsToContract()).equal(0);
+            
         });
         it("Without token with marketplace",async function(){
             const Marketplace = await ethers.getContractFactory("Marketplace");
@@ -355,6 +360,7 @@ describe("SimpleAuction", async function () {
             expect((await simpleAuction.products(0)).delivered).to.be.false;
             
             expect(await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(oneETH);
+            expect(await simpleAuction.belongsToContract()).equal(0);
             
         });
 
@@ -370,15 +376,20 @@ describe("SimpleAuction", async function () {
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(oneETH); //started with two
 
             await network.provider.send("evm_increaseTime", [-3600])
+            expect(await simpleAuction.belongsToContract()).equal(oneETH.sub(oneETHAfterFee));
             
         });
         
         it("No such product",async function(){
             await expect(simpleAuction.deliverProduct(2)).to.be.revertedWith("No such product");
+            expect(await simpleAuction.belongsToContract()).equal(0);
+            
         });
 
         it("Auction not finished",async function(){
             await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Auction not finished");
+            expect(await simpleAuction.belongsToContract()).equal(0);
+            
         });
 
         it("Product already delivered",async function(){
@@ -386,28 +397,36 @@ describe("SimpleAuction", async function () {
             await expect(simpleAuction.deliverProduct(0)).to.not.throw;
             await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Product already delivered");
             await network.provider.send("evm_increaseTime", [-3600])
-
+            expect(await simpleAuction.belongsToContract()).equal(oneETH.sub(oneETHAfterFee));
         });
     
     });
     //TODO: da se dobavi proverka za belongs to contract ( i za deliver testovete)
     describe("transferFunds", async function(){
         beforeEach(async function ()  {
-
             expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
             expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData,finishDate)).to.not.throw;
 
             expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
             
-            //CAUTION: Simple transfer of tokens to contract (not buying things)
-            expect(await agoraToken.connect(accounts[1]).transfer(simpleAuction.address,oneETH.sub(oneETHAfterFee)));
-        
+
         });
 
         it("Simple transfer",async function(){
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
             expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
+
+            await network.provider.send("evm_increaseTime", [3600])
+            expect(await simpleAuction.deliverProduct(0)).to.not.throw;
+            await network.provider.send("evm_increaseTime", [-3600])
+            
+            expect(await simpleAuction.belongsToContract()).equal(oneETH.sub(oneETHAfterFee));
+            
 
             const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
             const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
@@ -416,6 +435,7 @@ describe("SimpleAuction", async function () {
             expect(oldMarketplaceBalance).equal(0);
 
             expect(await simpleAuction.transferFunds()).to.not.throw;
+            expect(await simpleAuction.belongsToContract()).equal(0);
 
             const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
             const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
@@ -444,40 +464,12 @@ describe("SimpleAuction", async function () {
 
         it("No token specified",async function(){
             expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
-
-            const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
-            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
-            
-            expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-            expect(oldMarketplaceBalance).equal(0);
-
             await expect(simpleAuction.transferFunds()).to.be.revertedWith("No token specified");
-
-            const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
-            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
-
-            expect(newsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-            expect(newMarketplaceBalance).equal(0);
-        
         });
 
         it("No owner marketplace",async function(){
-
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
-
-            const oldsimpleAuctionBalance = await await agoraToken.balanceOf(simpleAuction.address);
-            const oldMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
-            
-            expect(oldsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-            expect(oldMarketplaceBalance).equal(0);
-
             await expect(simpleAuction.transferFunds()).to.be.revertedWith("Doesn't have owner marketplace");
-
-            const newsimpleAuctionBalance = await agoraToken.balanceOf(simpleAuction.address);
-            const newMarketplaceBalance = await agoraToken.balanceOf(marketplace.address);
-
-            expect(newsimpleAuctionBalance).equal(oneETH.sub(oneETHAfterFee));
-            expect(newMarketplaceBalance).equal(0);
         
         });
 

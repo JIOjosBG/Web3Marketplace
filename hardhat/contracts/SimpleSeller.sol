@@ -22,7 +22,7 @@ contract SimpleSeller is Ownable{
         bytes deliveryInstructions; 
     }
 
-    uint belongsToContract=0;
+    uint public belongsToContract=0;
 
     Marketplace public  ownerMarketplace;
 
@@ -64,7 +64,7 @@ contract SimpleSeller is Ownable{
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
         token.transfer(address(ownerMarketplace),belongsToContract);
-
+        belongsToContract=0;
     }
 
     function payProduct(uint index, bytes calldata deliveryInstructions,uint expiration, bytes32 nonce, uint amount, address from,bytes memory sig) public payable{
