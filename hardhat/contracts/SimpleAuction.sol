@@ -108,7 +108,7 @@ contract SimpleAuction is Ownable{
         p.currentBidder=from;
 
     }
-
+    //TODO: mechanism to verivy the caller is authorized
     function deliverProduct(uint index) public  /* onlyDelivery */{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");

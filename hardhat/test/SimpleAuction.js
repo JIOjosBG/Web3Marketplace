@@ -19,15 +19,15 @@ function hexToString(hexx) {
 
 describe("SimpleAuction", async function () {
     let simpleAuction;
-    let hashedData// = ethers.utils.formatBytes32String("");
-    let SimpleAuction// = await ethers.getContractFactory("SimpleAuciotn");
-    let accounts// = await ethers.getSigners();
-    let oneETH// = ethers.utils.parseEther("1");
-    let twoETHs// = ethers.utils.parseEther("2");
+    let hashedData;
+    let SimpleAuction;
+    let accounts;
+    let oneETH;
+    let twoETHs;
     let finishDate;
-    let oneETHAfterFee;// = ethers.utils.parseEther("0.99");
-    let agoraToken;// = await ethers.getContractFactory("AgoraToken");
-    let marketplace;// = await ethers.getContractFactory("Marketplace");
+    let oneETHAfterFee;
+    let agoraToken;
+    let marketplace;
     let sigData;
     beforeEach(async function ()  {
 
@@ -401,7 +401,6 @@ describe("SimpleAuction", async function () {
         });
     
     });
-    //TODO: da se dobavi proverka za belongs to contract ( i za deliver testovete)
     describe("transferFunds", async function(){
         beforeEach(async function ()  {
             expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;

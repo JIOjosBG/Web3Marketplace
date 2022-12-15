@@ -354,7 +354,6 @@ describe("SimpleSeller", async function () {
         });
     });
 
-    //TODO: da se dobavi proverka za belongs to contract ( i za deliver testovete)
     describe("transferFunds", async function(){
         beforeEach(async function ()  {
             expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;

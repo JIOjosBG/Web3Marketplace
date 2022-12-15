@@ -25,7 +25,6 @@ contract SimpleSeller is Ownable{
     uint public belongsToContract=0;
 
     Marketplace public  ownerMarketplace;
-
     mapping(uint => Product) public products;
     mapping(address => uint[]) public sellerToProductIndexes;
     //seller to (product to money)
@@ -91,7 +90,7 @@ contract SimpleSeller is Ownable{
         }
 
     }
-
+    //TODO: mechanism to verivy the caller is authorized
     function deliverProduct(uint index) public  /* onlyDelivery */{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
