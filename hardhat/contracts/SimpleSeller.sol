@@ -90,14 +90,14 @@ contract SimpleSeller is Ownable{
         }
 
     }
-    
+
     function deliverProduct(uint index) public  /* onlyDelivery */{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==true,"Product not paid");
         require(p.delivered==false,"Product already delivered");
-        require(address(ownerMarketplace)!=address(0),"No marketplace");
-        require(ownerMarketplace.couriers(msg.sender)==true,"Not an authorized courier");
+        //check if caller is courier only if there is an owner marketplace, else revert with false
+        require(address(ownerMarketplace)!=address(0) ? ownerMarketplace.couriers(msg.sender)==true : false,"Not an authorized courier");
         uint pay = owedMoneyToSellers[p.seller][index];
         belongsToContract+=p.price-pay;
         owedMoneyToSellers[p.seller][index] = 0;

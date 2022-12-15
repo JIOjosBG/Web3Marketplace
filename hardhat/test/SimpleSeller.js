@@ -49,6 +49,7 @@ describe("SimpleSeller", async function () {
         simpleSeller = await SimpleSeller.deploy();
         agoraToken = await AgoraToken.deploy();
         marketplace = await Marketplace.deploy();
+        expect(await marketplace.addCourier(accounts[3].address)).to.not.throw;
 
         sigData = {
             "currentTime": Math.floor(Date.now()/1000),
@@ -307,7 +308,6 @@ describe("SimpleSeller", async function () {
             expect(await simpleSeller.addProduct("Product2",twoETHs,"asd2",hashedData)).to.not.throw;
             expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
-
         });
         it("Deliver product successfully",async function(){
             expect((await simpleSeller.products(0)).delivered).to.be.false;
@@ -325,7 +325,7 @@ describe("SimpleSeller", async function () {
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
             expect(await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);
 
-            expect(await simpleSeller.deliverProduct(0)).to.not.throw;
+            expect(await simpleSeller.connect(accounts[3]).deliverProduct(0)).to.not.throw;
             expect((await simpleSeller.products(0)).delivered).to.be.true;
 
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
@@ -337,11 +337,11 @@ describe("SimpleSeller", async function () {
         });
         
         it("No such product",async function(){
-            await expect(simpleSeller.deliverProduct(2)).to.be.revertedWith("No such product");
+            await expect(simpleSeller.connect(accounts[3]).deliverProduct(2)).to.be.revertedWith("No such product");
         });
 
         it("Product not paid",async function(){
-            await expect(simpleSeller.deliverProduct(0)).to.be.revertedWith("Product not paid");
+            await expect(simpleSeller.connect(accounts[3]).deliverProduct(0)).to.be.revertedWith("Product not paid");
         });
 
         it("Product already delivered",async function(){
@@ -349,8 +349,16 @@ describe("SimpleSeller", async function () {
             const signature = accounts[1].signMessage(message);
             expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
 
-            await expect(simpleSeller.deliverProduct(0)).to.not.throw;
-            await expect(simpleSeller.deliverProduct(0)).to.be.revertedWith("Product already delivered");
+            await expect(simpleSeller.connect(accounts[3]).deliverProduct(0)).to.not.throw;
+            await expect(simpleSeller.connect(accounts[3]).deliverProduct(0)).to.be.revertedWith("Product already delivered");
+        });
+
+        it("Not a courier",async function(){
+            expect(await marketplace.removeCourier(accounts[3].address)).to.not.throw;
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
+            await expect(simpleSeller.connect(accounts[3]).deliverProduct(0)).to.be.revertedWith("Not an authorized courier");
         });
     });
 
@@ -373,7 +381,7 @@ describe("SimpleSeller", async function () {
             const signature = accounts[1].signMessage(message);
             expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
             expect(await simpleSeller.belongsToContract()).equal(0);
-            expect(await simpleSeller.deliverProduct(0)).to.not.throw;
+            expect(await simpleSeller.connect(accounts[3]).deliverProduct(0)).to.not.throw;
             expect(await simpleSeller.belongsToContract()).equal(oneETH.sub(oneETHAfterFee));
             expect(await simpleSeller.transferFunds()).to.not.throw;
             expect(await simpleSeller.belongsToContract()).equal(0);

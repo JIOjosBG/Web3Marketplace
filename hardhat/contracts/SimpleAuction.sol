@@ -114,8 +114,9 @@ contract SimpleAuction is Ownable{
         require(p.seller!=address(0), "No such product");
         require(p.finishDate<block.timestamp,"Auction not finished");
         require(p.delivered==false,"Product already delivered");
-        require(address(ownerMarketplace)!=address(0),"No marketplace");
-        require(ownerMarketplace.couriers(msg.sender)==true,"Not an authorized courier");
+        //check if caller is courier only if there is an owner marketplace, else revert with false
+        require(address(ownerMarketplace)!=address(0) ? ownerMarketplace.couriers(msg.sender)==true : false,"Not an authorized courier");
+
         uint pay = owedMoneyToBidders[p.currentBidder][index] *99/100;
         belongsToContract += p.bidAmount/100;
         owedMoneyToBidders[p.currentBidder][index] = 0;

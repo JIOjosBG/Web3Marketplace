@@ -42,6 +42,7 @@ describe("SimpleAuction", async function () {
         simpleAuction = await SimpleAuction.deploy();
         agoraToken = await AgoraToken.deploy();
         marketplace = await Marketplace.deploy();
+        expect(await marketplace.addCourier(accounts[3].address)).to.not.throw;
 
         finishDate =await  Math.floor(Date.now()/1000)+3600;
         oneETHAfterFee = ethers.utils.parseEther("0.99");
@@ -56,6 +57,7 @@ describe("SimpleAuction", async function () {
             "nonce1tenWEI": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint","uint"],[simpleAuction.address,1,10])),  
             "simplyBadNonce": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint","uint"],[ethers.constants.AddressZero,1,0])),  
         }
+
     });
 
     describe("Deployment", async function () {
@@ -228,7 +230,7 @@ describe("SimpleAuction", async function () {
 
         });
 
-        it("Lower than last bid",async function(){
+        it("Lower than minimal price",async function(){
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0tenWEI,10,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
 
@@ -367,7 +369,7 @@ describe("SimpleAuction", async function () {
         it("Deliver product successfully",async function(){
 
             await network.provider.send("evm_increaseTime", [3600])
-            expect(await simpleAuction.deliverProduct(0)).to.not.throw;
+            expect(await simpleAuction.connect(accounts[3]).deliverProduct(0)).to.not.throw;
             expect((await simpleAuction.products(0)).delivered).to.be.true;
 
             expect(await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
@@ -381,23 +383,31 @@ describe("SimpleAuction", async function () {
         });
         
         it("No such product",async function(){
-            await expect(simpleAuction.deliverProduct(2)).to.be.revertedWith("No such product");
+            await expect(simpleAuction.connect(accounts[3]).deliverProduct(2)).to.be.revertedWith("No such product");
             expect(await simpleAuction.belongsToContract()).equal(0);
             
         });
 
         it("Auction not finished",async function(){
-            await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Auction not finished");
+            await expect(simpleAuction.connect(accounts[3]).deliverProduct(0)).to.be.revertedWith("Auction not finished");
             expect(await simpleAuction.belongsToContract()).equal(0);
             
         });
 
         it("Product already delivered",async function(){
             await network.provider.send("evm_increaseTime", [3600])
-            await expect(simpleAuction.deliverProduct(0)).to.not.throw;
-            await expect(simpleAuction.deliverProduct(0)).to.be.revertedWith("Product already delivered");
+            await expect(simpleAuction.connect(accounts[3]).deliverProduct(0)).to.not.throw;
+            await expect(simpleAuction.connect(accounts[3]).deliverProduct(0)).to.be.revertedWith("Product already delivered");
             await network.provider.send("evm_increaseTime", [-3600])
             expect(await simpleAuction.belongsToContract()).equal(oneETH.sub(oneETHAfterFee));
+        });
+
+        it("Not a courier",async function(){
+            expect(await marketplace.removeCourier(accounts[3].address)).to.not.throw;
+            await network.provider.send("evm_increaseTime", [3600])
+            await expect(simpleAuction.connect(accounts[3]).deliverProduct(0)).to.be.revertedWith("Not an authorized courier");
+            await network.provider.send("evm_increaseTime", [-3600])
+            expect(await simpleAuction.belongsToContract()).equal(0);
         });
     
     });
@@ -421,7 +431,7 @@ describe("SimpleAuction", async function () {
             expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
 
             await network.provider.send("evm_increaseTime", [3600])
-            expect(await simpleAuction.deliverProduct(0)).to.not.throw;
+            expect(await simpleAuction.connect(accounts[3]).deliverProduct(0)).to.not.throw;
             await network.provider.send("evm_increaseTime", [-3600])
             
             expect(await simpleAuction.belongsToContract()).equal(oneETH.sub(oneETHAfterFee));

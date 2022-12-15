@@ -86,12 +86,12 @@ describe("Marketplace", function () {
             expect( (await marketplace.getMarketAddresses())[0]).equal(simpleSeller1.address);
         });
 
-        it("Thrwos error on 0 address", async function () {
+        it("Throws error on 0 address", async function () {
             await expect(marketplace.addContract(await ethers.constants.AddressZero,"SimpleSeller1")).to.be.revertedWith("Address shouldn't be 0");
             expect( (await marketplace.getMarketAddresses()).length).equal(0);
         });
 
-        it("Thrwos error on empty name", async function () {
+        it("Throws error on empty name", async function () {
             await expect(marketplace.addContract(simpleSeller1.address,"")).to.be.revertedWith("Name length shouldn't be 0");
             expect( (await marketplace.getMarketAddresses()).length).equal(0);
         });
@@ -113,8 +113,33 @@ describe("Marketplace", function () {
         it("Correct address not from owner",async function(){
             await expect(marketplace.connect(accounts[1]).setToken(agoraToken.address)).to.be.revertedWith('Ownable: caller is not the owner');
         });
-        it("Correct address from owner",async function(){
+        it("0 address from owner",async function(){
             await expect(marketplace.setToken(ethers.constants.AddressZero)).to.be.revertedWith("Token address shouldn't be address(0)");
         });
     });
+    describe("addCourier and removeCourier",async function(){
+        it("successfully adds and removes",async function(){
+            expect(await marketplace.couriers(accounts[0].address)).to.be.false;
+            expect(await marketplace.addCourier(accounts[0].address)).to.not.throw;
+            expect(await marketplace.couriers(accounts[0].address)).to.be.true;
+            expect(await marketplace.removeCourier(accounts[0].address)).to.not.throw;
+            expect(await marketplace.couriers(accounts[0].address)).to.be.false;
+
+        });
+
+        it("Tries to add 0 address",async function(){
+            expect(await marketplace.couriers(await ethers.constants.AddressZero)).to.be.false;
+            await expect(marketplace.addCourier(await ethers.constants.AddressZero)).to.be.revertedWith("Address shouldn't be 0");
+            expect(await marketplace.couriers(await ethers.constants.AddressZero)).to.be.false;
+        });
+
+        it("Not owner",async function(){
+            expect(await marketplace.couriers(accounts[3].address)).to.be.false;
+            await expect(marketplace.connect(accounts[2]).addCourier(accounts[3].address)).to.be.revertedWith("Ownable: caller is not the owner");
+            expect(await marketplace.couriers(accounts[3].address)).to.be.false;
+        });
+
+
+    });
+
 });
