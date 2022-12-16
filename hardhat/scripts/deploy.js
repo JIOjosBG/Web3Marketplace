@@ -7,19 +7,37 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
 
-  const lockedAmount = hre.ethers.utils.parseEther("1");
+  const Marketplace = await hre.ethers.getContractFactory("Marketplace");
+  const AgoraToken = await hre.ethers.getContractFactory("AgoraToken");
+  const SimpleSeller = await hre.ethers.getContractFactory("SimpleSeller");
+  const SimpleAuction = await hre.ethers.getContractFactory("SimpleAuction");
 
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  const marketplace = await Marketplace.deploy();
+  const agoraToken = await AgoraToken.deploy();
+  const simpleSeller = await SimpleSeller.deploy();
+  const simpleAuction = await SimpleAuction.deploy();
 
-  await lock.deployed();
+
+  await marketplace.deployed();
+  await agoraToken.deployed();
+  await simpleSeller.deployed();
+  await simpleAuction.deployed();
+
+  await marketplace.setToken(agoraToken.address);
+  await marketplace.addContract(simpleSeller.address,"Simple Seller");
+  await marketplace.addContract(simpleAuction.resolvedAddress,"Simple Auction");
+
+  await simpleSeller.joinMarketplace(marketplace.address);
+  await simpleAuction.joinMarketplace(marketplace.address);
 
   console.log(
-    `Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
+    `
+    marketplace deployed to ${marketplace.address}
+    agoraToken deployed to ${agoraToken.address}
+    simpleSeller deployed to ${simpleSeller.address}
+    simpleAuction deployed to ${simpleAuction.address}
+    `
   );
 }
 

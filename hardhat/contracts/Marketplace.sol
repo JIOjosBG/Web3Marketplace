@@ -11,7 +11,6 @@ contract Marketplace is Ownable {
         address addedBy;
         string name;
         uint addDate;
-        uint addedValue;
     }
 
     address public  myToken;
@@ -34,7 +33,7 @@ contract Marketplace is Ownable {
         require(bytes(name).length != 0, "Name length shouldn't be 0");
         require(markets[contractAddress].contractAddress == address(0),"Market already added");
         
-        markets[contractAddress] = ( Market(contractAddress,msg.sender,name,block.timestamp,0));
+        markets[contractAddress] = ( Market(contractAddress,msg.sender,name,block.timestamp));
         marketAddresses.push(contractAddress);
         marketCount+=1;
     }
