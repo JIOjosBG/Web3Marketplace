@@ -63,6 +63,5 @@ contract AgoraToken is ERC20 {
         require(signer==from,"Wrong arguments (recoveredAddress!=from)");
         nonces[nonce] = true;
         _transfer(from, to, amount );
-
     }
 }
