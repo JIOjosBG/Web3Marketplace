@@ -1,8 +1,8 @@
 // import React, { useState } from 'react';
 
 import logo from '../media/logo.png'; // Tell webpack this JS file uses this image
-import {Navbar,Container} from 'react-bootstrap';
-function MyNav() {
+import {Navbar,Container,Row,Col, Button} from 'react-bootstrap';
+function MyNav(props) {
 
   return (
     <>
@@ -11,10 +11,12 @@ function MyNav() {
       <Container>
         <img style={{width:'30%'}}src={logo} alt={logo}/>
         <h1 className="ml">Username</h1>
-        <Navbar.Toggle aria-controls="asd-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <h1>Simple Seller</h1>
-          <h1>Simple Auction</h1>
+        <Navbar.Toggle aria-controls="contracts-nav" />
+        <Navbar.Collapse id="contracts-nav">
+            <Row>
+                <Col><Button onClick={()=>props.changeState("SimpleAuction")}>Simple Auction</Button></Col>
+                <Col><Button onClick={()=>props.changeState("SimpleSeller")}>Simple Seller</Button></Col>
+            </Row>
         </Navbar.Collapse>
       </Container>
     </Navbar>
