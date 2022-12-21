@@ -2,65 +2,76 @@ import React, {useState} from 'react';
 import MyNav from './components/Navbar';
 import DisplayProducts from './components/DisplayProducts';
 import {ethers} from 'ethers'; 
+import {Button} from 'react-bootstrap';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 function App() {
   const [viewingContract, setViewingContract] = useState("");
-  const [account, setAccount] = useState(null);
-  const [balance, setBalance] = useState(null);
-  const [error, setError] = useState("Connect Wallet");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [account, setAccount] = useState("");
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
 
+  
   function chnageState(contract){
     setViewingContract(contract);
   }
 
-  const connectWallet = () => {
+  const connectWalletHandler=() => {
     if(window.ethereum){
-      window.ethereum.request({method: 'eth_requestAccounts'})
-      .then(result => {
-        accountChangedHandler(result[0]);
+      window.ethereum.request({method:'eth_requestAccounts'})
+      .then(result=>{
+        accountChangedHandler(result[0])
       })
     }else{
-      setError('Install metamask');
+      setErrorMessage("Install metamask")
     }
   }
 
   const accountChangedHandler = (newAccount) => {
-    console.log(newAccount+"asdasdasd");
     setAccount(newAccount);
-    getUserBalance(newAccount.toString());
+    updateEthers();
+
   }
 
-  const getUserBalance = (address) => {
-    window.ethereum.request({method:'eth_getBalance',params:[address,'latest']})
-    .then(balance => {
-      setBalance(ethers.utils.formatEther(balance));
-    })
-  }
+  const chainChangedHandler = () => {
+		window.location.reload();
+	}
 
-  const chainChnageHandler = () =>{
-    window.location.reload();
+	window.ethereum.on('accountsChanged', accountChangedHandler);
+	window.ethereum.on('chainChanged', chainChangedHandler);
+
+  const updateEthers = () => {
+    let tempProvider = new ethers.providers.Web3Provider(window.ethereum);
+    setProvider(tempProvider);
+    let tempSigner = tempProvider.getSigner();
+    setSigner(tempSigner);
+
+
   }
-  window.ethereum.on('accountsChanged',accountChangedHandler);
-  window.ethereum.on('chainChanged',chainChnageHandler);
 
   return (
-    <>
-        <h1> {account} </h1>
-      <h1> {balance} </h1>
-      <h1> {error} </h1>
-      <MyNav changeState={chnageState} contract={viewingContract}/>
-      <DisplayProducts contract={viewingContract}/>
-      <button onClick={connectWallet}>Connect</button>
-      <script src="https://cdn.jsdelivr.net/npm/react/umd/react.production.min.js" crossOrigin="true"></script>
-      <script
-        src="https://cdn.jsdelivr.net/npm/react-dom/umd/react-dom.production.min.js"
-        crossOrigin="true"></script>
-      <script
-        src="https://cdn.jsdelivr.net/npm/react-bootstrap@next/dist/react-bootstrap.min.js"
-        crossOrigin="true"></script>
-      <script>var Alert = ReactBootstrap.Alert;</script>
-    </>
+  <>
+    {errorMessage}
+    {account}
+
+    <MyNav changeState={chnageState} contract={viewingContract}/>
+    <DisplayProducts contract={viewingContract} provider={provider} signer={signer}/>
+    <Button onClick={connectWalletHandler}>Connect</Button>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/react/umd/react.production.min.js" crossOrigin="true"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/react-dom/umd/react-dom.production.min.js"
+      crossOrigin="true"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/react-bootstrap@next/dist/react-bootstrap.min.js"
+      crossOrigin="true"></script>
+    <script>var Alert = ReactBootstrap.Alert;</script>
+  </>
   );
 }
 
