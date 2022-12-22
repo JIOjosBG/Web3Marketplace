@@ -1,10 +1,11 @@
 import React, {useState} from 'react';
-import MyNav from './components/Navbar';
-import DisplayProducts from './components/DisplayProducts';
 import {ethers} from 'ethers'; 
-import {Button} from 'react-bootstrap';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import {Button} from 'react-bootstrap';
+
+import MyNav from './components/Navbar';
+import DisplayProducts from './components/DisplayProducts';
 
 
 function App() {
@@ -33,7 +34,6 @@ function App() {
   const accountChangedHandler = (newAccount) => {
     setAccount(newAccount);
     updateEthers();
-
   }
 
   const chainChangedHandler = () => {
@@ -48,8 +48,6 @@ function App() {
     setProvider(tempProvider);
     let tempSigner = tempProvider.getSigner();
     setSigner(tempSigner);
-
-
   }
 
   return (
@@ -57,12 +55,13 @@ function App() {
     {errorMessage}
     {account}
 
-    <MyNav changeState={chnageState} contract={viewingContract}/>
+    { provider 
+    ? <MyNav changeState={chnageState} contract={viewingContract}/>
+    :<Button onClick={connectWalletHandler}>Connect</Button>
+    }
+    
     <DisplayProducts contract={viewingContract} provider={provider} signer={signer}/>
-    <Button onClick={connectWalletHandler}>Connect</Button>
-
-
-
+     
     <script src="https://cdn.jsdelivr.net/npm/react/umd/react.production.min.js" crossOrigin="true"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/react-dom/umd/react-dom.production.min.js"

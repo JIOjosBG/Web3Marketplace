@@ -33,8 +33,6 @@ contract SimpleSeller is Ownable{
 
     uint public productCount=0;
 
-    //TODO: createProductInstance(string,uint,link,hashofdata)
-
     function productInit(string calldata name, uint price, string calldata link, bytes32 marketHashOfData) private view returns(Product memory){
         return Product(name,price,price*99 / 100,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false,"");
 

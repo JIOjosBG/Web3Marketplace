@@ -14,8 +14,8 @@ function MyNav(props) {
         <Navbar.Toggle aria-controls="contracts-nav" />
         <Navbar.Collapse id="contracts-nav">
             <Row>
-                <Col><Button onClick={()=>props.changeState("SimpleAuction")}>Simple Auction</Button></Col>
                 <Col><Button onClick={()=>props.changeState("SimpleSeller")}>Simple Seller</Button></Col>
+                <Col><Button onClick={()=>props.changeState("SimpleAuction")}>Simple Auction</Button></Col>
             </Row>
         </Navbar.Collapse>
       </Container>

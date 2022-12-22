@@ -1,7 +1,7 @@
 // import React, { useState } from 'react';
 import {Navbar,Container} from 'react-bootstrap';
-import SimpleAuctionProducts from './ProductDisplays/SimpleAuctionProducts';
-import SimpleSellerProducts from './ProductDisplays/SimpleSellerProducts';
+import SellerProductList from './ProductDisplays/simpleSeller/sellerProductList';
+import AuctionProductList from './ProductDisplays/simpleAuction/auctionProductList';
 
 function DisplayProducts(props) {
 
@@ -12,8 +12,8 @@ function DisplayProducts(props) {
       <Container>
         {console.log(props.contracts)}
         {props.contract==="" ? <h1>wow such empty</h1>: <></> }
-        {props.contract==="SimpleSeller" ? <SimpleSellerProducts/> : <></> }
-        {props.contract==="SimpleAuction" ? <SimpleAuctionProducts/> : <></> }
+        {props.contract==="SimpleSeller" ? <SellerProductList provider={props.provider} signer={props.signer} /> : <></> }
+        {props.contract==="SimpleAuction" ? <AuctionProductList provider={props.provider} signer={props.signer}  /> : <></> }
 
       </Container>
     </Navbar>
