@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import {Button, Container} from 'react-bootstrap';
+import {Button, Container } from 'react-bootstrap';
 import { ethers } from 'ethers';
+import {Navigate} from 'react-router-dom';
 
-import addresses from '../../../shared/contractAddresses.json';
-import simpleAuctionJSON from '../../../shared/ABIs/SimpleAuction.json';
+import addresses from '../shared/contractAddresses.json';
+import simpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
 
 function AuctionProductList(props) {
+
   const [count, setCount] = useState(0);
   const [products, setProducts] = useState(null);
   const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionJSON.abi, props.provider);
@@ -22,13 +24,17 @@ function AuctionProductList(props) {
     // setProducts(tmpProducts);
     setCount(c);
   }
+  
   return (
     <>
 
-      <Container>
-      <Button onClick={updateProducts}>{count} products found</Button>
+{props.provider
+      ?<Container>
+      <Button onClick={updateProducts}>{count} products found; click to update</Button>
         <h1>Products for auction</h1>
       </Container>
+      :<Navigate to="/"/>  
+      }
     </>
   );
 }
