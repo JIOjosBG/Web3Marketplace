@@ -6,10 +6,9 @@ import { Navbar, Button } from 'react-bootstrap';
 import {Routes,Route, Link} from 'react-router-dom';
 import HomePage from './pages/HomePage';
 
-import SimpleSellerListPage from './pages/SellerListPage';
-import SimpleAuctionListPage from './pages/AuctionListPage';
 import MyNavbar from './components/MyNavbar';
-
+import SimpleSellerRoutes from './Routers/SimpleSellerRoutes';
+import SimpleAuctionRoutes from './Routers/SimpleAuctionRoutes';
 
 // import MyNav from './components/Navbar';
 
@@ -61,8 +60,8 @@ function App() {
     <Routes>
       <Route path="/" element={<MyNavbar provider={provider} signer={signer} />}>
         <Route index element={<HomePage update/>} />
-        <Route path="s" element={<SimpleSellerListPage provider={provider} signer={signer}/>} />
-        <Route path="a" element={<SimpleAuctionListPage provider={provider} signer={signer}/>} />
+        <Route path="s/*" element={<SimpleSellerRoutes provider={provider} signer={signer}/>} />
+        <Route path="a/*" element={<SimpleAuctionRoutes provider={provider} signer={signer}/>} />
 
       </Route>
     </Routes>

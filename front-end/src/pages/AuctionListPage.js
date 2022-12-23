@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {Button, Container } from 'react-bootstrap';
 import { ethers } from 'ethers';
-import {Navigate} from 'react-router-dom';
+import {Navigate, Link} from 'react-router-dom';
 
 import addresses from '../shared/contractAddresses.json';
 import simpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
@@ -31,6 +31,7 @@ function AuctionProductList(props) {
 {props.provider
       ?<Container>
       <Button onClick={updateProducts}>{count} products found; click to update</Button>
+      <Link to="/a/c"><Button>Create product</Button></Link>
         <h1>Products for auction</h1>
       </Container>
       :<Navigate to="/"/>  

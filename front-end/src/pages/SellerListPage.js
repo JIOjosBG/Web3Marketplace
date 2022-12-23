@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import {Button, Container, Row, Card} from 'react-bootstrap';
 import { ethers } from 'ethers';
-import {Navigate} from 'react-router-dom';
-
+import {Navigate, Link} from 'react-router-dom';
 import addresses from '../shared/contractAddresses.json';
 import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 import productsJSON from '../shared/dummyData/simpleSellerProducts.json';
@@ -32,6 +31,7 @@ function SellerProductList(props) {
       {props.provider
       ?<Container>
       <Button onClick={updateProducts}>{count} products found; click to update</Button>
+      <Link to="/s/c"><Button> Create product</Button></Link>
         <h1>Products for seller</h1>
         <Row>
           {productCards}
