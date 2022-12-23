@@ -1,25 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {Button, Container, Row, Card} from 'react-bootstrap';
 import { ethers } from 'ethers';
 import {Navigate, Link} from 'react-router-dom';
 import addresses from '../shared/contractAddresses.json';
 import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
-import productsJSON from '../shared/dummyData/simpleSellerProducts.json';
 
 function SellerProductList(props) {
   const [count, setCount] = useState(0);
-  const [products, setProducts] = useState(productsJSON.products);
+  //const [products, setProducts] = useState(productsJSON.products);
+  const [products, setProducts] = useState([]);
+  useEffect(()=>{
+    updateProducts();
+  },[]);
   const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerJSON.abi, props.provider);
-  const updateProducts = async () => {
+  async function updateProducts (){
     let c =parseInt(await simpleSeller.productCount());
     console.log(c);
     let tmpProducts = [];
     for(let i=0;i<c;i++){
-      let p = await simpleSeller.products();
+      let p = await simpleSeller.products(i);
       tmpProducts.push(p);
     }
-    // TO ADD AFTER TESTING WITH DUMMY DATA
-    // setProducts(tmpProducts);
+    //TO ADD AFTER TESTING WITH DUMMY DATA
+    setProducts(tmpProducts);
     setCount(c);
   }
 
