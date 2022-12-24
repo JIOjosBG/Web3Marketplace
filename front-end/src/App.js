@@ -2,8 +2,8 @@ import React, {useState} from 'react';
  import {ethers} from 'ethers'; 
 
  import 'bootstrap/dist/css/bootstrap.min.css';
-import { Navbar, Button } from 'react-bootstrap';
-import {Routes,Route, Link} from 'react-router-dom';
+import { Button } from 'react-bootstrap';
+import { Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 
 import MyNavbar from './components/MyNavbar';
@@ -57,6 +57,10 @@ function App() {
   <>
   {errorMessage}
   {account}
+    
+
+    { provider 
+    ? 
     <Routes>
       <Route path="/" element={<MyNavbar provider={provider} signer={signer} />}>
         <Route index element={<HomePage update/>} />
@@ -65,11 +69,6 @@ function App() {
 
       </Route>
     </Routes>
-
-    { provider 
-    ? 
-    <>
-    </>
     :<Button onClick={connectWalletHandler}>Connect</Button>
     }
     

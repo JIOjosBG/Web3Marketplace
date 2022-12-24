@@ -5,12 +5,16 @@ import addressesJSON from '../shared/contractAddresses.json'
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json'
 
 import {Form, Button, Container} from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 function SellerCreateProductPage(props) {
     const [name,setName] = useState("");
     const [price,setPrice] = useState(0);
     const [linkForMedia,setLinkForMedia] = useState("");
+    //TODO: ADD PROPPER FIELD FOR SECRET DATA
+    //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
     const [marketHashOfData, setMarketHashOfData] = useState("111");
+    const navigate = useNavigate();
 //https://www.wigglestatic.com/product-media/100375136/Brand-X-Road-Bike-Road-Bikes-Black-2017-BRNDXROADXL-0.jpg
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer );
     const addProduct = async () => {
@@ -18,7 +22,7 @@ function SellerCreateProductPage(props) {
             try{
                 const data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
                 await simpleSeller.addProduct(name,price,linkForMedia,await ethers.utils.keccak256(data));
-                //TODO: navigate to list page
+                navigate("/s");
             }catch(e){
                 console.log("Error:",e);
             }

@@ -10,6 +10,8 @@ function SimpleAuctionRoutes(props) {
             <Routes>
                 <Route index element={<SimpleAuctionListPage provider={props.provider} signer={props.signer} /> }/>
                 <Route path="/c" element={<AuctionCreateProductPage provider={props.provider} signer={props.signer} /> }/>
+                {/* <Route path="/:id" element={<AuctionDetailProduct provider={props.provider} signer={props.signer} /> }/>
+                 */}
             </Routes>
             :<Navigate to="/" />
             }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {Button, Container, Row, Card} from 'react-bootstrap';
 import { ethers } from 'ethers';
 import {Navigate, Link} from 'react-router-dom';
+
 import addresses from '../shared/contractAddresses.json';
 import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 
