@@ -60,7 +60,7 @@ function AuctionProductCard(props) {
         <Card.Text>
           Price: {parseInt(p.minimalPrice)}
           Seller: {p.seller}
-          FinishDate: {Date(parseInt(p.finishDate._hex)*1000) }
+          FinishDate: {new Date(parseInt(p.finishDate._hex)*1000).toString() }
           {p.approved ? "approved":""}
         
         </Card.Text>

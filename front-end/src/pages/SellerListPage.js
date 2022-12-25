@@ -20,14 +20,13 @@ function SellerProductList(props) {
     let tmpProducts = [];
     for(let i=0;i<c;i++){
       let p = await simpleSeller.products(i);
-      tmpProducts.push(p);
+      tmpProducts.push([p,i]);
     }
-    //TO ADD AFTER TESTING WITH DUMMY DATA
     setProducts(tmpProducts);
     setCount(c);
   }
 
-  const productCards = products.map((p,i) =><SellerProductCard key={i} product={p}/>);
+  const productCards = products.map((p) =><SellerProductCard key={p[1]} product={p[0]} id={p[1]}/>);
 
   return (
     <>
@@ -49,7 +48,7 @@ function SellerProductList(props) {
 
 
 function SellerProductCard(props) {
-  const p = props.product;  
+  const p = props.product;
   return (
     <Card style={{ width: '12rem' }}>
       <Card.Img variant="top" src={p.linkForMedia} />
@@ -60,7 +59,9 @@ function SellerProductCard(props) {
           Seller: {p.seller}
           {p.approved ? "approved":""}
         </Card.Text>
-        <Button variant="primary">Go to product detail</Button>
+        <Link to={`/s/${props.id}`}>
+          <Button variant="primary">Go to product detail</Button>
+        </Link>
       </Card.Body>
     </Card>
   );
