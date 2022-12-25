@@ -63,7 +63,6 @@ function SellerCreateProductPage(props) {
         eth = parseFloat(eth).toFixed( 18 );
 
         return ethers.utils.parseEther(eth.toString());
-
     }
     async function submitProduct(){
         await getRates();
@@ -103,7 +102,7 @@ function SellerCreateProductPage(props) {
                     <Form.Label>Price in wei</Form.Label>
                     <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setPrice(usdToWei(e.target.value));}} type="number" placeholder="Price in gwei" />
                     <Form.Text className="text-muted">
-                    {price._hex} in wei
+                    {price._hex} in wei (powered by <a href='https://www.coingecko.com/'> Coingecko </a>)
                     </Form.Text>
                 </Form.Group>
                 <Form.Group>

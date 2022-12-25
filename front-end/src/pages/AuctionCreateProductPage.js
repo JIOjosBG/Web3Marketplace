@@ -108,7 +108,7 @@ function AuctionCreateProductPage(props) {
                     <Form.Label>Price in USD</Form.Label>
                     <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setMinimalPrice(usdToWei(e.target.value));}} type="number" placeholder="Price in USD" />
                     <Form.Text className="text-muted">
-                    {minimalPrice._hex}
+                    I{minimalPrice._hex} in wei (powered by <a href='https://www.coingecko.com/'> Coingecko </a>)
                     </Form.Text>
                 </Form.Group>
                 <Form.Group>
