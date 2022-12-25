@@ -13,7 +13,7 @@ function MyNavbar(props) {
       <Container>
         <Row>
           <Col>
-          <img style={{width:'50%'}}src={logo} alt={logo}/>
+          <img style={{width:'50%'}} src={logo} alt={logo}/>
           </Col>
           <Col>
           <h1 className="ml">Username</h1>
