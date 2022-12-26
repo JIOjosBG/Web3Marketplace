@@ -41,7 +41,6 @@ function AuctionDetailProduct(props){
 
     const getRates = async () => {
         try{
-            //https://www.coingecko.com/api/documentations/v3#/simple/get_simple_price
             const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
                 method: 'GET',
 
@@ -96,7 +95,7 @@ function AuctionDetailProduct(props){
         return {"nonce":nonce,"signature":signature};
     }
 
-    const handleBid = async () => {
+    const handleBidViaContract = async () => {
         let nonce,sig;
         console.log("in");
         try{
@@ -116,6 +115,33 @@ function AuctionDetailProduct(props){
             
             try{
                 await simpleAuction.bidForProduct(id,deliveryData,product.finishDate,nonce,myBid,await signer.getAddress(),sig);
+            }catch(e){
+                console.log(e);
+            }
+        }
+    }
+
+    const handleBidViaBackend = async () => {
+        let nonce,sig;
+        console.log("in");
+        try{
+            const sigData = await makeSignature();
+            nonce=await sigData['nonce'];
+            sig=await sigData['signature'];
+        }catch(e){
+            console.log(e.message);
+        }
+        if(sig==null || deliveryInstructions==""){
+            //TODO: open modal
+            //TODO: encrypt delivery instructions with public key of seller
+            console.log("not okay with sig and delivery instructions");
+        }else{
+            const message = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
+            const deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
+            
+            try{
+                //TODO: send data to backend
+                //await simpleAuction.bidForProduct(id,deliveryData,product.finishDate,nonce,myBid,await signer.getAddress(),sig);
             }catch(e){
                 console.log(e);
             }
@@ -149,7 +175,7 @@ function AuctionDetailProduct(props){
             {new Date(parseInt(product.addDate._hex)*1000).toString()}
             {/*TODO: make window to shouw previous bids*/}
             <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Delivery Instruvtions:</Form.Label>
+                <Form.Label>Delivery Instructions:</Form.Label>
                 <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
             </Form.Group>
             <Form.Group className="mb-3" controlId="formName">
@@ -159,7 +185,7 @@ function AuctionDetailProduct(props){
 
             </Form.Group>
             
-            <Button onClick={handleBid}>Bid ${myBidInUSD} </Button>
+            <Button onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>
             </>
         :<h1>Loading</h1>
         }

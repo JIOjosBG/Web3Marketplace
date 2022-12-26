@@ -28,7 +28,7 @@ function AuctionProductList(props) {
     setCount(c);
   }
 
-  const productCards = products.map((p,i) =><AuctionProductCard key={i} product={p}/>);
+  const productCards = products.map((p,i) =><AuctionProductCard key={i} product={p} id={i}/>);
 
   
   return (
@@ -64,7 +64,7 @@ function AuctionProductCard(props) {
           {p.approved ? "approved":""}
         
         </Card.Text>
-        <Button variant="primary">Go to product detail</Button>
+        <Link to={`/a/${props.id}`}><Button variant="primary">Go to product detail</Button></Link>
       </Card.Body>
     </Card>
   );

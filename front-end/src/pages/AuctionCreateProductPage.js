@@ -29,7 +29,6 @@ function AuctionCreateProductPage(props) {
     },[]);
     const getRates = async () => {
         try{
-            //https://www.coingecko.com/api/documentations/v3#/simple/get_simple_price
             await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
                 method: 'GET',
 

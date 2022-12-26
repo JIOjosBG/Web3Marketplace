@@ -26,7 +26,6 @@ function SellerDetailProduct(props){
 
     const getRates = async () => {
         try{
-            //https://www.coingecko.com/api/documentations/v3#/simple/get_simple_price
             const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
                 method: 'GET',
 
@@ -118,7 +117,7 @@ function SellerDetailProduct(props){
             {new Date(parseInt(product.addDate._hex)*1000).toString()}
             {parseInt(product.addDate).toString()}
             <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Delivery Instruvtions:</Form.Label>
+                <Form.Label>Delivery Instructions:</Form.Label>
                 <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
             </Form.Group>
             <Button onClick={buyProduct}> Buy now </Button>

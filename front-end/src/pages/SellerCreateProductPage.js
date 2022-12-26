@@ -19,7 +19,6 @@ function SellerCreateProductPage(props) {
     //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
     const [marketHashOfData, setMarketHashOfData] = useState("111");
     const navigate = useNavigate();
-//https://www.wigglestatic.com/product-media/100375136/Brand-X-Road-Bike-Road-Bikes-Black-2017-BRNDXROADXL-0.jpg
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer );
     
     useEffect(()=>{
@@ -42,7 +41,6 @@ function SellerCreateProductPage(props) {
 
     const getRates = async () => {
         try{
-            //https://www.coingecko.com/api/documentations/v3#/simple/get_simple_price
             await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
                 method: 'GET',
                 // headers: {

@@ -66,6 +66,7 @@ function App() {
         <Route index element={<HomePage update/>} />
         <Route path="s/*" element={<SimpleSellerRoutes provider={provider} signer={signer}/>} />
         <Route path="a/*" element={<SimpleAuctionRoutes provider={provider} signer={signer}/>} />
+        <Route path="*" element={<h1>404 not found</h1>} />
 
       </Route>
     </Routes>
