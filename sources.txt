@@ -3,3 +3,6 @@ https://programtheblockchain.com/posts/2018/02/17/signing-and-verifying-messages
 
 за верифициране
 https://docs.ethers.io/v4/api-utils.html
+
+за API
+//https://www.coingecko.com/api/documentations/v3#/simple/get_simple_price
