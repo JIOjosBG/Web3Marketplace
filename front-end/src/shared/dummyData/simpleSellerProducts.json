@@ -1,0 +1,43 @@
+{
+    "products":[
+        {
+            "name": "product1",
+            "price": "0x5F5E100",
+            "sellerGets": "0x55D4A80",
+            "seller": "0x7faafA84A6484c22D986bBE73651C7330689d53b",
+            "buyer": "0x0",
+            "addDate": 1671726961741,
+            "linkForMedia": "https://pedegoelectricbikes.com/wp-content/uploads/2022/08/Avenue-Croc-Green.jpg",
+            "approved": true,
+            "paid": false,
+            "delivered":false,
+            "deliveryInstructions": "0x00"
+        },
+        {
+            "name": "product2",
+            "price": "0x12A05F200",
+            "sellerGets": "0x1270B0180",
+            "seller": "0x7faafA84A6484c22D986bBE73651C7330689d53b",
+            "buyer": "0x0",
+            "addDate": 1671726961750,
+            "linkForMedia": "https://pedegoelectricbikes.com/wp-content/uploads/2022/08/Avenue-Croc-Green.jpg",
+            "approved": false,
+            "paid": false,
+            "delivered":false,
+            "deliveryInstructions": "0x00"
+        },
+        {
+            "name": "product3",
+            "price": "0x12A05F2000",
+            "sellerGets": "0x1270B01800",
+            "seller": "0x7faafA84A6484c22D986bBE73651C7330689d53b",
+            "buyer": "0x0",
+            "addDate": 1671726961780,
+            "linkForMedia": "https://pedegoelectricbikes.com/wp-content/uploads/2022/08/Avenue-Croc-Green.jpg",
+            "approved": false,
+            "paid": false,
+            "delivered":false,
+            "deliveryInstructions": "0x00"
+        }
+    ]
+}
