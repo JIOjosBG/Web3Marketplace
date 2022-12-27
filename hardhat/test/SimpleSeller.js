@@ -1,6 +1,5 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const {generateSignatureStructure} = require("../helperFunctions/signing");
 
 function stringToHex(str){
     var arr1 = ['0','x'];
@@ -10,8 +9,8 @@ function stringToHex(str){
     }
     return arr1.join('');
 }
-function hexToString(hexx) {
-    var hex = hexx.toString().slice(2);
+function hexToString(hex) {
+    hex = hex.toString().slice(2);
     var str = '';
     for (var i = 0; i < hex.length; i += 2)
         str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));

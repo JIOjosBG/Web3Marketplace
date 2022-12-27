@@ -1,7 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-//TODO: refactor tests to prevent repetition of code (initialisation of shared variables)
 describe("AgoraToken", function () {
     let oneETH;
     let twoETH;
@@ -80,7 +79,7 @@ describe("AgoraToken", function () {
 
         beforeEach(async function ()  {
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETH})).to.not.throw;
-            expiration  =Math.floor(Date.now()/1000)+100;
+            expiration = Math.floor(Date.now()/1000)+100;
             expirationNow  =Math.floor(Date.now()/1000)-1;
 
             nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)

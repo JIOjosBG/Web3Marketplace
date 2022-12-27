@@ -30,12 +30,10 @@ contract SimpleAuction is Ownable{
 
     mapping(uint => Product) public products;
     mapping(address => uint[]) public sellerToProductIndexes;
-    //seller to (product to money)
     mapping(address => mapping(uint => uint)) public owedMoneyToBidders;
 
     uint public productCount=0;
 
-    //TODO: createProductInstance(string,uint,link,hashofdata)
     function productInit(
         string calldata name,
         uint minimalPrice,
@@ -68,8 +66,7 @@ contract SimpleAuction is Ownable{
         require(address(marketplace) != address(0),"Address shouldn't be 0");
         ownerMarketplace =Marketplace(marketplace);
     }
-    //TODO: CHECK CORRECT AMOUNT OF TOKENS TO BE TRANSFERED
-    //NOT ALL IN THE CONTRACT BELONG TO IT (SOME ARE FROM UNFINISHED AUCTIONS(BIDS ARE DEPOSITS))
+    
     function transferFunds() public onlyOwner{
         require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
