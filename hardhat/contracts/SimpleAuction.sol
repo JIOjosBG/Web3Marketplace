@@ -6,7 +6,11 @@ import "./Marketplace.sol";
 import "hardhat/console.sol";
 import "./AgoraToken.sol";
 
-contract SimpleAuction is Ownable{
+contract SimpleAuction is Ownable{    
+    event auctionProductAdded(string name, uint minimalPrice, address seller, uint index);
+    event auctionProductBid(uint index,address bidder, uint amount);
+    event auctionProductDelivered(uint index, address buyer, address courier);
+
     struct Product{
         string name;
         uint minimalPrice;
@@ -55,7 +59,9 @@ contract SimpleAuction is Ownable{
         //require(startDate<finishDate,"Start should be before end");
         products[productCount]=productInit(name, minimalPrice, link, marketHashOfData,/*startDate,*/finishDate);
         sellerToProductIndexes[msg.sender].push(productCount);
+        emit auctionProductAdded(name, minimalPrice, msg.sender,productCount);
         productCount+=1;
+
     }
 
     function getIndexesFromSellerAddress(address seller) public view returns(uint[] memory indexes){
@@ -104,7 +110,9 @@ contract SimpleAuction is Ownable{
         p.bidAmount=amount;
         p.currentBidder=from;
 
+        emit auctionProductBid(index, from, amount);
     }
+
     //TODO: mechanism to verivy the caller is authorized
     function deliverProduct(uint index) public  /* onlyDelivery */{
         Product memory p = products[index];
@@ -119,5 +127,6 @@ contract SimpleAuction is Ownable{
         owedMoneyToBidders[p.currentBidder][index] = 0;
         products[index].delivered=true;
         AgoraToken(ownerMarketplace.myToken()).transfer(p.seller,pay);
+        emit auctionProductDelivered(index, p.currentBidder, msg.sender);
     }
 }

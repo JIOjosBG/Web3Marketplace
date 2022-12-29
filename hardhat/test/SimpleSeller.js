@@ -84,7 +84,6 @@ describe("SimpleSeller", async function () {
 
             expect(product1.name).equal("Product1");
             expect(product1.price).equal(oneETH);
-            expect(product1.sellerGets).equal(oneETHAfterFee);
             expect(product1.seller).equal(accounts[0].address);
             expect(product1.buyer).equal(ethers.constants.AddressZero);
             expect(product1.linkForMedia).equal("asd1");
@@ -97,7 +96,6 @@ describe("SimpleSeller", async function () {
 
             expect(product2.name).equal("Product2");
             expect(product2.price).equal(oneETH);
-            expect(product2.sellerGets).equal(oneETHAfterFee);
             expect(product2.seller).equal(accounts[0].address);
             expect(product2.buyer).equal(ethers.constants.AddressZero);
             expect(product2.linkForMedia).equal("asd2");
@@ -123,6 +121,7 @@ describe("SimpleSeller", async function () {
         });
 
     });
+
     describe("payProduct with marketplace",async function(){
         beforeEach(async function ()  {
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
@@ -422,6 +421,35 @@ describe("SimpleSeller", async function () {
         });
 
     });
+
+    describe("Events", async function () {
+        beforeEach(async function(){
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleSeller.joinMarketplace(marketplace.address)).to.not.throw;
+
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:oneETH})).to.not.throw;
+            expect(await agoraToken.connect(accounts[2]).buyTokens({value:twoETHs})).to.not.throw;
+
+        });
+
+        it("test events", async function () {
+            expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData))
+            .to.emit(simpleSeller, "sellerProductAdded")
+            .withArgs("Product1",oneETH,accounts[0].address,0);
+            
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature))
+            .to.emit(simpleSeller, "sellerProductSold")
+            .withArgs(0,accounts[1].address);
+
+            await expect(simpleSeller.connect(accounts[3]).deliverProduct(0))
+            .to.emit(simpleSeller,"sellerProductDelivered")
+            .withArgs(0,accounts[0].address,accounts[3].address);
+        });
+
+    });
+
 
 });
 

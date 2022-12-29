@@ -59,7 +59,7 @@ describe("SimpleAuction", async function () {
         }
 
     });
-
+   
     describe("Deployment", async function () {
 
         it("Should have the correct owner", async function () {
@@ -480,6 +480,34 @@ describe("SimpleAuction", async function () {
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
             await expect(simpleAuction.transferFunds()).to.be.revertedWith("Doesn't have owner marketplace");
         
+        });
+
+    });
+
+    describe("Events", async function () {
+        beforeEach(async function(){
+            expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
+            expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+
+            expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
+
+        });
+        it("test events", async function () {
+            expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate))
+            .to.emit(simpleAuction, "auctionProductAdded")
+            .withArgs("Product1",oneETH, accounts[0].address,0);
+            
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0twoETHs,twoETHs,accounts[1].address,simpleAuction.address])));
+            const signature = accounts[1].signMessage(message);
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0twoETHs,twoETHs,accounts[1].address,signature))
+            .to.emit(simpleAuction, "auctionProductBid")
+            .withArgs(0,accounts[1].address,twoETHs);
+
+            await network.provider.send("evm_increaseTime", [3600]);
+            expect( await simpleAuction.connect(accounts[3]).deliverProduct(0))
+            .to.emit(simpleAuction, "auctionProductDelivered")
+            .withArgs(0, accounts[0].address,accounts[3].address);
+            await network.provider.send("evm_increaseTime", [-3600]);
         });
 
     });

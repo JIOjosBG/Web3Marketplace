@@ -73,14 +73,14 @@ describe("AgoraToken", function () {
 
     describe("Working with pre-signed transactions", async function () {
         let expiration;
-        let expirationNow;
+        let expired;
 
         let nonce;
 
         beforeEach(async function ()  {
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETH})).to.not.throw;
             expiration = Math.floor(Date.now()/1000)+100;
-            expirationNow  =Math.floor(Date.now()/1000)-1;
+            expired =  Math.floor(Date.now()/1000)-3600;
 
             nonce = ethers.utils.hexZeroPad(ethers.utils.hexlify(1), 32)
 
@@ -98,13 +98,13 @@ describe("AgoraToken", function () {
         });
 
         it("Expired",async function() {
-            const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expirationNow,nonce,oneETH,accounts[1].address,accounts[0].address]);
+            const message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expired,nonce,oneETH,accounts[1].address,accounts[0].address]);
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             const signature = ( await accounts[1].signMessage(hashedMessage));
             
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
-            await expect(agoraToken.transactiWithSignature(expirationNow,nonce,oneETH,accounts[1].address,accounts[0].address,signature)).to.be.revertedWith("Signature expired");
+            await expect(agoraToken.transactiWithSignature(expired,nonce,oneETH,accounts[1].address,accounts[0].address,signature)).to.be.revertedWith("Signature expired");
             expect(await agoraToken.balanceOf(accounts[0].address)).equal(0);
             expect(await agoraToken.balanceOf(accounts[1].address)).equal(twoETH);
         });

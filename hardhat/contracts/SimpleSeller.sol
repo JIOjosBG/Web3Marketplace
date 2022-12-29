@@ -7,10 +7,13 @@ import "hardhat/console.sol";
 import "./AgoraToken.sol";
 
 contract SimpleSeller is Ownable{
+    event sellerProductAdded(string name, uint price, address seller, uint index);
+    event sellerProductSold(uint index, address buyer);
+    event sellerProductDelivered(uint index, address seller, address courier);
+
     struct Product{
         string name;
         uint price;
-        uint sellerGets;
         address seller;
         address buyer;
         uint addDate;
@@ -34,7 +37,7 @@ contract SimpleSeller is Ownable{
     uint public productCount=0;
 
     function productInit(string calldata name, uint price, string calldata link, bytes32 marketHashOfData) private view returns(Product memory){
-        return Product(name,price,price*99 / 100,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false,"");
+        return Product(name,price,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false,"");
 
     }
 
@@ -43,6 +46,7 @@ contract SimpleSeller is Ownable{
         require(price>=2000000,"Price should be >=2000000");
         products[productCount]=productInit(name, price, link, marketHashOfData);
         sellerToProductIndexes[msg.sender].push(productCount);
+        emit sellerProductAdded(name,price,msg.sender,productCount);
         productCount+=1;
     }
 
@@ -76,7 +80,7 @@ contract SimpleSeller is Ownable{
 
         p.deliveryInstructions = deliveryInstructions;
         p.paid=true;
-        owedMoneyToSellers[p.seller][index] = p.sellerGets;
+        owedMoneyToSellers[p.seller][index] = p.price*99/100;
         owedMoneyToBuyers[from][index] = p.price;
         products[index].buyer = from;
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
@@ -84,8 +88,9 @@ contract SimpleSeller is Ownable{
 
         if(amount>p.price){
             token.transfer(from,amount-p.price);
-        
         }
+        emit sellerProductSold(index, from);
+
 
     }
 
@@ -103,6 +108,7 @@ contract SimpleSeller is Ownable{
         products[index].delivered=true;
         AgoraToken(ownerMarketplace.myToken()).transfer(p.seller,pay);
         //payable(p.seller).transfer(pay);
+        emit sellerProductDelivered(index, p.seller, msg.sender);
     }
 
 }
