@@ -36,9 +36,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     linkForMedia: DataTypes.STRING,
-    marketHashOfData: {
+    marketHashOfData:{
       type: DataTypes.BLOB,
-      allowNull: false
+      defaultValue: null
     },
     approved: {
       type: DataTypes.BOOLEAN,

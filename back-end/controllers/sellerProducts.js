@@ -12,29 +12,36 @@ const getProduct = async (req, res) => {
 }
 
 const createProduct = async (req, res) => {
+    if(chechCorrectCreateProductData(req.body)==false){
+        res.status(400);
+        res.send(req.body);
+        return;
+    }
     const {
         name, 
         price, 
         seller, 
-        linkForMedia, 
-        marketHashOfData, 
-        description
+        linkForMedia="",
+        marketHashOfData="",
+        description=""
     } = req.body;
-    //TODO: checks for correct input data
     try{
-        SellerProduct.create({
-            name:name,
-            price:price,
-            seller:seller,
+        await SellerProduct.create({
+            name,
+            price,
+            seller,
             addDate: new Date(),
-            linkForMedia:linkForMedia,
-            marketHashOfData:marketHashOfData,
-            description:description
+            linkForMedia,
+            marketHashOfData,
+            description
         });
     }catch(e){
+        res.send(e.statusCode);
         console.log(e);
+        return;
     }
-    res.send(req.body);
+    const createdProduct = await SellerProduct.findOne({ where: { name: name }});
+    res.send(createdProduct);
     console.log("createProduct");
 }
 
@@ -43,5 +50,14 @@ const updateProduct = async (req, res) => {
     res.send("updateProduct");
     console.log("updateProduct");
 }
+
+
+function chechCorrectCreateProductData(args){
+    if(args.name==null || args.name=='') return false;
+    if(args.price==null || args.price<=0) return false;
+    if(args.seller==null || args.seller=='') return false;
+    return true;
+}
+
 
 module.exports = { getProduct, createProduct, getProducts, updateProduct};
