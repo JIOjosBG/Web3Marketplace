@@ -1,4 +1,5 @@
 const { sequelize, SellerProduct } = require("../models");
+//TODO: listener for event createproduct (sets instanceId in DB)
 
 const getProducts = async (req, res) => {
     res.send("getProducts");
@@ -45,6 +46,7 @@ const createProduct = async (req, res) => {
     console.log("createProduct");
 }
 
+//TODO: make update product
 const updateProduct = async (req, res) => {   
     console.log(req.params.id);
     res.send("updateProduct");
