@@ -7,6 +7,7 @@ import "hardhat/console.sol";
 import "./AgoraToken.sol";
 
 contract SimpleAuction is Ownable{
+    //TODO: add events
     struct Product{
         string name;
         uint minimalPrice;
