@@ -9,10 +9,7 @@ import HomePage from './pages/HomePage';
 import MyNavbar from './components/MyNavbar';
 import SimpleSellerRoutes from './Routers/SimpleSellerRoutes';
 import SimpleAuctionRoutes from './Routers/SimpleAuctionRoutes';
-
-// import MyNav from './components/Navbar';
-
-// import HomePage from './pages/HomePage';
+import BuyTokensPage from './pages/BuyTokensPage';
 
 function App() {
   const [errorMessage, setErrorMessage] = useState("");
@@ -62,10 +59,12 @@ function App() {
     { provider 
     ? 
     <Routes>
-      <Route path="/" element={<MyNavbar provider={provider} signer={signer} />}>
+      <Route path="/" element={<MyNavbar provider={provider} account={account} />}>
         <Route index element={<HomePage update/>} />
         <Route path="s/*" element={<SimpleSellerRoutes provider={provider} signer={signer}/>} />
         <Route path="a/*" element={<SimpleAuctionRoutes provider={provider} signer={signer}/>} />
+        <Route path="t/" element={<BuyTokensPage provider={provider} signer={signer}/>} />
+        
         <Route path="*" element={<h1>404 not found</h1>} />
 
       </Route>

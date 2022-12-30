@@ -16,16 +16,21 @@ function MyNavbar(props) {
           <img style={{width:'50%'}} src={logo} alt={logo}/>
           </Col>
           <Col>
-          <h1 className="ml">Username</h1>
+          <h6 className="ml">{props.account}</h6>
           </Col>
         </Row>
-        {
-          provider
-          ?<Row>
-            <Link to="/s">Simple Seller</Link>
-            <Link to="/a">Simple Auction</Link>
-        </Row>
-        :<></>
+        {provider
+          ?<>
+            <Col>
+              <Link to="/s">Simple Seller </Link>
+              <Link to="/a">Simple Auction </Link>
+            </Col>
+            <Col>
+              <Link to="/t"> Buy tokens </Link>
+            {/* TODO: add available tokens display */}
+            </Col>
+          </>
+          :<></>
         }
       </Container>
     </Navbar> 

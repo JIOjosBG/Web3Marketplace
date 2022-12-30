@@ -11,18 +11,13 @@ function SellerDetailProduct(props){
     const [rate,setRate] = useState(0);
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
 
-    const [error,setError] = useState("");
-
-    
+  
     const signer = props.signer;
+
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer);
     const { id } = useParams();
     //TODO: add form for delivery instructions to be passed when purchasing
     //TODO: make popup for that form with amount eth to usd convertion
-    useEffect(()=>{
-        //TODO: ???? check in DB if there is more data about the product
-        getProduct();
-    },[]);
 
     const getRates = async () => {
         try{
@@ -46,31 +41,43 @@ function SellerDetailProduct(props){
     }
 
 
-    const getProduct = async () => {
+    async function getProduct(){
         try{
             // TODO: check if this is bad ID
             const p = await simpleSeller.products(id);
             await setProduct(p);
             const r = await getRates();
-            console.log(p.price,r);
             await setPriceInUSD(weiToUsd(p.price,r));
         }catch(e){
-            console.log(e);
+            console.log(e);           
         }
     }
 
     const makeSignature = async () => {
         let nonce = await ethers.utils.solidityPack(['address','uint'],[simpleSeller.address,id]);
         nonce = await ethers.utils.keccak256(nonce);
-        const expiration = Math.floor(new Date().getTime()/1000)+3600;
+        const expiration = Math.floor(Date.now()/1000)+3600;
         const signerAddress = await signer.getAddress();
-        let message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[expiration,nonce,product.price,signerAddress,simpleSeller.address]);
-        message = await ethers.utils.keccak256(message);
-        let signature = signer.signMessage(message);
+        
+
+
+        console.log(expiration,nonce,product.price,signerAddress,simpleSeller.address);
+        const message = await ethers.utils.solidityPack(
+            ['uint','bytes32','uint','address','address'],
+            [expiration,nonce,product.price._hex,signerAddress,simpleSeller.address]);
+        console.log(simpleSeller.address);
+            //[expiration,nonce,product.price,signerAddress,simpleSeller.address]);
+            //[expired,nonce,oneETH,accounts[1].address,accounts[0].address]);
+        
+            const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
+        let signature = signer.signMessage(hashedMessage);
+            
+
         return {"nonce":nonce,"expiration":expiration,"signature":signature};
     }
 
     const buyProduct = async () => {
+        //TODO: check if sufficient funds
         let nonce,expiration,sig;
         try{
             const sigData = await makeSignature();
@@ -80,21 +87,28 @@ function SellerDetailProduct(props){
         }catch(e){
             console.log(e.message);
         }
-        if(sig==null || deliveryInstructions==""){
+        if(sig===null || deliveryInstructions===""){
             //TODO: open modal
             //TODO: encrypt delivery instructions with public key of seller
             console.log("not okay with sig and delivery instructions");
         }else{
-            const message = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
-            const deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
+            let deliveryData = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
+            deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(deliveryData));
             
             try{
+                console.log(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
                 await simpleSeller.payProduct(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
+                    //simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
+                
             }catch(e){
                 console.log(e);
             }
         }
     }
+    useEffect(()=>{
+        //TODO: ???? check in DB if there is more data about the product
+        getProduct();
+    },[]);
 
 
     return(
@@ -127,6 +141,7 @@ function SellerDetailProduct(props){
         
     </>
     );
+
 }
 
 export default SellerDetailProduct;
