@@ -16,7 +16,7 @@ function SellerProductList(props) {
   const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerJSON.abi, props.provider);
   async function updateProducts (){
     let c =parseInt(await simpleSeller.productCount());
-    console.log(c);
+
     let tmpProducts = [];
     for(let i=0;i<c;i++){
       let p = await simpleSeller.products(i);

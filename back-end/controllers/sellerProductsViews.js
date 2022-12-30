@@ -1,0 +1,71 @@
+const { sequelize, SellerProduct } = require("../models");
+//TODO: listener for event createproduct (sets instanceId in DB)
+
+const getProducts = async (req, res) => {
+    const products = await SellerProduct.findAll();
+    res.send(products);
+    console.log("getProducts");
+}
+
+const getProduct = async (req, res) => {
+    console.log(req.params.id);
+    res.send("getProduct");
+    console.log("getProduct");
+}
+
+//TODO: redo
+const createProduct = async (req, res) => {
+    console.log("Remake createProduct");
+    res.send("cerateProduct called, no changes to DB");
+}
+// {
+//     if(chechCorrectCreateProductData(req.body)==false){
+//         res.status(400);
+//         res.send(req.body);
+//         return;
+//     }
+//     const {
+//         name, 
+//         price, 
+//         seller, 
+//         linkForMedia="",
+//         marketHashOfData="",
+//         description=""
+//     } = req.body;
+//     try{
+//         await SellerProduct.create({
+//             name,
+//             price,
+//             seller,
+//             addDate: new Date(),
+//             linkForMedia,
+//             marketHashOfData,
+//             description
+//         });
+//     }catch(e){
+//         res.send(e.statusCode);
+//         console.log(e);
+//         return;
+//     }
+//     const createdProduct = await SellerProduct.findOne({ where: { name: name }});
+//     res.send(createdProduct);
+//     console.log("createProduct");
+// }
+
+//TODO: make update product
+const updateProduct = async (req, res) => {   
+    console.log(req.params.id);
+    res.send("updateProduct");
+    console.log("updateProduct");
+}
+
+
+function chechCorrectCreateProductData(args){
+    if(args.name==null || args.name=='') return false;
+    if(args.price==null || args.price<=0) return false;
+    if(args.seller==null || args.seller=='') return false;
+    return true;
+}
+
+
+module.exports = { getProduct, createProduct, getProducts, updateProduct};

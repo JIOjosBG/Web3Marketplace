@@ -33,10 +33,12 @@ async function main() {
 
   console.log(
     `
-    marketplace deployed to ${marketplace.address}
-    agoraToken deployed to ${agoraToken.address}
-    simpleSeller deployed to ${simpleSeller.address}
-    simpleAuction deployed to ${simpleAuction.address}
+    {
+      marketplace":"${marketplace.address}",
+      "agoraToken":"${agoraToken.address}",
+      "simpleSeller":"${simpleSeller.address}",
+      "simpleAuction":"${simpleAuction.address}"
+    }
     `
   );
 }
