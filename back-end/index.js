@@ -6,7 +6,7 @@ require("dotenv").config();
 const simpleSellerABI = require("./contracts/ABIs/SimpleSeller.json").abi;
 const addresses = require("./contracts/contractAddresses.json");
 const sellerProductRoutes = require('./routes/sellerProducts.js');
-const { handleSllerProductAdd } = require('./controllers/contractListeners');
+const { createSellerProduct, sellSellerProduct, deliverSellerProduct } = require('./controllers/eventHandlers');
 
 const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
 const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerABI, provider);  
@@ -31,4 +31,6 @@ app.listen(PORT, async () =>{
     console.log("DB connected");
 });
 
-simpleSeller.on("sellerProductAdded", handleSllerProductAdd);
+simpleSeller.on("sellerProductAdded", createSellerProduct);
+simpleSeller.on("sellerProductSold", sellSellerProduct);
+simpleSeller.on("sellerProductDelivered", deliverSellerProduct);
