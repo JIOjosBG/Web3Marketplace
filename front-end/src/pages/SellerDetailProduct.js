@@ -105,6 +105,13 @@ function SellerDetailProduct(props){
             }
         }
     }
+    const deliverProduct = async() => {
+        try{
+            simpleSeller.deliverProduct(id);
+        }catch(e){
+            console.log(e);
+        }
+    }
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
         getProduct();
@@ -130,11 +137,19 @@ function SellerDetailProduct(props){
             <h4>{product.seller}</h4>
             {new Date(parseInt(product.addDate._hex)*1000).toString()}
             {parseInt(product.addDate).toString()}
+            {!product.paid
+            ?<>
             <Form.Group className="mb-3" controlId="formName">
                 <Form.Label>Delivery Instructions:</Form.Label>
                 <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
             </Form.Group>
             <Button onClick={buyProduct}> Buy now </Button>
+            </>
+            :!product.delivered
+            /* TODO: check if courier*/
+            ?<Button onClick={deliverProduct}> Deliver now </Button>
+            :<h4>Paid and delivered</h4>
+            }
             </>
         :<h1>Loading</h1>
         }
