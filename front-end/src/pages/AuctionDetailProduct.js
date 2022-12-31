@@ -31,8 +31,8 @@ function AuctionDetailProduct(props){
             setProduct(p);
             const r = await getRates();
 
-        await setMinimalPriceInUSD(weiToUsd(p.minimalPrice,r));
-        await setHighestBidInUSD(weiToUsd(p.bidAmount,r));
+        await setMinimalPriceInUSD(weiToUsd(parseInt(p.minimalPrice),r));
+        await setHighestBidInUSD(weiToUsd(parseInt(p.bidAmount),r));
         
         }catch(e){
             console.log(e);
@@ -73,7 +73,7 @@ function AuctionDetailProduct(props){
         //TODO: check if it is higher than prev bid and open modal
         console.log(amount,typeof(amount));
         if(amount=="") amount="0";
-        amount = parseInt(amount);
+        amount = parseFloat(amount);
 
         setMyBidInUSD(amount);
 
@@ -90,8 +90,8 @@ function AuctionDetailProduct(props){
         nonce = await ethers.utils.keccak256(nonce);
         const signerAddress = await signer.getAddress();
         let message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[product.finishDate,nonce,myBid,signerAddress,simpleAuction.address]);
-        message = await ethers.utils.keccak256(message);
-        let signature = signer.signMessage(message);
+        let hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
+        let signature = signer.signMessage(hashedMessage);
         return {"nonce":nonce,"signature":signature};
     }
 

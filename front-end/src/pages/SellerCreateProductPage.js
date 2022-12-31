@@ -98,7 +98,7 @@ function SellerCreateProductPage(props) {
 
                 <Form.Group>
                     <Form.Label>Price in usd</Form.Label>
-                    <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setPrice(usdToWei(e.target.value));}} type="number" placeholder="Price in gwei" />
+                    <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setPrice(usdToWei(e.target.value));}} type="number" placeholder="Price in usd" />
                     <Form.Text className="text-muted">
                     {price._hex} in wei (powered by <a href='https://www.coingecko.com/'> Coingecko </a>)
                     </Form.Text>
