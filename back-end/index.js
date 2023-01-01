@@ -29,7 +29,7 @@ app.all("*", (req, res) =>res.send("404"));
 
 app.listen(PORT, async () =>{
     console.log(`Server running on port: http://localhost:${PORT}`);
-    await sequelize.sync();
+    //await sequelize.sync();
     await sequelize.authenticate();
     console.log("DB connected");
 });
