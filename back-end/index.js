@@ -8,6 +8,8 @@ const simpleAuctionABI = require("./contracts/ABIs/SimpleAuction.json").abi;
 
 const addresses = require("./contracts/contractAddresses.json");
 const sellerProductRoutes = require('./routes/sellerProducts.js');
+const auctionRoutes = require('./routes/auctionProducts.js');
+
 const { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct } = require('./controllers/eventHandlers');
 
 const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
@@ -23,13 +25,15 @@ app.use(express.json());
 
 app.get("/", (req, res) => res.send("Welcome to the API!"));
 app.use("/s/p", sellerProductRoutes);
+app.use("/a", auctionRoutes);
+
 app.all("*", (req, res) =>res.send("404"));
 
 
 
 app.listen(PORT, async () =>{
     console.log(`Server running on port: http://localhost:${PORT}`);
-    //await sequelize.sync();
+    // await sequelize.sync();
     await sequelize.authenticate();
     console.log("DB connected");
 });

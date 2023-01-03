@@ -75,11 +75,7 @@ async function deliverSellerProduct(index, courier){
     product.save();
 }
 
-/*
-    event auctionProductAdded(string name, uint minimalPrice, address seller, uint index);
-    event auctionProductBid(uint index,address bidder, uint amount);
-    event auctionProductDelivered(uint index, address buyer, address courier);
-*/
+//TODO: create cron jo for submiting bids from the db
 async function createAuctionProduct(name,minimalPrice,seller,index){
     try{
         const p = await simpleAuction.products(index);

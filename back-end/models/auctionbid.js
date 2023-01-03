@@ -30,10 +30,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BLOB,
       allowNull: false
     },
-    auctionFinishDate: {
-      type: DataTypes.DATE,
-      allowNull: false
-    },
     signature: {
       type: DataTypes.BLOB,
       allowNull: false

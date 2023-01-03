@@ -146,7 +146,7 @@ function SellerDetailProduct(props){
             <Button onClick={buyProduct}> Buy now </Button>
             </>
             :!product.delivered
-            /* TODO: check if courier*/
+            //TODO: check if courier
             ?<Button onClick={deliverProduct}> Deliver now </Button>
             :<h4>Paid and delivered</h4>
             }
