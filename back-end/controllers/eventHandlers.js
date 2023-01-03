@@ -11,7 +11,7 @@ const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuction
 
 //TODO: add log file
 //TODO: some form of tests
-
+//TODO: convert deliveryInstruction and marketHashOfData from hex string to bytes
 async function createSellerProduct(name,price,seller,index){
        try{
         const p = await simpleSeller.products(index);

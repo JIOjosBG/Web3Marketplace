@@ -36,8 +36,7 @@ const getProduct = async (req, res) => {
     console.log("GET /s/p/:id : found");
 }
 
-//TODO: redo
-const instantiateProduct = async (req, res) => {
+const instantiateOrUpdateProduct = async (req, res) => {
     const id = req.params.id;
     let bci;
     let p;
@@ -127,4 +126,4 @@ const instantiateProduct = async (req, res) => {
 // }
 
 
-module.exports = { getProduct, instantiateProduct, getProducts};
+module.exports = { getProduct, instantiateOrUpdateProduct, getProducts};

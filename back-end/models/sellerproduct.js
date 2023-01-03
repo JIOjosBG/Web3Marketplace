@@ -56,7 +56,7 @@ module.exports = (sequelize, DataTypes) => {
     description: DataTypes.STRING
   }, {
     sequelize,
-    tableName: 'seller_product',
+    tableName: 'seller_products',
     modelName: 'SellerProduct',
   });
   return SellerProduct;

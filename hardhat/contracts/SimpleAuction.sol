@@ -90,6 +90,7 @@ contract SimpleAuction is Ownable{
         require(amount>p.bidAmount, "Bid must be larger");
 
         require(deliveryInstructions.length!=0, "No delivery instructions");
+        //TODO: ?????remove nonce from arguments (alredy in signature and can be computed)
         require(nonce==keccak256(abi.encodePacked(address(this),index,amount)),"Wrong nonce");
 
         require(address(ownerMarketplace)!=address(0),"No marketplace");
@@ -98,7 +99,7 @@ contract SimpleAuction is Ownable{
         p.deliveryInstructions = deliveryInstructions;
 
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
-
+        //TODO: remove expirataion (can get it from p.dinishDate and is already in signature)
         token.transactiWithSignature(expiration,nonce,amount,from,address(this),sig);
         //RETURN PREV BID MONEY
         if(p.currentBidder!=address(0)){

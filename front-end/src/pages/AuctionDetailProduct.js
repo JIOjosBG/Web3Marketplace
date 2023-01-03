@@ -21,6 +21,7 @@ function AuctionDetailProduct(props){
     //TODO: make popup for that form with amount eth to usd convertion
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
+        //TODO: add bid with database button
         getProduct();
     },[]);
 

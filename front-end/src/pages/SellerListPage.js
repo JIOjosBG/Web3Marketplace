@@ -26,6 +26,9 @@ function SellerProductList(props) {
     setCount(c);
   }
 
+  //TODO: add contract event listener
+
+
   const productCards = products.map((p) =><SellerProductCard key={p[1]} product={p[0]} id={p[1]}/>);
 
   return (
