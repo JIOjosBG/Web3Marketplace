@@ -75,8 +75,9 @@ async function deliverSellerProduct(index, courier){
     product.save();
 }
 
-//TODO: create cron jo for submiting bids from the db
+//TODO: create cron job for submiting bids from the db
 async function createAuctionProduct(name,minimalPrice,seller,index){
+    console.log("okokokok")
     try{
         const p = await simpleAuction.products(index);
         await AuctionProduct.create({

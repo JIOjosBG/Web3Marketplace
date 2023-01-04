@@ -129,10 +129,12 @@ const instantiateOrUpdateProduct = async (req, res) => {
 }
 
 //TODO: finish this function
-const bidForProduct = async (req, res) => {
+const bidForProduct = async (req, res,next) => {
+    console.log("asdasd")
     let bci;
     let bid;
-    console.log("TODO POST /a/b/");
+    console.log(req.body)
+    console.log("POST /a/b/");
     instanceId = parseInt(req.body.instanceId);
     if(instanceId==null || isNaN(instanceId)){
         res.status(400)
@@ -143,7 +145,7 @@ const bidForProduct = async (req, res) => {
     req.body.amount=="" || req.body.amount==null ||
     req.body.deliveryInstructions=="" || req.body.deliveryInstructions==null ||
     req.body.signature=="" || req.body.signature==null){
-        res.status(400)
+        res.status(401)
         res.send({'message':'bad request'})
         return
     }
@@ -182,6 +184,7 @@ const bidForProduct = async (req, res) => {
         console.log("POST /a/b : cant create db instance", e)
         res.status(500)
         res.send({"message":"Inetrnal server error"})
+        return;
     }
 
     res.send(bid.toJSON())

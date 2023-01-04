@@ -44,7 +44,6 @@ function AuctionDetailProduct(props){
         try{
             const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
                 method: 'GET',
-
             });
             let r = (await response.json()).ethereum.usd;
             setRate(r);
@@ -56,7 +55,7 @@ function AuctionDetailProduct(props){
     }
 
     const weiToUsd = (wei,r) => {
-        if(wei==0) return 0;
+        if(wei===0) return 0;
         let usd = 1/r;
         const priceInEth = ethers.utils.formatEther(wei);
         
@@ -73,7 +72,7 @@ function AuctionDetailProduct(props){
     const handleBidInput = async (amount) => {
         //TODO: check if it is higher than prev bid and open modal
         console.log(amount,typeof(amount));
-        if(amount=="") amount="0";
+        if(amount==="") amount="0";
         amount = parseFloat(amount);
 
         setMyBidInUSD(amount);
@@ -92,7 +91,7 @@ function AuctionDetailProduct(props){
         const signerAddress = await signer.getAddress();
         let message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[product.finishDate,nonce,myBid,signerAddress,simpleAuction.address]);
         let hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
-        let signature = signer.signMessage(hashedMessage);
+        let signature =  signer.signMessage(hashedMessage);
         return {"nonce":nonce,"signature":signature};
     }
 
@@ -106,7 +105,7 @@ function AuctionDetailProduct(props){
         }catch(e){
             console.log(e.message);
         }
-        if(sig==null || deliveryInstructions==""){
+        if(sig===null || deliveryInstructions==""){
             //TODO: open modal
             //TODO: encrypt delivery instructions with public key of seller
             console.log("not okay with sig and delivery instructions");
@@ -138,10 +137,28 @@ function AuctionDetailProduct(props){
             console.log("not okay with sig and delivery instructions");
         }else{
             const message = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
-            const deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
+            //const deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
+            //TODO: arrayify
+            const deliveryData =(await ethers.utils.keccak256(message));
             
             try{
-                //TODO: send data to backend
+                const response = await fetch('http://localhost:5000/a/b/', {
+                method: 'POST',
+                body:JSON.stringify({
+                    "instanceId":id,
+                    "bidder":await signer.getAddress(),
+                    "amount":myBid._hex,
+                    "deliveryInstructions":deliveryData,
+                    "signature":sig
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                });
+                //.then((response) => response.json())
+                //.then((data) => console.log(data));
+                console.log(await response.status);
                 //await simpleAuction.bidForProduct(id,deliveryData,product.finishDate,nonce,myBid,await signer.getAddress(),sig);
             }catch(e){
                 console.log(e);
@@ -187,6 +204,8 @@ function AuctionDetailProduct(props){
             </Form.Group>
             
             <Button onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>
+            <Button onClick={handleBidViaBackend }>Bid via backend ${myBidInUSD} </Button>
+
             </>
         :<h1>Loading</h1>
         }
