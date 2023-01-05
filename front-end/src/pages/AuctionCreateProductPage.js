@@ -17,7 +17,7 @@ function AuctionCreateProductPage(props) {
     //TODO: ADD PROPPER FIELD FOR SECRET DATA
     //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
     //TODO: safety checks
-    const [marketHashOfData, setMarketHashOfData] = useState("111");
+    const [marketHashOfData, setMarketHashOfData] = useState();
     const [ rate, setRate ] = useState(0);
     const [show,setShow] = useState(false);
     const navigate = useNavigate();
@@ -120,6 +120,10 @@ function AuctionCreateProductPage(props) {
                 <Form.Group>
                     <Form.Label>Media link</Form.Label>
                     <Form.Control onChange={e=>setLinkForMedia(e.target.value)} type="text" placeholder="Link for media" />
+                </Form.Group>
+                <Form.Group>
+                    <Form.Label>Market hash of data</Form.Label>
+                    <Form.Control onChange={e=>setMarketHashOfData(e.target.value)} type="text" placeholder="Market hash of data" />
                 </Form.Group>
 
                 <Button variant="primary" onClick={submitProduct}>

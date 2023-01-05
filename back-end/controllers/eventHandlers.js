@@ -11,17 +11,26 @@ const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuction
 
 //TODO: add log file
 //TODO: some form of tests
-//TODO: convert deliveryInstruction and marketHashOfData from hex string to bytes
+//TODO: move func to a shared folder?
+function hexToBytes(hex) {
+    let bytes=[];
+    for (let i=2;i<hex.length;i+=2)
+        bytes.push(parseInt(hex.substr(i, 2), 16));
+    return bytes;
+}
+
 async function createSellerProduct(name,price,seller,index){
        try{
-        const p = await simpleSeller.products(index);
+        const bci = await simpleSeller.products(index);
+        let marketHashOfData=hexToBytes(bci.marketHashOfData);
+
         await SellerProduct.create({
             name,
             price: price._hex,
             seller,
             instanceId:index,
-            linkForMedia:"",
-            marketHashOfData:p.marketHashOfData,
+            linkForMedia:bci.linkForMedia,
+            marketHashOfData:marketHashOfData,
             description:"",
             addDate: new Date()
         });
@@ -29,7 +38,6 @@ async function createSellerProduct(name,price,seller,index){
         console.log(e);
         return;
     }
-    console.log(name,price,seller,index);
  
 }
 
@@ -79,16 +87,19 @@ async function deliverSellerProduct(index, courier){
 async function createAuctionProduct(name,minimalPrice,seller,index){
     console.log("okokokok")
     try{
-        const p = await simpleAuction.products(index);
+        const bci = await simpleAuction.products(index);
+        let marketHashOfData=hexToBytes(bci.marketHashOfData);
+
         await AuctionProduct.create({
             instanceId:index,
             name,
             minimalPrice: minimalPrice._hex,
             addDate: new Date(),
             seller,
-            finishDate: new Date(p.finishDate*1000),
-            linkForMedia:p.linkForMedia,
+            finishDate: new Date(bci.finishDate*1000),
+            linkForMedia:bci.linkForMedia,
             description:"",
+            marketHashOfData: marketHashOfData
         });
     }catch(e){
         console.log(e);
@@ -113,7 +124,8 @@ async function bidAuctionProduct(index,bidder,amount){
     }
     product.currentBidder = bidder;
     product.bidAmount = amount._hex;
-    product.deliveryInstructions = bci.deliveryInstructions; 
+    let deliveryInstructions=hexToBytes(bci.deliveryInstructions);
+    product.deliveryInstructions = deliveryInstructions; 
     product.save();
 }
 
@@ -121,7 +133,6 @@ async function deliverAuctionProduct(index, courier){
     console.log(`Auction Product with index ${index} delivered`);
     let product = await AuctionProduct.findOne({ where: { instanceId: index } });
     if (product === null) {
-        //blockchain instance (bci)
         try{
             const bci = await simpleAuction.products(index);
             await createAuctionProduct(bci.name,bci.minimalPrice,bci.seller,index);
@@ -129,7 +140,12 @@ async function deliverAuctionProduct(index, courier){
 
             product.currentBidder = bci.currentBidder;
             product.bidAmount = bci.bidAmount._hex;
-            product.deliveryInstructions=bci.deliveryInstructions;
+            let deliveryInstructions=hexToBytes(bci.deliveryInstructions);
+            let marketHashOfData=hexToBytes(bci.marketHashOfData);
+
+            product.deliveryInstructions=deliveryInstructions;
+            product.marketHashOfData=marketHashOfData;
+
             console.log('Not found, but creating!');
         }catch(e){
             console.log(e)

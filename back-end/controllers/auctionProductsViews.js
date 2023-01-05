@@ -6,7 +6,13 @@ const addresses = require("../contracts/contractAddresses.json");
 const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
 const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionABI, provider); 
 
-//TODO: listener for event createproduct (sets instanceId in DB)
+
+function hexToBytes(hex) {
+    let bytes=[];
+    for (let i=2;i<hex.length;i+=2)
+        bytes.push(parseInt(hex.substr(i, 2), 16));
+    return bytes;
+}
 
 const getProducts = async (req, res) => {
     const products = await AuctionProduct.findAll();
@@ -52,7 +58,6 @@ const instantiateOrUpdateProduct = async (req, res) => {
     const id = req.params.id;
     let bci;
     let p;
-
     if(id==null || isNaN(id)){
         console.log("POST /a/p/:id : id is null or NaN");
         res.status(400);
@@ -74,6 +79,9 @@ const instantiateOrUpdateProduct = async (req, res) => {
         res.send({"message":`no product with id ${id} in smart contract`});
         return;
     }
+    const deliveryInstructions = hexToBytes(bci.deliveryInstructions)
+    const marketHashOfData = hexToBytes(bci.marketHashOfData)
+    
 
     try{
         p = await AuctionProduct.findOne({ where: { instanceId: id } });
@@ -86,7 +94,7 @@ const instantiateOrUpdateProduct = async (req, res) => {
             p.currentBidder = bci.currentBidder;
             p.bidAmount = bci.bidAmount._hex;
             p.delivered = bci.delivered;
-            p.deliveryInstructions = bci.deliveryInstructions;
+            p.deliveryInstructions = deliveryInstructions;
             p.save();
             console.log(`POST /a/p/:id : updated db instance with insanceid ${id}`)
             res.send(p.toJSON());
@@ -110,10 +118,10 @@ const instantiateOrUpdateProduct = async (req, res) => {
             finishDate: new Date(bci.finishDate*1000),
             addDate: new Date(),
             linkForMedia:bci.linkForMedia,
-            marketHashOfData:bci.marketHashOfData,
+            marketHashOfData:marketHashOfData,
             approved:bci.approved,
             delivered: bci.delivered,
-            deliveryInstructions: bci.deliveryInstructions,
+            deliveryInstructions: deliveryInstructions,
             description:""
         });
     }catch(e){
@@ -171,14 +179,15 @@ const bidForProduct = async (req, res,next) => {
         res.send({"message":"Too low bid amount for this product"})
         return
     }
-
+    const deliveryInstructions = hexToBytes(req.body.deliveryInstructions)
+    const signature = hexToBytes(req.body.signature)
     try{
         bid = await AuctionBid.create({
             instanceId: instanceId,
             bidder: req.body.bidder,
             amount: req.body.amount,
-            deliveryInstructions: req.body.deliveryInstructions,
-            signature: req.body.signature
+            deliveryInstructions: deliveryInstructions,
+            signature: signature
         });
     }catch(e){
         console.log("POST /a/b : cant create db instance", e)

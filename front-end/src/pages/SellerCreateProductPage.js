@@ -17,7 +17,7 @@ function SellerCreateProductPage(props) {
 
     //TODO: ADD PROPPER FIELD FOR SECRET DATA
     //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
-    const [marketHashOfData, setMarketHashOfData] = useState("111");
+    const [marketHashOfData, setMarketHashOfData] = useState("");
     const navigate = useNavigate();
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer );
     
@@ -28,8 +28,11 @@ function SellerCreateProductPage(props) {
     const addProduct = async () => {
         if(simpleSeller){
             try{
-                const data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
-                await simpleSeller.addProduct(name,price,linkForMedia,await ethers.utils.keccak256(data));
+                let data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
+                data = await ethers.utils.keccak256(data);
+                console.log(data)
+    
+                await simpleSeller.addProduct(name,price,linkForMedia,data);
                 navigate("/s");
             }catch(e){
                 console.log("Error:",e);
@@ -43,9 +46,6 @@ function SellerCreateProductPage(props) {
         try{
             await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
                 method: 'GET',
-                // headers: {
-                //     'Accepts': 'application/json',
-                // },
             })
             .then(async (response) => {
                 let r = (await response.json()).ethereum.usd;
@@ -68,6 +68,7 @@ function SellerCreateProductPage(props) {
         setShow(true);
     }
     
+
 
     return(
         <Container>
@@ -106,6 +107,11 @@ function SellerCreateProductPage(props) {
                 <Form.Group>
                     <Form.Label>Media link</Form.Label>
                     <Form.Control onChange={e=>setLinkForMedia(e.target.value)} type="text" placeholder="Link for media" />
+                </Form.Group>
+
+                <Form.Group>
+                    <Form.Label>Markte hash of data</Form.Label>
+                    <Form.Control onChange={e=>setMarketHashOfData(e.target.value)} type="text" placeholder="Market hash of data" />
                 </Form.Group>
 
                 <Button variant="primary" onClick={()=>submitProduct()}>
