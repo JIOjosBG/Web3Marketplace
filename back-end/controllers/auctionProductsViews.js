@@ -43,7 +43,6 @@ const getProduct = async (req, res) => {
     }
     const product = await AuctionProduct.findOne({ where: { instanceId: id } });
 
-    //console.log(product);
     if(product===null || product.name==""){
         console.log(`GET /a/p/:id : not found ${id}`);
         res.status(404);
@@ -138,10 +137,8 @@ const instantiateOrUpdateProduct = async (req, res) => {
 
 //TODO: finish this function
 const bidForProduct = async (req, res,next) => {
-    console.log("asdasd")
     let bci;
     let bid;
-    console.log(req.body)
     console.log("POST /a/b/");
     instanceId = parseInt(req.body.instanceId);
     if(instanceId==null || isNaN(instanceId)){
@@ -199,12 +196,5 @@ const bidForProduct = async (req, res,next) => {
     res.send(bid.toJSON())
     
 }
-//TODO: make update product
-// const updateProduct = async (req, res) => {   
-//     console.log(req.params.id);
-//     res.send("updateProduct");
-//     console.log("updateProduct");
-// }
-
 
 module.exports = { getProduct, instantiateOrUpdateProduct, getProducts, getBidsForProduct, bidForProduct};

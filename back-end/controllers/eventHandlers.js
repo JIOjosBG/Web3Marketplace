@@ -1,6 +1,8 @@
 const ethers = require('ethers');
 
-const { sequelize, SellerProduct, AuctionProduct } = require("../models");
+const { scheduleBidExecution } = require('./scheduleJobs.js');
+
+const { SellerProduct, AuctionProduct } = require("../models");
 const simpleSellerABI = require("../contracts/ABIs/SimpleSeller.json").abi;
 const simpleAuctionABI = require("../contracts/ABIs/SimpleAuction.json").abi;
 
@@ -105,6 +107,7 @@ async function createAuctionProduct(name,minimalPrice,seller,index){
         console.log(e);
         return;
     }
+    scheduleBidExecution(index)
     console.log(`Created auction for ${name} index ${index}`)
 }
 

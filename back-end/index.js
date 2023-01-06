@@ -46,7 +46,7 @@ app.all("*", (req, res) =>res.send("404"));
 
 app.listen(PORT, async () =>{
     console.log(`Server running on port: http://localhost:${PORT}`);
-    await sequelize.sync();
+    //await sequelize.sync();
     await sequelize.authenticate();
     console.log("DB connected");
 });
@@ -58,5 +58,5 @@ simpleAuction.on("auctionProductAdded", createAuctionProduct);
 //TODO: add function to mark the auction as finished
 simpleAuction.on("auctionProductBid", bidAuctionProduct);
 simpleAuction.on("auctionProductDelivered", deliverAuctionProduct);
- 
+
 console.log("set up listeners");

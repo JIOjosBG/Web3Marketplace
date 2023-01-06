@@ -133,12 +133,11 @@ function AuctionDetailProduct(props){
         }
         if(sig==null || deliveryInstructions==""){
             //TODO: open modal
-            //TODO: encrypt delivery instructions with public key of seller
             console.log("not okay with sig and delivery instructions");
         }else{
+            //TODO: encrypt delivery instructions with public key of seller
             const message = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
-            //const deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
-            //TODO: arrayify
+
             const deliveryData =(await ethers.utils.keccak256(message));
             
             try{
@@ -156,10 +155,7 @@ function AuctionDetailProduct(props){
                 },
 
                 });
-                //.then((response) => response.json())
-                //.then((data) => console.log(data));
                 console.log(await response.status);
-                //await simpleAuction.bidForProduct(id,deliveryData,product.finishDate,nonce,myBid,await signer.getAddress(),sig);
             }catch(e){
                 console.log(e);
             }
