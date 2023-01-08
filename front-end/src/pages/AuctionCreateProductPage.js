@@ -6,13 +6,15 @@ import { useNavigate } from 'react-router-dom';
 import addressesJSON from '../shared/contractAddresses.json'
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json'
 
-
+//TODO: convert all hex wei price values to decimal eth
 function AuctionCreateProductPage(props) {
     const [name,setName] = useState("");
     const [minimalPrice,setMinimalPrice] = useState(0);
     const [priceInUSD,setPriceInUSD] = useState(0);
 
     const [finishDate,setFinishDate] = useState(0);
+    const [finishTime,setFinishTime] = useState(0);
+
     const [linkForMedia,setLinkForMedia] = useState("");
     //TODO: ADD PROPPER FIELD FOR SECRET DATA
     //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
@@ -22,7 +24,7 @@ function AuctionCreateProductPage(props) {
     const [show,setShow] = useState(false);
     const navigate = useNavigate();
 
-    const simpleAuction= new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , props.signer );
+    const simpleAuction = new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , props.signer );
     
     useEffect(()=>{
         getRates();
@@ -58,7 +60,14 @@ function AuctionCreateProductPage(props) {
     const addProduct = async () => {
         if(simpleAuction){
             try{
-                const date = Math.floor(new Date(finishDate)/1000);
+                let date = Math.floor(new Date(finishDate)/1000);
+                const offset = new Date().getTimezoneOffset()
+                date+=offset*60;
+                if(finishTime){
+                    date+=parseInt(finishTime.substr(0,2)*3600+finishTime.substr(3,5)*60)
+                }
+
+                //TODO: check if exists marketHashOfData
                 const data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
                 await simpleAuction.addProduct(name,minimalPrice,linkForMedia,await ethers.utils.keccak256(data),date);
                 navigate("/a")
@@ -113,6 +122,8 @@ function AuctionCreateProductPage(props) {
                 <Form.Group>
                     <Form.Label>Finish date</Form.Label>
                     <Form.Control onChange={e=>setFinishDate(e.target.value)} type="date"/>
+                    <Form.Control onChange={e=>setFinishTime(e.target.value)} type="time"/>
+
                     <Form.Text className="text-muted">
                     Date
                     </Form.Text>
@@ -126,9 +137,7 @@ function AuctionCreateProductPage(props) {
                     <Form.Control onChange={e=>setMarketHashOfData(e.target.value)} type="text" placeholder="Market hash of data" />
                 </Form.Group>
 
-                <Button variant="primary" onClick={submitProduct}>
-                    Submit
-                </Button>
+                <Button variant="primary" onClick={submitProduct}>Submit</Button>
                 </Form>
         </Container>
     );
