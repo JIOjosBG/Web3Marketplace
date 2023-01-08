@@ -169,7 +169,7 @@ function AuctionDetailProduct(props){
         <>
             <h1>{product.name}</h1>
             <img style={{width:'20%'}}src={product.linkForMedia}/>
-            {product.minimalPrice>product.bidAmount
+            {product.minimalPrice.gt(product.bidAmount)
             ?<>
                 <h2>Minimal price in wei: { (product.minimalPrice._hex)}</h2>
                 <h6>Minimal in USD: {minimalPriceInUSD}</h6>

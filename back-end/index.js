@@ -12,6 +12,7 @@ const sellerProductRoutes = require('./routes/sellerProducts.js');
 const auctionRoutes = require('./routes/auctionProducts.js');
 
 const { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct } = require('./controllers/eventHandlers');
+const {scheduleBidExecution} = require('./controllers/scheduleJobs');
 
 const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
 const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerABI, provider);  
@@ -58,5 +59,5 @@ simpleAuction.on("auctionProductAdded", createAuctionProduct);
 //TODO: add function to mark the auction as finished
 simpleAuction.on("auctionProductBid", bidAuctionProduct);
 simpleAuction.on("auctionProductDelivered", deliverAuctionProduct);
-
+//scheduleBidExecution(13)
 console.log("set up listeners");
