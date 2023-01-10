@@ -30,7 +30,7 @@ async function main() {
 
   await simpleSeller.joinMarketplace(marketplace.address);
   await simpleAuction.joinMarketplace(marketplace.address);
-
+  //TODO: set sender to be admin in marketplace
   console.log(
     `
     {

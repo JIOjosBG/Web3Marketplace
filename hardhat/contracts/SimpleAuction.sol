@@ -38,6 +38,12 @@ contract SimpleAuction is Ownable{
 
     uint public productCount=0;
 
+    modifier onlyCourier {
+        require(address(ownerMarketplace)!=address(0),"No owner marketplace");
+        require(Marketplace(ownerMarketplace).couriers(msg.sender),"Not an authorized courier");
+        _;
+    }
+
     function productInit(
         string calldata name,
         uint minimalPrice,
@@ -81,7 +87,7 @@ contract SimpleAuction is Ownable{
         belongsToContract=0;
     }
 
-    function bidForProduct(uint index,bytes calldata deliveryInstructions,uint expiration, bytes32 nonce, uint amount, address from,bytes memory sig) public payable{
+    function bidForProduct(uint index,bytes calldata deliveryInstructions, uint amount, address from,bytes memory sig) public payable{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.finishDate>block.timestamp,"Auction already finished");
@@ -90,17 +96,15 @@ contract SimpleAuction is Ownable{
         require(amount>p.bidAmount, "Bid must be larger");
 
         require(deliveryInstructions.length!=0, "No delivery instructions");
-        //TODO: ?????remove nonce from arguments (alredy in signature and can be computed)
-        require(nonce==keccak256(abi.encodePacked(address(this),index,amount)),"Wrong nonce");
-
+        //require(nonce==keccak256(abi.encodePacked(address(this),index,amount)),"Wrong nonce");
+        bytes32 nonce = keccak256(abi.encodePacked(address(this),index,amount));
         require(address(ownerMarketplace)!=address(0),"No marketplace");
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
 
         p.deliveryInstructions = deliveryInstructions;
 
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
-        //TODO: remove expirataion (can get it from p.dinishDate and is already in signature)
-        token.transactiWithSignature(expiration,nonce,amount,from,address(this),sig);
+        token.transactiWithSignature(p.finishDate,nonce,amount,from,address(this),sig);
         //RETURN PREV BID MONEY
         if(p.currentBidder!=address(0)){
             owedMoneyToBidders[p.currentBidder][index] = 0;
@@ -115,15 +119,12 @@ contract SimpleAuction is Ownable{
     }
 
     //TODO: mechanism to verivy the caller is authorized
-    function deliverProduct(uint index) public  /* onlyDelivery */{
+    function deliverProduct(uint index) public onlyCourier{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.finishDate<block.timestamp,"Auction not finished");
         //TODO: check if any bids
         require(p.delivered==false,"Product already delivered");
-        //check if caller is courier only if there is an owner marketplace, else revert with false
-        require(address(ownerMarketplace)!=address(0) ? ownerMarketplace.couriers(msg.sender)==true : false,"Not an authorized courier");
-
         uint pay = owedMoneyToBidders[p.currentBidder][index] *99/100;
         belongsToContract += p.bidAmount/100;
         owedMoneyToBidders[p.currentBidder][index] = 0;

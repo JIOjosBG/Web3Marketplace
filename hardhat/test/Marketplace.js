@@ -117,14 +117,37 @@ describe("Marketplace", function () {
             await expect(marketplace.setToken(ethers.constants.AddressZero)).to.be.revertedWith("Token address shouldn't be address(0)");
         });
     });
+    
+    describe("Add and remove admin",async function(){
+        it("successfully adds and removes",async function(){
+            expect(await marketplace.admins(accounts[0].address)).to.be.false;
+            expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
+            expect(await marketplace.admins(accounts[0].address)).to.be.true;
+            expect(await marketplace.removeAdmin(accounts[0].address)).to.not.throw;
+            expect(await marketplace.admins(accounts[0].address)).to.be.false;
+        });
+        it("0 address from owner",async function (){
+            await expect( marketplace.addAdmin(ethers.constants.AddressZero)).to.be.revertedWith("Address shouldn't be 0");
+        });
+        it("Correct address not from owner",async function (){
+            await expect( marketplace.connect(accounts[1]).addAdmin(accounts[1].address)).to.be.revertedWith("Ownable: caller is not the owner");
+        });
+    });
     describe("addCourier and removeCourier",async function(){
+        //TODO: update (check events and if admin)
+        beforeEach(async function(){
+            expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
+        });
         it("successfully adds and removes",async function(){
             expect(await marketplace.couriers(accounts[0].address)).to.be.false;
-            expect(await marketplace.addCourier(accounts[0].address)).to.not.throw;
+            expect(await marketplace.addCourier(accounts[0].address))
+            .to.emit(marketplace, "addedCourier")
+            .withArgs(accounts[0].address,accounts[0].address);
             expect(await marketplace.couriers(accounts[0].address)).to.be.true;
-            expect(await marketplace.removeCourier(accounts[0].address)).to.not.throw;
+            expect(await marketplace.removeCourier(accounts[0].address))
+            .to.emit(marketplace, "removedCourier")
+            .withArgs(accounts[0].address,accounts[0].address);
             expect(await marketplace.couriers(accounts[0].address)).to.be.false;
-
         });
 
         it("Tries to add 0 address",async function(){
@@ -133,9 +156,9 @@ describe("Marketplace", function () {
             expect(await marketplace.couriers(await ethers.constants.AddressZero)).to.be.false;
         });
 
-        it("Not owner",async function(){
+        it("Not admin",async function(){
             expect(await marketplace.couriers(accounts[3].address)).to.be.false;
-            await expect(marketplace.connect(accounts[2]).addCourier(accounts[3].address)).to.be.revertedWith("Ownable: caller is not the owner");
+            await expect(marketplace.connect(accounts[2]).addCourier(accounts[3].address)).to.be.revertedWith("Sender is not an admin!");
             expect(await marketplace.couriers(accounts[3].address)).to.be.false;
         });
 

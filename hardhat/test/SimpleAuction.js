@@ -29,12 +29,14 @@ describe("SimpleAuction", async function () {
     let agoraToken;
     let marketplace;
     let sigData;
+    let p0;
+    let p1;
     beforeEach(async function ()  {
 
         hashedData = await ethers.utils.formatBytes32String("");
         SimpleAuction = await ethers.getContractFactory("SimpleAuction");
         AgoraToken = await ethers.getContractFactory("AgoraToken");
-        Marketplace= await ethers.getContractFactory("Marketplace");
+        Marketplace = await ethers.getContractFactory("Marketplace");
         
         accounts = await ethers.getSigners();
         oneETH = await ethers.utils.parseEther("1");
@@ -42,13 +44,14 @@ describe("SimpleAuction", async function () {
         simpleAuction = await SimpleAuction.deploy();
         agoraToken = await AgoraToken.deploy();
         marketplace = await Marketplace.deploy();
+        expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
         expect(await marketplace.addCourier(accounts[3].address)).to.not.throw;
 
         finishDate =await  Math.floor(Date.now()/1000)+3600;
         oneETHAfterFee = ethers.utils.parseEther("0.99");
         sigData = {
             "currentTime": Math.floor(Date.now()/1000),
-            "futureTime":  Math.floor(Date.now()/1000)+1000,
+            "futureTime": Math.floor(Date.now()/1000)+3600,
             "nonce0oneETH": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint","uint"],[simpleAuction.address,0,oneETH])),
             "nonce1oneETH": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint","uint"],[simpleAuction.address,1,oneETH])),  
             "nonce0twoETHs": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint","uint"],[simpleAuction.address,0,twoETHs])),
@@ -145,6 +148,9 @@ describe("SimpleAuction", async function () {
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[2]).buyTokens({value:twoETHs})).to.not.throw;
             expect(await simpleAuction.belongsToContract()).equal(0);
+            p0 = await simpleAuction.products(0);
+            p1 = await simpleAuction.products(1);
+
         });
 
         it("Bids for product successfully",async function(){
@@ -153,9 +159,9 @@ describe("SimpleAuction", async function () {
 
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.not.throw;
             expect( (await simpleAuction.products(0)).currentBidder).equal(accounts[1].address);
             expect( (await simpleAuction.products(0)).bidAmount).equal(oneETH);
             const rawdeliveryInstructions = (await simpleAuction.products(0)).deliveryInstructions;
@@ -168,9 +174,9 @@ describe("SimpleAuction", async function () {
 
             expect( (await simpleAuction.products(0)).currentBidder).equal(accounts[1].address);
             expect( (await simpleAuction.products(0)).bidAmount).equal(oneETH);
-            const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0twoETHs,twoETHs,accounts[2].address,simpleAuction.address])));
+            const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0twoETHs,twoETHs,accounts[2].address,simpleAuction.address])));
             const signature2 = accounts[2].signMessage(message2);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here2"),sigData.futureTime,sigData.nonce0twoETHs,twoETHs,accounts[2].address,signature2)).to.not.throw;
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here2"),twoETHs,accounts[2].address,signature2)).to.not.throw;
             expect( (await simpleAuction.products(0)).currentBidder).equal(accounts[2].address);
             expect( (await simpleAuction.products(0)).bidAmount).equal(twoETHs);
             const rawdeliveryInstructions2 = (await simpleAuction.products(0)).deliveryInstructions;
@@ -189,7 +195,7 @@ describe("SimpleAuction", async function () {
         it("No such product",async function(){
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(3,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.be.revertedWith("No such product");
+            await expect(simpleAuction.bidForProduct(3,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.be.revertedWith("No such product");
 
             expect( await simpleAuction.owedMoneyToBidders(accounts[0].address,3)).equal(0);
             expect(await simpleAuction.belongsToContract()).equal(0);
@@ -199,9 +205,9 @@ describe("SimpleAuction", async function () {
         it("Auction finished",async function(){
             await network.provider.send("evm_increaseTime", [3600])
 
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[0,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[2].address,signature)).to.be.revertedWith("Auction already finished");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[2].address,signature)).to.be.revertedWith("Auction already finished");
 
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
@@ -211,17 +217,17 @@ describe("SimpleAuction", async function () {
         });
 
         it("Lower than last bid",async function(){
-            const message1 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const message1 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature1 = accounts[1].signMessage(message1);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature1)).to.not.throw;
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature1)).to.not.throw;
         
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(oneETH);
             expect( await simpleAuction.owedMoneyToBidders(accounts[2].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(accounts[1].address);
             
-            const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[2].address,simpleAuction.address])));
+            const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0oneETH,oneETH,accounts[2].address,simpleAuction.address])));
             const signature2 = accounts[2].signMessage(message2);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[2].address,signature2)).to.be.rejectedWith("Bid must be larger");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[2].address,signature2)).to.be.rejectedWith("Bid must be larger");
             
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(oneETH);
             expect( await simpleAuction.owedMoneyToBidders(accounts[2].address,0)).equal(0);
@@ -234,17 +240,17 @@ describe("SimpleAuction", async function () {
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0tenWEI,10,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
 
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0tenWEI,10,accounts[1].address,signature)).to.be.rejectedWith("Bid must be larger");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),10,accounts[1].address,signature)).to.be.rejectedWith("Bid must be larger");
             
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
         });
 
-        it("No delivery instructions",async function(){            
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+        it("No delivery instructions",async function(){        
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(0,stringToHex(""),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.be.revertedWith("No delivery instructions");
+            await expect(simpleAuction.bidForProduct(0,stringToHex(""),oneETH,accounts[1].address,signature)).to.be.revertedWith("No delivery instructions");
             
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
@@ -255,25 +261,26 @@ describe("SimpleAuction", async function () {
 
         it("Wrong nonce",async function(){
             //bad index
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce1oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p1.finishDate,sigData.nonce1oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce1oneETH,oneETH,accounts[1].address,signature)).to.be.revertedWith("Wrong nonce");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.be.revertedWith("Wrong arguments (recoveredAddress!=from)");
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
 
             //bad amount
-            const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0twoETHs,oneETH,accounts[1].address,simpleAuction.address])));
+            const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0twoETHs,oneETH,accounts[1].address,simpleAuction.address])));
             const signature2 = accounts[1].signMessage(message2);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0twoETHs,oneETH,accounts[1].address,signature2)).to.be.revertedWith("Wrong nonce");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature2)).to.be.revertedWith("Wrong arguments (recoveredAddress!=from)");
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
 
             //bad address
-            const message3 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.simplyBadNonce,oneETH,accounts[1].address,simpleAuction.address])));
+            const message3 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.simplyBadNonce,oneETH,accounts[1].address,simpleAuction.address])));
             const signature3 = accounts[1].signMessage(message3);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.simplyBadNonce,oneETH,accounts[1].address,signature3)).to.be.revertedWith("Wrong nonce");
+            //TODO: FIX THIS ERR (will be from!=signer instead of bad nonce)
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature3)).to.be.revertedWith("Wrong arguments (recoveredAddress!=from)");
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
@@ -281,9 +288,9 @@ describe("SimpleAuction", async function () {
 
 
         it("Expired signature",async function(){
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.currentTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[0,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.currentTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.be.revertedWith("Signature expired");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.be.revertedWith("Wrong arguments (recoveredAddress!=from)");
 
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
@@ -304,7 +311,7 @@ describe("SimpleAuction", async function () {
         it("Without marketplace or token",async function(){
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.be.revertedWith("No marketplace");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.be.revertedWith("No marketplace");
             
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
@@ -319,7 +326,7 @@ describe("SimpleAuction", async function () {
 
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.be.revertedWith("No token specified");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.be.revertedWith("No token specified");
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
@@ -347,18 +354,18 @@ describe("SimpleAuction", async function () {
     });
 
     describe("deliverProduct", async function(){
-
         beforeEach(async function ()  {
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
             expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
 
             expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
             expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData,finishDate)).to.not.throw;
+            p0 = await simpleAuction.products(0)
             expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.not.throw;
             expect((await simpleAuction.products(0)).delivered).to.be.false;
             
             expect(await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(oneETH);
@@ -409,13 +416,20 @@ describe("SimpleAuction", async function () {
             await network.provider.send("evm_increaseTime", [-3600])
             expect(await simpleAuction.belongsToContract()).equal(0);
         });
+
+        it("No marketplace",async function(){
+            simpleAuctionNoMP = await SimpleAuction.deploy();
+            await expect(simpleAuctionNoMP.deliverProduct(0)).to.be.revertedWith("No owner marketplace");
+
+        });
     
     });
+
     describe("transferFunds", async function(){
         beforeEach(async function ()  {
             expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
             expect(await simpleAuction.addProduct("Product2",twoETHs,"asd2",hashedData,finishDate)).to.not.throw;
-
+            p0 = await simpleAuction.products(0);
             expect(await agoraToken.connect(accounts[0]).buyTokens({value:oneETH})).to.not.throw;
             expect(await agoraToken.connect(accounts[1]).buyTokens({value:twoETHs})).to.not.throw;
             
@@ -426,9 +440,9 @@ describe("SimpleAuction", async function () {
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
             expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
 
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,signature)).to.not.throw;
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.not.throw;
 
             await network.provider.send("evm_increaseTime", [3600])
             expect(await simpleAuction.connect(accounts[3]).deliverProduct(0)).to.not.throw;
@@ -496,10 +510,10 @@ describe("SimpleAuction", async function () {
             expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate))
             .to.emit(simpleAuction, "auctionProductAdded")
             .withArgs("Product1",oneETH, accounts[0].address,0);
-            
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0twoETHs,twoETHs,accounts[1].address,simpleAuction.address])));
+            p0 = await simpleAuction.products(0)
+            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0twoETHs,twoETHs,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0twoETHs,twoETHs,accounts[1].address,signature))
+            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),twoETHs,accounts[1].address,signature))
             .to.emit(simpleAuction, "auctionProductBid")
             .withArgs(0,accounts[1].address,twoETHs);
 

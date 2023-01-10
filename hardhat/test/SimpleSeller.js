@@ -48,6 +48,7 @@ describe("SimpleSeller", async function () {
         simpleSeller = await SimpleSeller.deploy();
         agoraToken = await AgoraToken.deploy();
         marketplace = await Marketplace.deploy();
+        expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
         expect(await marketplace.addCourier(accounts[3].address)).to.not.throw;
 
         sigData = {
@@ -62,9 +63,9 @@ describe("SimpleSeller", async function () {
     describe("Deployment", async function () {
 
         it("Should have the correct owner", async function () {
-            const addressOfOwnerOfSimpleSeller = await simpleSeller.owner();
-            expect(addressOfOwnerOfSimpleSeller).to.equal(accounts[0].address, "Wrong owner");
-            expect(addressOfOwnerOfSimpleSeller).to.not.equal(accounts[1].address, "Wrong owner");
+            const owner = await simpleSeller.owner();
+            expect(owner).to.equal(accounts[0].address, "Wrong owner");
+            expect(owner).to.not.equal(accounts[1].address, "Wrong owner");
         });
 
         it("Should start with 0 values", async function () {
