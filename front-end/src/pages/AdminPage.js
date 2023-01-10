@@ -8,18 +8,20 @@ import marketplaceJSON from '../shared/ABIs/Marketplace.json'
 
 function AdminPage(props) {
     const [courier,setCourier] = useState("");
+    const [isOwner,setIsOwner] = useState(0);
 
     const navigate = useNavigate();
     const marketplace = new ethers.Contract( addressesJSON.marketplace, marketplaceJSON.abi , props.signer );
-    async function redirectIfNotAdmin(){
+    async function getInitialInfo(){
         const owner = await marketplace.owner()
         const account = await props.signer.getAddress()
         if(await marketplace.admins(account) == false){
             navigate("/");
         }
+        setIsOwner((await marketplace.owner()).toLowerCase() === account.toLowerCase())
     }
     useEffect(()=>{
-        redirectIfNotAdmin();
+        getInitialInfo();
     },[]);
     
     async function addCourier(){
@@ -35,11 +37,16 @@ function AdminPage(props) {
     return(
         <Container>
             <h1>Admin page</h1>
-            <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Add courier:</Form.Label>
-                <Form.Control onChange={e=>setCourier(e.target.value)} type="text" placeholder="Courier address"/>
-            </Form.Group>
-            <Button onClick={addCourier}>Add courier</Button>
+            {isOwner
+                ?<>
+                <Form.Group className="mb-3" controlId="formName">
+                    <Form.Label>Add courier:</Form.Label>
+                    <Form.Control onChange={e=>setCourier(e.target.value)} type="text" placeholder="Courier address"/>
+                </Form.Group>
+                <Button onClick={addCourier}>Add courier</Button>
+                </>
+                :<></>
+            }
         </Container>
     );
 }
