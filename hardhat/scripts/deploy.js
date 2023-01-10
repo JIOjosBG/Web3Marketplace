@@ -5,6 +5,8 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
+const dotenv = require("dotenv")
+dotenv.config();
 
 async function main() {
 
@@ -27,6 +29,10 @@ async function main() {
   await marketplace.setToken(agoraToken.address);
   await marketplace.addContract(simpleSeller.address,"Simple Seller");
   await marketplace.addContract(simpleAuction.resolvedAddress,"Simple Auction");
+  const owner = marketplace.owner();
+
+  await marketplace.addAdmin(owner);
+  await marketplace.addAdmin(process.env.DEVELOPMENT_PUBLIC_KEY);
 
   await simpleSeller.joinMarketplace(marketplace.address);
   await simpleAuction.joinMarketplace(marketplace.address);
@@ -34,7 +40,7 @@ async function main() {
   console.log(
     `
     {
-      marketplace":"${marketplace.address}",
+      "marketplace":"${marketplace.address}",
       "agoraToken":"${agoraToken.address}",
       "simpleSeller":"${simpleSeller.address}",
       "simpleAuction":"${simpleAuction.address}"

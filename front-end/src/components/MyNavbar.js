@@ -13,15 +13,15 @@ import MarketplaceJSON from "../shared/ABIs/Marketplace.json";
 function MyNavbar(props) {
   let provider=props.provider;
   const [tokens, setTokens] = useState(0)
-  const [isOwner, setIsOwner] = useState(0)
+  const [isAdmin, setIsAdmin] = useState(0)
   const agoraToken = new ethers.Contract(addresses.agoraToken, AgoraTokenJSON.abi, provider);  
   const marketplace = new ethers.Contract(addresses.marketplace, MarketplaceJSON.abi, provider);  
 
   async function getContractValues(){
     const t = await agoraToken.balanceOf(props.account)
     setTokens(t)
-    const o = await marketplace.owner();
-    await setIsOwner(props.account.toLowerCase()===o.toLowerCase());
+    const a = await marketplace.admins(props.account);
+    await setIsAdmin(a);
   }
   
   useEffect(()=>{
@@ -49,7 +49,7 @@ function MyNavbar(props) {
             <Link to="/t"><Button>Buy Tokens</Button></Link>
             <h3>Available tokens { Number(ethers.utils.formatUnits(tokens, "ether")).toFixed(5) }</h3>
           </Col>
-          {isOwner
+          {isAdmin
             ?<Col> <Link to="admin/"><Button>Admin page</Button></Link></Col>
             :<></>
           }
