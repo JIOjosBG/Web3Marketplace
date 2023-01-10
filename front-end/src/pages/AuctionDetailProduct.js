@@ -4,6 +4,8 @@ import { useParams } from 'react-router-dom';
 import {Button, Form} from 'react-bootstrap';
 
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
+import MarketplaceJSON from '../shared/ABIs/Marketplace.json';
+
 import addressesJSON from '../shared/contractAddresses.json';
 
 function AuctionDetailProduct(props){
@@ -12,19 +14,25 @@ function AuctionDetailProduct(props){
     const [minimalPriceInUSD,setMinimalPriceInUSD] = useState(0);
     const [highestBidInUSD,setHighestBidInUSD] = useState(0);
     const simpleAuction= new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , props.signer);
+    const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider);
+    
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
     const [myBid,setMyBid] = useState(0);
     const [myBidInUSD,setMyBidInUSD] = useState(0);
+    const [isCourier,setIsCourier] = useState(0);
     const signer = props.signer;
     const { id } = useParams();
     //TODO: add form for delivery instructions to be passed when purchasing
     //TODO: make popup for that form with amount eth to usd convertion
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
-        //TODO: add bid with database button
+        getIsCourierStatus()
         getProduct();
     },[]);
 
+    const getIsCourierStatus = async () => {
+        setIsCourier(await marketplace.couriers(await signer.getAddress()))
+    }
     const getProduct = async () => {
         try{
             // TODO: check if this is bad ID
@@ -198,9 +206,15 @@ function AuctionDetailProduct(props){
                 <Form.Text className="text-muted">{myBid._hex} in Wei</Form.Text>
 
             </Form.Group>
-            
-            <Button onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>
-            <Button onClick={handleBidViaBackend }>Bid via backend ${myBidInUSD} </Button>
+            {parseInt(product.finishDate._hex)*1000>new Date().getTime()
+                ?<>
+                    <Button onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>
+                    <Button onClick={handleBidViaBackend }>Bid via backend ${myBidInUSD} </Button>
+                </>
+                :isCourier
+                    ?<Button onClick={() => console.log("deliver function here")}>Deliver now </Button>
+                    :<></>
+            }
 
             </>
         :<h1>Loading</h1>

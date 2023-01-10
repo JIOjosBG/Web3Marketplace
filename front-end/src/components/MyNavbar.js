@@ -1,11 +1,32 @@
-// import React, { useState } from 'react';
-
-import logo from '../media/logo.png'; // Tell webpack this JS file uses this image
-import {Navbar,Container,Row, Col} from 'react-bootstrap';
+import { useState, useEffect } from 'react';
+import {ethers} from "ethers";
+import logo from '../media/logo.png';
+import {Navbar,Container,Row, Col, Button} from 'react-bootstrap';
 import {Link, Outlet} from 'react-router-dom';
+
+
+import addresses from "../shared/contractAddresses.json";
+import AgoraTokenJSON from "../shared/ABIs/AgoraToken.json";
+import MarketplaceJSON from "../shared/ABIs/Marketplace.json";
+
 
 function MyNavbar(props) {
   let provider=props.provider;
+  const [tokens, setTokens] = useState(0)
+  const [isOwner, setIsOwner] = useState(0)
+  const agoraToken = new ethers.Contract(addresses.agoraToken, AgoraTokenJSON.abi, provider);  
+  const marketplace = new ethers.Contract(addresses.marketplace, MarketplaceJSON.abi, provider);  
+
+  async function getContractValues(){
+    const t = await agoraToken.balanceOf(props.account)
+    setTokens(t)
+    const o = await marketplace.owner();
+    await setIsOwner(props.account.toLowerCase()===o.toLowerCase());
+  }
+  
+  useEffect(()=>{
+    getContractValues()
+  },[])
   return (
     <>
 
@@ -13,25 +34,27 @@ function MyNavbar(props) {
       <Container>
         <Row>
           <Col>
-          <img style={{width:'50%'}} src={logo} alt={logo}/>
+            <img style={{width:'50%'}} src={logo} alt={logo}/>
+            {props.account
+              ?<h6 className="ml">Account: {props.account ? props.account.substr(0,10) : 0}...</h6>
+              :<></>
+            }
+          </Col>
+
+          <Col>
+            <Link to="/s"><Button>Simple Seller </Button></Link>
+            <Link to="/a"><Button>Simple Auction </Button></Link>
           </Col>
           <Col>
-          <h6 className="ml">{props.account}</h6>
+            <Link to="/t"><Button>Buy Tokens</Button></Link>
+            <h3>Available tokens { Number(ethers.utils.formatUnits(tokens, "ether")).toFixed(5) }</h3>
           </Col>
+          {isOwner
+            ?<Col> <Link to="admin/"><Button>Admin page</Button></Link></Col>
+            :<></>
+          }
+          {/* TODO: add available tokens display */}
         </Row>
-        {provider
-          ?<>
-            <Col>
-              <Link to="/s">Simple Seller </Link>
-              <Link to="/a">Simple Auction </Link>
-            </Col>
-            <Col>
-              <Link to="/t"> Buy tokens </Link>
-            {/* TODO: add available tokens display */}
-            </Col>
-          </>
-          :<></>
-        }
       </Container>
     </Navbar> 
     <Outlet/>

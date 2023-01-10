@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AgoraToken.sol";
-
+//TODO: add admins
 contract Marketplace is Ownable {
 
     struct Market{
@@ -12,11 +12,12 @@ contract Marketplace is Ownable {
         string name;
         uint addDate;
     }
-
+    //TODO: get all couriers
     address public  myToken;
     address[] public marketAddresses;
     uint public marketCount;
     mapping(address => Market) public markets;
+    //TODO: update to a list
     mapping(address => bool) public couriers;
 
     function setToken(address _token) public onlyOwner {
