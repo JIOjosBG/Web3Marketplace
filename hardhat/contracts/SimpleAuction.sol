@@ -119,6 +119,7 @@ contract SimpleAuction is Ownable{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.finishDate<block.timestamp,"Auction not finished");
+        //TODO: check if any bids
         require(p.delivered==false,"Product already delivered");
         //check if caller is courier only if there is an owner marketplace, else revert with false
         require(address(ownerMarketplace)!=address(0) ? ownerMarketplace.couriers(msg.sender)==true : false,"Not an authorized courier");
