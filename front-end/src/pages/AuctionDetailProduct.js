@@ -172,6 +172,9 @@ function AuctionDetailProduct(props){
         }
     }
 
+    const deliverProduct = async () => {
+        await simpleAuction.deliverProduct(id);
+    }
 
     return(
     <>
@@ -197,24 +200,28 @@ function AuctionDetailProduct(props){
             }
             <h4>{product.seller}</h4>
             {new Date(parseInt(product.addDate._hex)*1000).toString()}
-            {/*TODO: make window to shouw previous bids*/}
-            <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Delivery Instructions:</Form.Label>
-                <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
-            </Form.Group>
-            <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Bid for product:</Form.Label>
-                <Form.Control onChange={e=>handleBidInput(e.target.value)} type="number" placeholder="Your bid"/>
-                <Form.Text className="text-muted">{myBid._hex} in Wei</Form.Text>
-
-            </Form.Group>
+            {/*TODO: make window to shouw previous bids in DB*/}
+            
             {parseInt(product.finishDate._hex)*1000>new Date().getTime()
                 ?<>
+                <Form.Group className="mb-3" controlId="formName">
+                    <Form.Label>Delivery Instructions:</Form.Label>
+                    <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
+                </Form.Group>
+                <Form.Group className="mb-3" controlId="formName">
+                    <Form.Label>Bid for product:</Form.Label>
+                    <Form.Control onChange={e=>handleBidInput(e.target.value)} type="number" placeholder="Your bid"/>
+                    <Form.Text className="text-muted">{myBid._hex} in Wei</Form.Text>
+
+                </Form.Group>
+
                     <Button onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>
                     <Button onClick={handleBidViaBackend }>Bid via backend ${myBidInUSD} </Button>
                 </>
                 :isCourier
-                    ?<Button onClick={() => console.log("deliver function here")}>Deliver now </Button>
+                    ?product.delivered==false
+                        ?<Button onClick={deliverProduct}>Deliver now </Button>
+                        :<h4>Already delivered</h4>    
                     :<></>
             }
 
