@@ -67,7 +67,7 @@ contract SimpleSeller is Ownable{
         token.transfer(address(ownerMarketplace),belongsToContract);
         belongsToContract=0;
     }
-
+    //TODO: remove nonce and amount
     function payProduct(uint index, bytes calldata deliveryInstructions,uint expiration, bytes32 nonce, uint amount, address from,bytes memory sig) public payable{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");

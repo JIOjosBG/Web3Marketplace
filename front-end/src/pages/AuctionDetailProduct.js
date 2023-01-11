@@ -122,7 +122,9 @@ function AuctionDetailProduct(props){
             const deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
             
             try{
-                await simpleAuction.bidForProduct(id,deliveryData,product.finishDate,nonce,myBid,await signer.getAddress(),sig);
+                // await simpleAuction.bidForProduct(id,deliveryData,product.finishDate,nonce,myBid,await signer.getAddress(),sig);
+                await simpleAuction.bidForProduct(id,deliveryData,myBid,await signer.getAddress(),sig);
+                
             }catch(e){
                 console.log(e);
             }

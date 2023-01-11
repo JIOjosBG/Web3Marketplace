@@ -97,9 +97,8 @@ function SellerDetailProduct(props){
             
             try{
                 console.log(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
+                //TODO: update
                 await simpleSeller.payProduct(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
-                    //simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,signature)).to.not.throw;
-                
             }catch(e){
                 console.log(e);
             }
