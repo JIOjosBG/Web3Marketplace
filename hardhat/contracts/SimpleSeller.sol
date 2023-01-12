@@ -67,14 +67,12 @@ contract SimpleSeller is Ownable{
         token.transfer(address(ownerMarketplace),belongsToContract);
         belongsToContract=0;
     }
-    //TODO: remove nonce and amount
-    function payProduct(uint index, bytes calldata deliveryInstructions,uint expiration, bytes32 nonce, uint amount, address from,bytes memory sig) public payable{
+    function payProduct(uint index, bytes calldata deliveryInstructions,uint expiration,address from,bytes memory sig) public{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==false,"Product already bought");
-        require(amount>=p.price, "Not enough eth");
         require(deliveryInstructions.length!=0, "No delivery instructions");
-        require(nonce==keccak256(abi.encodePacked(address(this),index)),"Wrong nonce");
+        bytes32 nonce=keccak256(abi.encodePacked(address(this),index));
         require(address(ownerMarketplace)!=address(0),"No marketplace");
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
 
@@ -83,12 +81,10 @@ contract SimpleSeller is Ownable{
         owedMoneyToSellers[p.seller][index] = p.price*99/100;
         owedMoneyToBuyers[from][index] = p.price;
         products[index].buyer = from;
+        //???to move before setting delivery instructions etc. ????
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
-        token.transactiWithSignature(expiration,nonce,amount,from,address(this),sig);
-
-        if(amount>p.price){
-            token.transfer(from,amount-p.price);
-        }
+        token.transactiWithSignature(expiration,nonce,p.price,from,address(this),sig);
+        
         emit sellerProductSold(index, from);
 
 

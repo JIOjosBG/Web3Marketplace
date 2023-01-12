@@ -199,7 +199,9 @@ function AuctionDetailProduct(props){
             :<></>
             }
             <h4>{product.seller}</h4>
-            {new Date(parseInt(product.addDate._hex)*1000).toString()}
+            <h4>Added {new Date(parseInt(product.addDate._hex)*1000).toString()}</h4>
+            <h4>Finishes {new Date(parseInt(product.finishDate._hex)*1000).toString()}</h4>
+            
             {/*TODO: make window to shouw previous bids in DB*/}
             
             {parseInt(product.finishDate._hex)*1000>new Date().getTime()

@@ -4,20 +4,28 @@ import { useParams } from 'react-router-dom';
 import {Button, Form} from 'react-bootstrap';
 
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
+import MarketplaceJSON from '../shared/ABIs/Marketplace.json';
+
 import addressesJSON from '../shared/contractAddresses.json';
 function SellerDetailProduct(props){
     const [product,setProduct] = useState(null);
     const [priceInUSD,setPriceInUSD] = useState(0);
     const [rate,setRate] = useState(0);
+    const [isCourier, setIsCourier] = useState(0);
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
 
   
     const signer = props.signer;
 
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer);
+    const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider);
+    
     const { id } = useParams();
     //TODO: add form for delivery instructions to be passed when purchasing
     //TODO: make popup for that form with amount eth to usd convertion
+    const getIsCourierStatus = async () => {
+        setIsCourier(await marketplace.couriers(await signer.getAddress()))
+    }
 
     const getRates = async () => {
         try{
@@ -98,7 +106,7 @@ function SellerDetailProduct(props){
             try{
                 console.log(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
                 //TODO: update
-                await simpleSeller.payProduct(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
+                await simpleSeller.payProduct(id,deliveryData,expiration,await signer.getAddress(),sig);
             }catch(e){
                 console.log(e);
             }
@@ -106,13 +114,16 @@ function SellerDetailProduct(props){
     }
     const deliverProduct = async() => {
         try{
-            simpleSeller.deliverProduct(id);
+            console.log(simpleSeller)
+            await simpleSeller.deliverProduct(id);
         }catch(e){
             console.log(e);
         }
     }
+    //TODO: add account to update list
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
+        getIsCourierStatus()
         getProduct();
     },[]);
 
@@ -136,18 +147,23 @@ function SellerDetailProduct(props){
             <h4>{product.seller}</h4>
             {new Date(parseInt(product.addDate._hex)*1000).toString()}
             {parseInt(product.addDate).toString()}
+
+
+
+
             {!product.paid
-            ?<>
-            <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Delivery Instructions:</Form.Label>
-                <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
-            </Form.Group>
-            <Button onClick={buyProduct}> Buy now </Button>
-            </>
-            :!product.delivered
-            //TODO: check if courier
-            ?<Button onClick={deliverProduct}> Deliver now </Button>
-            :<h4>Paid and delivered</h4>
+                ?<>
+                <Form.Group className="mb-3" controlId="formName">
+                    <Form.Label>Delivery Instructions:</Form.Label>
+                    <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
+                </Form.Group>
+                <Button onClick={buyProduct}> Buy now </Button>
+                </>
+                :isCourier
+                    ?product.delivered==false
+                        ?<Button onClick={deliverProduct}>Deliver now </Button>
+                        :<h4>Already delivered</h4>    
+                    :<></>
             }
             </>
         :<h1>Loading</h1>

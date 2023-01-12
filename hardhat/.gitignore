@@ -3,3 +3,4 @@
 /cache
 /node_modules
 /coverage
+/ganache_db

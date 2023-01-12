@@ -21,6 +21,7 @@ function MyNavbar(props) {
     const t = await agoraToken.balanceOf(props.account)
     setTokens(t)
     const a = await marketplace.admins(props.account);
+    console.log(a);
     await setIsAdmin(a);
   }
   
