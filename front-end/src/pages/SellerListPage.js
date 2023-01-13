@@ -8,7 +8,6 @@ import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 
 function SellerProductList(props) {
   const [count, setCount] = useState(0);
-  //const [products, setProducts] = useState(productsJSON.products);
   const [products, setProducts] = useState([]);
   useEffect(()=>{
     updateProducts();

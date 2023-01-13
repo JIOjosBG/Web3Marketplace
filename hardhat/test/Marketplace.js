@@ -134,7 +134,6 @@ describe("Marketplace", function () {
         });
     });
     describe("addCourier and removeCourier",async function(){
-        //TODO: update (check events and if admin)
         beforeEach(async function(){
             expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
         });

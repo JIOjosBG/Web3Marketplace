@@ -3,7 +3,8 @@ const ethers = require('ethers');
 
 const simpleSellerABI = require("../contracts/ABIs/SimpleSeller.json").abi;
 const addresses = require("../contracts/contractAddresses.json");
-const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
+const provider = require("./shared.js");
+
 const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerABI, provider); 
 
 //TODO: listener for event createproduct (sets instanceId in DB)

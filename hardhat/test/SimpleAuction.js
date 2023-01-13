@@ -279,7 +279,6 @@ describe("SimpleAuction", async function () {
             //bad address
             const message3 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.simplyBadNonce,oneETH,accounts[1].address,simpleAuction.address])));
             const signature3 = accounts[1].signMessage(message3);
-            //TODO: FIX THIS ERR (will be from!=signer instead of bad nonce)
             await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature3)).to.be.revertedWith("Wrong arguments (recoveredAddress!=from)");
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
@@ -421,6 +420,22 @@ describe("SimpleAuction", async function () {
             simpleAuctionNoMP = await SimpleAuction.deploy();
             await expect(simpleAuctionNoMP.deliverProduct(0)).to.be.revertedWith("No owner marketplace");
 
+        });
+
+        it("No bids", async function ()  {
+            expect(await simpleAuction.addProduct("Product3",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
+            const p2 = await simpleAuction.products(2)
+            expect(p2.delivered).to.be.false;
+
+            expect(p2.bidAmount).equal(0);
+            expect(p2.currentBidder).equal(ethers.constants.AddressZero);
+
+            expect(await simpleAuction.owedMoneyToBidders(accounts[0].address,3)).equal(0);
+            expect(await simpleAuction.owedMoneyToBidders(accounts[1].address,3)).equal(0);
+            expect(await simpleAuction.belongsToContract()).equal(0);
+            await network.provider.send("evm_increaseTime", [3600])
+            await expect( simpleAuction.connect(accounts[3]).deliverProduct(2)).to.be.revertedWith("No bids, therefore can't deliver");
+            await network.provider.send("evm_increaseTime", [-3600])
         });
     
     });

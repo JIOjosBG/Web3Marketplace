@@ -17,7 +17,7 @@ contract SimpleAuction is Ownable{
         address seller;
         uint addDate;
         string linkForMedia;
-        bytes32 marketHashOfData;
+        bytes marketHashOfData;
         bool approved;
         bool delivered;
         bytes deliveryInstructions;
@@ -48,7 +48,7 @@ contract SimpleAuction is Ownable{
         string calldata name,
         uint minimalPrice,
         string calldata linkForMedia,
-        bytes32 marketHashOfData,
+        bytes calldata marketHashOfData,
         uint endDate
         )private view returns(Product memory){
             return Product(
@@ -57,7 +57,7 @@ contract SimpleAuction is Ownable{
             );
     }
 
-    function addProduct(string calldata name, uint minimalPrice, string calldata link, bytes32 marketHashOfData,/*uint startDate,*/ uint finishDate) public {
+    function addProduct(string calldata name, uint minimalPrice, string calldata link, bytes calldata marketHashOfData, uint finishDate) public {
         require(bytes(name).length != 0,"Name shouldn't be empty");
         require(minimalPrice>=2000000,"Price should be >=2000000");
         //require(startDate>=block.timestamp,"Start should be in the future");
@@ -118,12 +118,11 @@ contract SimpleAuction is Ownable{
         emit auctionProductBid(index, from, amount);
     }
 
-    //TODO: mechanism to verivy the caller is authorized
     function deliverProduct(uint index) public onlyCourier{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.finishDate<block.timestamp,"Auction not finished");
-        //TODO: check if any bids
+        require(p.currentBidder!=address(0),"No bids, therefore can't deliver");
         require(p.delivered==false,"Product already delivered");
         uint pay = owedMoneyToBidders[p.currentBidder][index] *99/100;
         belongsToContract += p.bidAmount/100;

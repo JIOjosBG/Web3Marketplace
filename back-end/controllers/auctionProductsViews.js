@@ -3,7 +3,8 @@ const ethers = require('ethers');
 
 const simpleAuctionABI = require("../contracts/ABIs/SimpleAuction.json").abi;
 const addresses = require("../contracts/contractAddresses.json");
-const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
+const provider = require("./shared.js")
+
 const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionABI, provider); 
 
 

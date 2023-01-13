@@ -105,7 +105,6 @@ function SellerDetailProduct(props){
             
             try{
                 console.log(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
-                //TODO: update
                 await simpleSeller.payProduct(id,deliveryData,expiration,await signer.getAddress(),sig);
             }catch(e){
                 console.log(e);

@@ -13,8 +13,8 @@ const auctionRoutes = require('./routes/auctionProducts.js');
 
 const { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct } = require('./controllers/eventHandlers');
 const {scheduleBidExecution} = require('./controllers/scheduleJobs');
+const provider = require("./controllers/shared.js")
 
-const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
 const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerABI, provider);  
 const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionABI, provider);  
 

@@ -8,9 +8,7 @@ const simpleAuctionABI = require("../contracts/ABIs/SimpleAuction.json").abi;
 const agoraTokenABI = require("../contracts/ABIs/AgoraToken.json").abi;
 
 const addresses = require("../contracts/contractAddresses.json");
-//TODO: provider to signer
-//CAUTION: doesnt work otherwise
-const provider = new ethers.providers.WebSocketProvider(`wss://goerli.infura.io/ws/v3/${process.env.INFURA_KEY}`);
+const provider = require("./shared.js")
 const signer = new ethers.Wallet( process.env.ACCOUNT_PRIVATE_KEY, provider )
 
 const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionABI, signer);  
@@ -85,7 +83,7 @@ async function makeBidsForProduct(index){
                 const preHashedNonce = await ethers.utils.solidityPack(["address","uint","uint"],[simpleAuction.address,index,bids[i].amount])
                 const nonce = await ethers.utils.arrayify(await ethers.utils.keccak256(preHashedNonce));
                 const expiration = bci.finishDate;
-                await simpleAuction.bidForProduct(index,bids[i].deliveryInstructions,expiration, nonce, bids[i].amount, bids[i].bidder, bids[i].signature);
+                await simpleAuction.bidForProduct(index,bids[i].deliveryInstructions, bids[i].amount, bids[i].bidder, bids[i].signature);
                 console.log(`Schedule jobs: successfully bid for product ${index}`)
                 flag=1;
                 break
