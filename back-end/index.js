@@ -56,7 +56,6 @@ simpleSeller.on("sellerProductAdded", createSellerProduct);
 simpleSeller.on("sellerProductSold", sellSellerProduct);
 simpleSeller.on("sellerProductDelivered", deliverSellerProduct);
 simpleAuction.on("auctionProductAdded", createAuctionProduct);
-//TODO: add function to mark the auction as finished
 simpleAuction.on("auctionProductBid", bidAuctionProduct);
 simpleAuction.on("auctionProductDelivered", deliverAuctionProduct);
 //scheduleBidExecution(13)

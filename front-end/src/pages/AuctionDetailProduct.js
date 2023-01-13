@@ -13,6 +13,8 @@ function AuctionDetailProduct(props){
     const [rate,setRate] = useState(0);
     const [minimalPriceInUSD,setMinimalPriceInUSD] = useState(0);
     const [highestBidInUSD,setHighestBidInUSD] = useState(0);
+    const [bids,setBids] = useState([]);
+
     const simpleAuction= new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , props.signer);
     const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider);
     
@@ -24,21 +26,37 @@ function AuctionDetailProduct(props){
     const { id } = useParams();
     //TODO: add form for delivery instructions to be passed when purchasing
     //TODO: make popup for that form with amount eth to usd convertion
+
+    // simpleAuction.on("auctionProductBid", getProduct);
+    // simpleAuction.on("auctionProductDelivered", getProduct);
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
         getIsCourierStatus()
         getProduct();
+        getBids();
     },[]);
 
+    const getBids = async () => {
+        try{
+            const response = await fetch(`http://localhost:5000/a/b/${id}`, {
+                method: 'GET',
+            });
+            let b = (await response.json());
+            setBids(b);
+            console.log("aaa",b[0])
+        }catch(e){
+            console.log(e);
+        }
+    }
     const getIsCourierStatus = async () => {
         setIsCourier(await marketplace.couriers(await signer.getAddress()))
     }
-    const getProduct = async () => {
+    async function getProduct(){
         try{
             // TODO: check if this is bad ID
             const p = await simpleAuction.products(id);
             setProduct(p);
-            const r = await getRates();
+            const r =await getRates();
 
         await setMinimalPriceInUSD(weiToUsd(parseInt(p.minimalPrice),r));
         await setHighestBidInUSD(weiToUsd(parseInt(p.bidAmount),r));
@@ -176,6 +194,10 @@ function AuctionDetailProduct(props){
         await simpleAuction.deliverProduct(id);
     }
 
+    const bidsList = bids.length>0 ? bids.map((b) =><BidCard key={b.id} bid={b} />) : <></>;
+
+
+    //TODO: make timed getter for rates
     return(
     <>
         {product?
@@ -201,6 +223,8 @@ function AuctionDetailProduct(props){
             <h4>{product.seller}</h4>
             <h4>Added {new Date(parseInt(product.addDate._hex)*1000).toString()}</h4>
             <h4>Finishes {new Date(parseInt(product.finishDate._hex)*1000).toString()}</h4>
+            <h6>Bids</h6>
+            {bidsList}
             
             {/*TODO: make window to shouw previous bids in DB*/}
             
@@ -231,6 +255,18 @@ function AuctionDetailProduct(props){
         :<h1>Loading</h1>
         }
         
+    </>
+    );
+}
+
+
+
+function BidCard(props){
+    return(
+    <>
+        <h6>{props.bid.bidder}</h6>
+        <h6>{props.bid.amount}</h6>
+
     </>
     );
 }

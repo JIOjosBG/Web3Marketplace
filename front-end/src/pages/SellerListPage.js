@@ -9,10 +9,12 @@ import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 function SellerProductList(props) {
   const [count, setCount] = useState(0);
   const [products, setProducts] = useState([]);
+  const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerJSON.abi, props.provider);
+  simpleSeller.on("sellerProductAdded", updateProducts);
+  
   useEffect(()=>{
     updateProducts();
   },[]);
-  const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerJSON.abi, props.provider);
   async function updateProducts (){
     let c =parseInt(await simpleSeller.productCount());
 
@@ -24,9 +26,6 @@ function SellerProductList(props) {
     setProducts(tmpProducts);
     setCount(c);
   }
-
-  //TODO: add contract event listener
-
 
   const productCards = products.map((p) =><SellerProductCard key={p[1]} product={p[0]} id={p[1]}/>);
 

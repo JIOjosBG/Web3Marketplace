@@ -123,6 +123,10 @@ async function bidAuctionProduct(index,bidder,amount){
         try{
             await createAuctionProduct(bci.name,bci.minimalPrice,bci.seller,index);
             product = await AuctionProduct.findOne({ where: { instanceId: index } });
+            if(product==null){
+                console.log("cant create product in bid event listenere")
+                return
+            }
             console.log('Not found, but created!');
         }catch(e){
             console.log(e)

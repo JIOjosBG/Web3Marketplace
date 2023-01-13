@@ -11,12 +11,13 @@ function AuctionProductList(props) {
   const [count, setCount] = useState(0);
   const [products, setProducts] = useState([]);
   const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionJSON.abi, props.provider);
+  simpleAuction.on("auctionProductAdded", updateProducts);
   
   useEffect(()=>{
     updateProducts();
   },[]);
 
-  const updateProducts = async () => {
+  async function updateProducts(){
     let c =parseInt(await simpleAuction.productCount());
     console.log(c);
     let tmpProducts = [];
@@ -27,7 +28,7 @@ function AuctionProductList(props) {
     setProducts(tmpProducts);
     setCount(c);
   }
-  //TODO: add contract event listener
+
   const productCards = products.map((p,i) =><AuctionProductCard key={i} product={p} id={i}/>);
 
   
