@@ -7,7 +7,6 @@ const provider = require("./shared.js");
 
 const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerABI, provider); 
 
-//TODO: listener for event createproduct (sets instanceId in DB)
 
 const getProducts = async (req, res) => {
     const products = await SellerProduct.findAll();

@@ -16,7 +16,6 @@ function AuctionCreateProductPage(props) {
     const [finishTime,setFinishTime] = useState(0);
 
     const [linkForMedia,setLinkForMedia] = useState("");
-    //TODO: ADD PROPPER FIELD FOR SECRET DATA
     //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
     //TODO: safety checks
     const [marketHashOfData, setMarketHashOfData] = useState();

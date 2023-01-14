@@ -24,7 +24,6 @@ function AuctionDetailProduct(props){
     const [isCourier,setIsCourier] = useState(0);
     const signer = props.signer;
     const { id } = useParams();
-    //TODO: add form for delivery instructions to be passed when purchasing
     //TODO: make popup for that form with amount eth to usd convertion
 
     // simpleAuction.on("auctionProductBid", getProduct);
@@ -225,9 +224,6 @@ function AuctionDetailProduct(props){
             <h4>Finishes {new Date(parseInt(product.finishDate._hex)*1000).toString()}</h4>
             <h6>Bids</h6>
             {bidsList}
-            
-            {/*TODO: make window to shouw previous bids in DB*/}
-            
             {parseInt(product.finishDate._hex)*1000>new Date().getTime()
                 ?<>
                 <Form.Group className="mb-3" controlId="formName">

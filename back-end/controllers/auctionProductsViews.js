@@ -136,7 +136,7 @@ const instantiateOrUpdateProduct = async (req, res) => {
         
 }
 
-//TODO: finish this function
+
 const bidForProduct = async (req, res,next) => {
     let bci;
     let bid;

@@ -44,7 +44,7 @@ app.use("/a", auctionRoutes);
 app.all("*", (req, res) =>res.send("404"));
 
 
-
+//TODO: add the graph querying on startup
 app.listen(PORT, async () =>{
     console.log(`Server running on port: http://localhost:${PORT}`);
     //await sequelize.sync();

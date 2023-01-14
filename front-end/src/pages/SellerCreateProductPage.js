@@ -15,8 +15,8 @@ function SellerCreateProductPage(props) {
     const [ rate, setRate ] = useState(0);
     const [show,setShow] = useState(false);
 
-    //TODO: ADD PROPPER FIELD FOR SECRET DATA
     //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
+    //done but not deployed
     const [marketHashOfData, setMarketHashOfData] = useState("");
     const navigate = useNavigate();
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer );
