@@ -83,14 +83,7 @@ function SellerCreateProductPage(props) {
         setPrice(usdToWei(priceInUSD));
         setShow(true);
     }
-    
-    const handleFileChange = (e) => {
-        console.log("aa")
-        console.log(e.target.files)
-        if (e.target.files) {
-          setFile(e.target.files[0]);
-        }
-      };
+
 
     return(
         <Container>
@@ -128,7 +121,7 @@ function SellerCreateProductPage(props) {
                 </Form.Group>
                 <Form.Group>
                     <Form.Label>File here</Form.Label>
-                    <Form.Control onChange={e=>handleFileChange(e)} type="file" name="image" placeholder="File" />
+                    <Form.Control onChange={e=>setFile(e.target.files[0])} type="file" name="image" placeholder="File" />
                 </Form.Group>
 
                 <Form.Group>

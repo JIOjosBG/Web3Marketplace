@@ -17,5 +17,5 @@ var upload = multer({ storage: storage });
 
 
 router.post('/', upload.single('image'),uploadImageView);
-
+router.use('/', express.static('uploads'))
 module.exports = router;

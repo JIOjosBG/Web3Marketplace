@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import {ethers} from 'ethers';
 import {Form, Button, Container, Modal} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 import addressesJSON from '../shared/contractAddresses.json'
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json'
@@ -11,7 +12,7 @@ function AuctionCreateProductPage(props) {
     const [name,setName] = useState("");
     const [minimalPrice,setMinimalPrice] = useState(0);
     const [priceInUSD,setPriceInUSD] = useState(0);
-
+    const [file,setFile] = useState(0);
     const [finishDate,setFinishDate] = useState(0);
     const [finishTime,setFinishTime] = useState(0);
 
@@ -51,6 +52,17 @@ function AuctionCreateProductPage(props) {
     }
 
     async function submitProduct(){
+        const formData = new FormData();
+        console.log(file)
+        formData.append("image", file);
+        console.log(formData)
+        const response = await axios({
+            method: "post",
+            url: "http://localhost:5000/i",
+            data: formData,
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        setLinkForMedia("http://localhost:5000"+response.data.pathToImage);
         await getRates();
         setMinimalPrice(usdToWei(priceInUSD));
         setShow(true);
@@ -77,11 +89,6 @@ function AuctionCreateProductPage(props) {
         // console.log(name,price,linkForMedia);
     }
 
-    async function submitProduct(){
-        await getRates();
-        setMinimalPrice(usdToWei(priceInUSD));
-        setShow(true);
-    }
     return(
         <Container>
             <Modal show={show} onHide={()=>setShow(false)}>
@@ -129,8 +136,9 @@ function AuctionCreateProductPage(props) {
                 </Form.Group>
                 <Form.Group>
                     <Form.Label>Media link</Form.Label>
-                    <Form.Control onChange={e=>setLinkForMedia(e.target.value)} type="text" placeholder="Link for media" />
+                    <Form.Control onChange={e=>setFile(e.target.files[0])} type="file" placeholder="Image" />
                 </Form.Group>
+                
                 <Form.Group>
                     <Form.Label>Market hash of data</Form.Label>
                     <Form.Control onChange={e=>setMarketHashOfData(e.target.value)} type="text" placeholder="Market hash of data" />
