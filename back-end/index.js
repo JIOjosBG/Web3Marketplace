@@ -2,6 +2,7 @@ const express = require('express');
 const ethers = require("ethers");
 const bodyParser = require('body-parser')
 require("dotenv").config();
+const multer  = require('multer')
 
 
 const simpleSellerABI = require("./contracts/ABIs/SimpleSeller.json").abi;
@@ -10,6 +11,8 @@ const simpleAuctionABI = require("./contracts/ABIs/SimpleAuction.json").abi;
 const addresses = require("./contracts/contractAddresses.json");
 const sellerProductRoutes = require('./routes/sellerProducts.js');
 const auctionRoutes = require('./routes/auctionProducts.js');
+const imageRoutes = require('./routes/images.js');
+
 
 const { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct } = require('./controllers/eventHandlers');
 const provider = require("./controllers/shared.js")
@@ -38,6 +41,7 @@ app.use((req,res,next)=>{
 app.get("/", (req, res) => res.send("Welcome to the API!"));
 app.use("/s/p", sellerProductRoutes);
 app.use("/a", auctionRoutes);
+app.use("/i", imageRoutes);
 
 app.all("*", (req, res) =>res.send("404"));
 

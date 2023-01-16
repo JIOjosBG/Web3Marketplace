@@ -21,8 +21,6 @@ function SellerDetailProduct(props){
     const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider);
     
     const { id } = useParams();
-    //TODO: add form for delivery instructions to be passed when purchasing
-    //TODO: make popup for that form with amount eth to usd convertion
     const getIsCourierStatus = async () => {
         setIsCourier(await marketplace.couriers(await signer.getAddress()))
     }

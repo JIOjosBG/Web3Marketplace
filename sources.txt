@@ -6,3 +6,7 @@ https://docs.ethers.io/v4/api-utils.html
 
 за API
 //https://www.coingecko.com/api/documentations/v3#/simple/get_simple_price
+
+za file upload
+https://codefrontend.com/file-upload-reactjs/
+https://www.npmjs.com/package/multer
