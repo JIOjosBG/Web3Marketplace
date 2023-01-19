@@ -54,7 +54,8 @@ describe("SimpleSeller", async function () {
     let publicKey;
     let privateKey;
     let secretMessage = "Secret message";
-
+    let encryptedDeliveryInstructions;
+    let deliveryInstructions = "Deliver here"
     beforeEach(async function(){
         accounts = await ethers.getSigners();
         oneETH = ethers.utils.parseEther("1");
@@ -82,6 +83,7 @@ describe("SimpleSeller", async function () {
         testingPubliCKey = identity.publicKey
         testingPrivateKey = identity.privateKey
         hashedData = await encryptWithPublicKey(secretMessage,testingPubliCKey);
+        encryptedDeliveryInstructions = encryptWithPublicKey(deliveryInstructions, testingPubliCKey);
 
     });
     
@@ -171,14 +173,15 @@ describe("SimpleSeller", async function () {
 
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
             const signature = accounts[1].signMessage(message);
-            expect(await simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,accounts[1].address,signature)).to.not.throw;
+            expect(await simpleSeller.payProduct(0,encryptedDeliveryInstructions,sigData.futureTime,accounts[1].address,signature)).to.not.throw;
 
             expect( (await simpleSeller.products(0)).paid).to.be.true;
             expect( (await simpleSeller.products(0)).buyer).equal(accounts[1].address);
 
-            const rawdeliveryInstructions = (await simpleSeller.products(0)).deliveryInstructions;
-            const deliveryInstructions = hexToString(rawdeliveryInstructions);
-            expect( deliveryInstructions).equal("Deliver here");
+            const rawDeliveryInstructions = (await simpleSeller.products(0)).deliveryInstructions;
+            expect( 
+                await decryptWithPrivateKey(rawDeliveryInstructions,testingPrivateKey)
+                ).equal(deliveryInstructions);
 
             expect( await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(oneETHAfterFee);
             expect( await simpleSeller.owedMoneyToBuyers(accounts[1].address,0)).equal(oneETH);

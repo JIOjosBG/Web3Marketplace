@@ -49,6 +49,8 @@ describe("SimpleAuction", async function () {
     let publicKey;
     let privateKey;
     let secretMessage = "Secret message";
+    let deliveryInstructions = "deliver here";
+    let deliveryInstructions2 = "deliver here 2";
     beforeEach(async function ()  {
         SimpleAuction = await ethers.getContractFactory("SimpleAuction");
         AgoraToken = await ethers.getContractFactory("AgoraToken");
@@ -81,6 +83,8 @@ describe("SimpleAuction", async function () {
         testingPubliCKey = identity.publicKey
         testingPrivateKey = identity.privateKey
         hashedData = await encryptWithPublicKey(secretMessage,testingPubliCKey);
+        encryptedDeliveryInstructions = await encryptWithPublicKey(deliveryInstructions,testingPubliCKey);
+        encryptedDeliveryInstructions2 = await encryptWithPublicKey(deliveryInstructions2,testingPubliCKey);
 
     });
    
@@ -188,12 +192,13 @@ describe("SimpleAuction", async function () {
             expect( (await simpleAuction.products(0)).bidAmount).equal(0);
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.not.throw;
+            expect(await simpleAuction.bidForProduct(0,encryptedDeliveryInstructions,oneETH,accounts[1].address,signature)).to.not.throw;
             expect( (await simpleAuction.products(0)).currentBidder).equal(accounts[1].address);
             expect( (await simpleAuction.products(0)).bidAmount).equal(oneETH);
-            const rawdeliveryInstructions = (await simpleAuction.products(0)).deliveryInstructions;
-            const deliveryInstructions = hexToString(rawdeliveryInstructions);
-            expect( deliveryInstructions).equal("Deliver here");
+            const rawDeliveryInstructions = (await simpleAuction.products(0)).deliveryInstructions;
+            expect( 
+                await decryptWithPrivateKey(rawDeliveryInstructions,testingPrivateKey)
+                ).equal(deliveryInstructions);
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(oneETH);
             expect( await agoraToken.balanceOf(accounts[1].address)).equal(0);
             expect( await agoraToken.balanceOf(accounts[2].address)).equal(twoETHs);
@@ -203,12 +208,13 @@ describe("SimpleAuction", async function () {
             expect( (await simpleAuction.products(0)).bidAmount).equal(oneETH);
             const message2 =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[p0.finishDate,sigData.nonce0twoETHs,twoETHs,accounts[2].address,simpleAuction.address])));
             const signature2 = accounts[2].signMessage(message2);
-            expect(await simpleAuction.bidForProduct(0,stringToHex("Deliver here2"),twoETHs,accounts[2].address,signature2)).to.not.throw;
+            expect(await simpleAuction.bidForProduct(0,encryptedDeliveryInstructions2,twoETHs,accounts[2].address,signature2)).to.not.throw;
             expect( (await simpleAuction.products(0)).currentBidder).equal(accounts[2].address);
             expect( (await simpleAuction.products(0)).bidAmount).equal(twoETHs);
-            const rawdeliveryInstructions2 = (await simpleAuction.products(0)).deliveryInstructions;
-            const deliveryInstructions2 = hexToString(rawdeliveryInstructions2);
-            expect( deliveryInstructions2).equal("Deliver here2");
+            const rawDeliveryInstructions2 = (await simpleAuction.products(0)).deliveryInstructions;
+            expect( 
+                await decryptWithPrivateKey(rawDeliveryInstructions2,testingPrivateKey)
+                ).equal(deliveryInstructions2);
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( await simpleAuction.owedMoneyToBidders(accounts[2].address,0)).equal(twoETHs);
             
