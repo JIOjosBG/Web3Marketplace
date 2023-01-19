@@ -18,7 +18,7 @@ contract SimpleSeller is Ownable{
         address buyer;
         uint addDate;
         string linkForMedia;
-        bytes32 marketHashOfData;
+        bytes marketHashOfData;
         bool approved;
         bool paid;
         bool delivered;
@@ -36,12 +36,12 @@ contract SimpleSeller is Ownable{
 
     uint public productCount=0;
 
-    function productInit(string calldata name, uint price, string calldata link, bytes32 marketHashOfData) private view returns(Product memory){
+    function productInit(string calldata name, uint price, string calldata link, bytes calldata marketHashOfData) private view returns(Product memory){
         return Product(name,price,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false,"");
 
     }
 
-    function addProduct(string calldata name, uint price, string calldata link, bytes32 marketHashOfData) public {
+    function addProduct(string calldata name, uint price, string calldata link, bytes calldata marketHashOfData) public {
         require(bytes(name).length != 0,"Name shouldn't be empty");
         require(price>=2000000,"Price should be >=2000000");
         products[productCount]=productInit(name, price, link, marketHashOfData);

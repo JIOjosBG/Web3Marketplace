@@ -4,3 +4,4 @@
 /node_modules
 /coverage
 /ganache_db
+/enc.js

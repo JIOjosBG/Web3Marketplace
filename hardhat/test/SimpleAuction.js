@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const EthCrypto = require('eth-crypto');
 
 function stringToHex(str){
     var arr1 = ['0','x'];
@@ -9,6 +10,7 @@ function stringToHex(str){
     }
     return arr1.join('');
 }
+
 function hexToString(hexx) {
     var hex = hexx.toString().slice(2);
     var str = '';
@@ -17,9 +19,22 @@ function hexToString(hexx) {
     return str;
 }
 
+async function encryptWithPublicKey(message,publicKey){
+    let data = await EthCrypto.encryptWithPublicKey(publicKey, message);
+    data = JSON.stringify(data)
+    data = stringToHex(data);
+    return data;
+}
+
+async function decryptWithPrivateKey(message,privateKey){
+    var data = hexToString(message)
+    data = JSON.parse(data)
+    data = await EthCrypto.decryptWithPrivateKey(privateKey,data)
+    return data;
+}
+
 describe("SimpleAuction", async function () {
     let simpleAuction;
-    let hashedData;
     let SimpleAuction;
     let accounts;
     let oneETH;
@@ -31,9 +46,10 @@ describe("SimpleAuction", async function () {
     let sigData;
     let p0;
     let p1;
+    let publicKey;
+    let privateKey;
+    let secretMessage = "Secret message";
     beforeEach(async function ()  {
-
-        hashedData = await ethers.utils.formatBytes32String("");
         SimpleAuction = await ethers.getContractFactory("SimpleAuction");
         AgoraToken = await ethers.getContractFactory("AgoraToken");
         Marketplace = await ethers.getContractFactory("Marketplace");
@@ -60,6 +76,11 @@ describe("SimpleAuction", async function () {
             "nonce1tenWEI": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint","uint"],[simpleAuction.address,1,10])),  
             "simplyBadNonce": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint","uint"],[ethers.constants.AddressZero,1,0])),  
         }
+
+        const identity = EthCrypto.createIdentity();
+        testingPubliCKey = identity.publicKey
+        testingPrivateKey = identity.privateKey
+        hashedData = await encryptWithPublicKey(secretMessage,testingPubliCKey);
 
     });
    
@@ -100,6 +121,9 @@ describe("SimpleAuction", async function () {
             expect(product1.bidAmount).equal(0);
             expect(product1.linkForMedia).equal("asd1");
             expect(product1.marketHashOfData).equal(hashedData);
+            expect(
+                await decryptWithPrivateKey(product1.marketHashOfData,testingPrivateKey)
+                    ).equal(secretMessage);
             expect(product1.approved).to.be.false;
             expect(product1.delivered).to.be.false;
             expect(product1.deliveryInstructions).equal("0x");
@@ -112,6 +136,9 @@ describe("SimpleAuction", async function () {
             expect(product2.bidAmount).equal(0);
             expect(product2.linkForMedia).equal("asd2");
             expect(product2.marketHashOfData).equal(hashedData);
+            expect(
+                await decryptWithPrivateKey(product2.marketHashOfData,testingPrivateKey)
+                    ).equal(secretMessage);
             expect(product2.approved).to.be.false;
             expect(product2.delivered).to.be.false;
             expect(product2.deliveryInstructions).equal("0x");

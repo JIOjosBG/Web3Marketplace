@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const EthCrypto = require('eth-crypto');
 
 function stringToHex(str){
     var arr1 = ['0','x'];
@@ -16,6 +17,22 @@ function hexToString(hex) {
         str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
     return str;
 }
+
+
+async function encryptWithPublicKey(message,publicKey){
+    let data = await EthCrypto.encryptWithPublicKey(publicKey, message);
+    data = JSON.stringify(data)
+    data = stringToHex(data);
+    return data;
+}
+
+async function decryptWithPrivateKey(message,privateKey){
+    var data = hexToString(message)
+    data = JSON.parse(data)
+    data = await EthCrypto.decryptWithPrivateKey(privateKey,data)
+    return data;
+}
+
 
 describe("SimpleSeller", async function () {
     let simpleSeller;
@@ -34,12 +51,15 @@ describe("SimpleSeller", async function () {
     let accounts;
     
 
+    let publicKey;
+    let privateKey;
+    let secretMessage = "Secret message";
+
     beforeEach(async function(){
         accounts = await ethers.getSigners();
         oneETH = ethers.utils.parseEther("1");
         twoETHs = ethers.utils.parseEther("2");
         oneETHAfterFee = ethers.utils.parseEther("0.99");
-        hashedData = ethers.utils.formatBytes32String("");
         
         SimpleSeller = await ethers.getContractFactory("SimpleSeller");
         AgoraToken = await ethers.getContractFactory("AgoraToken");
@@ -57,6 +77,12 @@ describe("SimpleSeller", async function () {
             "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
             "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
         }
+
+        const identity = EthCrypto.createIdentity();
+        testingPubliCKey = identity.publicKey
+        testingPrivateKey = identity.privateKey
+        hashedData = await encryptWithPublicKey(secretMessage,testingPubliCKey);
+
     });
     
 
@@ -89,6 +115,9 @@ describe("SimpleSeller", async function () {
             expect(product1.buyer).equal(ethers.constants.AddressZero);
             expect(product1.linkForMedia).equal("asd1");
             expect(product1.marketHashOfData).equal(hashedData);
+            expect(
+                await decryptWithPrivateKey(product1.marketHashOfData,testingPrivateKey)
+                    ).equal(secretMessage);
             expect(product1.approved).to.be.false;
             expect(product1.paid).to.be.false;
             expect(product1.delivered).to.be.false;
@@ -101,6 +130,9 @@ describe("SimpleSeller", async function () {
             expect(product2.buyer).equal(ethers.constants.AddressZero);
             expect(product2.linkForMedia).equal("asd2");
             expect(product2.marketHashOfData).equal(hashedData);
+            expect(
+                await decryptWithPrivateKey(product2.marketHashOfData,testingPrivateKey)
+                    ).equal(secretMessage);
             expect(product2.approved).to.be.false;
             expect(product2.paid).to.be.false;
             expect(product2.delivered).to.be.false;
