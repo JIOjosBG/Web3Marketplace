@@ -7,12 +7,19 @@ contract Marketplace is Ownable {
     event addedCourier(address adder, address courier);
     event removedCourier(address remover, address courier);
 
+    constructor(bytes memory _publicKey) Ownable() {
+        require(_publicKey.length==65,"Bad public key");
+        publicKey = _publicKey;
+    }
+
     struct Market{
         address contractAddress;
         address addedBy;
         string name;
         uint addDate;
     }
+
+    bytes public publicKey;
     address public  myToken;
     address[] public marketAddresses;
     uint public marketCount;
@@ -64,6 +71,10 @@ contract Marketplace is Ownable {
         admins[admin]=false;
     }
     
+    function changePublicKey(bytes memory _publicKey) public onlyOwner{
+        require(_publicKey.length==65,"Bad public key");
+        publicKey = _publicKey;
+    }
 
     receive() external  payable {}
 }

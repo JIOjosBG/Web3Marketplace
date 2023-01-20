@@ -48,6 +48,8 @@ function App() {
     let tempProvider = new ethers.providers.Web3Provider(window.ethereum);
     setProvider(tempProvider);
     let tempSigner = tempProvider.getSigner();
+    //let tmpPublicKey = tempProvider.
+    console.log(Object.keys(window.ethereum))
     setSigner(tempSigner);
   }
 

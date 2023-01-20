@@ -6,6 +6,7 @@ import axios from 'axios';
 
 import addressesJSON from '../shared/contractAddresses.json'
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json'
+import marketplaceJSON from '../shared/ABIs/Marketplace.json'
 
 //TODO: convert all hex wei price values to decimal eth
 function AuctionCreateProductPage(props) {
@@ -25,6 +26,7 @@ function AuctionCreateProductPage(props) {
     const navigate = useNavigate();
 
     const simpleAuction = new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , props.signer );
+    const marketplace = new ethers.Contract( addressesJSON.marketplace, marketplaceJSON.abi , props.provider );
     
     useEffect(()=>{
         getRates();

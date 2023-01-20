@@ -18,6 +18,13 @@ function hexToString(hex) {
     return str;
 }
 
+function hexToArray(hexx) {
+    var hex = hexx.toString().slice(2);
+    var arr = [];
+    for (var i = 0; i < hex.length; i += 2)
+        arr.push(parseInt(hex.substr(i, 2), 16));
+    return arr;
+}
 
 async function encryptWithPublicKey(message,publicKey){
     let data = await EthCrypto.encryptWithPublicKey(publicKey, message);
@@ -52,7 +59,6 @@ describe("SimpleSeller", async function () {
     
 
     let publicKey;
-    let privateKey;
     let secretMessage = "Secret message";
     let encryptedDeliveryInstructions;
     let deliveryInstructions = "Deliver here"
@@ -68,7 +74,11 @@ describe("SimpleSeller", async function () {
 
         simpleSeller = await SimpleSeller.deploy();
         agoraToken = await AgoraToken.deploy();
-        marketplace = await Marketplace.deploy();
+
+        publicKey = await ethers.utils.computePublicKey(process.env.ACCOUNT_PRIVATE_KEY);
+        publicKey = hexToArray(publicKey);
+        marketplace = await Marketplace.deploy(publicKey);
+
         expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
         expect(await marketplace.addCourier(accounts[3].address)).to.not.throw;
 

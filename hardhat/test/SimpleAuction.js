@@ -2,6 +2,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const EthCrypto = require('eth-crypto');
 
+//TODO: put in package for helper fucntions
 function stringToHex(str){
     var arr1 = ['0','x'];
     for (var n = 0, l = str.length; n < l; n ++){
@@ -10,6 +11,15 @@ function stringToHex(str){
     }
     return arr1.join('');
 }
+
+function hexToArray(hexx) {
+    var hex = hexx.toString().slice(2);
+    var arr = [];
+    for (var i = 0; i < hex.length; i += 2)
+        arr.push(parseInt(hex.substr(i, 2), 16));
+    return arr;
+}
+
 
 function hexToString(hexx) {
     var hex = hexx.toString().slice(2);
@@ -47,7 +57,6 @@ describe("SimpleAuction", async function () {
     let p0;
     let p1;
     let publicKey;
-    let privateKey;
     let secretMessage = "Secret message";
     let deliveryInstructions = "deliver here";
     let deliveryInstructions2 = "deliver here 2";
@@ -61,7 +70,11 @@ describe("SimpleAuction", async function () {
         twoETHs = await ethers.utils.parseEther("2");
         simpleAuction = await SimpleAuction.deploy();
         agoraToken = await AgoraToken.deploy();
-        marketplace = await Marketplace.deploy();
+
+        publicKey = await ethers.utils.computePublicKey(process.env.ACCOUNT_PRIVATE_KEY);
+        publicKey = hexToArray(publicKey);
+        marketplace = await Marketplace.deploy(publicKey);
+        
         expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
         expect(await marketplace.addCourier(accounts[3].address)).to.not.throw;
 
@@ -353,8 +366,8 @@ describe("SimpleAuction", async function () {
         });
         it("Without token with marketplace",async function(){
             const Marketplace = await ethers.getContractFactory("Marketplace");
-            marketplace = await Marketplace.deploy();
-            expect(await simpleAuction.joinMarketplace(marketplace.address)).to.not.throw;
+            marketplace2 = await Marketplace.deploy(publicKey);
+            expect(await simpleAuction.joinMarketplace(marketplace2.address)).to.not.throw;
 
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);

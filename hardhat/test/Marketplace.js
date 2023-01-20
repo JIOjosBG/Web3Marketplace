@@ -1,5 +1,30 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const dotenv = require("dotenv");
+
+dotenv.config();
+
+
+function hexToArray(hexx) {
+    var hex = hexx.toString().slice(2);
+    var arr = [];
+    for (var i = 0; i < hex.length; i += 2)
+        arr.push(parseInt(hex.substr(i, 2), 16));
+    return arr;
+}
+
+function arrayToHex(arr){
+    var res = ['0','x'];
+    for (var n = 0, l = arr.length; n < l; n ++){
+        var hex = arr[n].toString(16);
+        if(hex.length==1){
+            res.push('0')
+        }
+        res.push(hex);
+    }
+    return res.join('');
+}
+
 describe("Marketplace", function () {
 
     let marketplace;
@@ -8,6 +33,7 @@ describe("Marketplace", function () {
     let AgoraToken;
 
     let accounts;
+    let publicKey;
 
     let SimpleSeller;
     let simpleSeller1;
@@ -17,7 +43,10 @@ describe("Marketplace", function () {
     beforeEach(async function ()  {
         accounts = await ethers.getSigners();
         Marketplace = await ethers.getContractFactory("Marketplace");
-        marketplace = await Marketplace.deploy();
+        publicKey = await ethers.utils.computePublicKey(process.env.ACCOUNT_PRIVATE_KEY);
+        publicKey = hexToArray(publicKey);
+        marketplace = await Marketplace.deploy(publicKey);
+        
         AgoraToken = await ethers.getContractFactory("AgoraToken");
         agoraToken = await AgoraToken.deploy();
 
@@ -29,7 +58,7 @@ describe("Marketplace", function () {
     });
     
     describe("Deployment", async function () {
-        
+
 
         it("Should have the correct owner", async function () {
             const addressOfOwnerOfMarketplace = await marketplace.owner();
@@ -41,6 +70,10 @@ describe("Marketplace", function () {
             expect(await marketplace.marketCount()).equal(0);
             const addresses = await marketplace.getMarketAddresses();
             expect(addresses.length).equal(0);
+        });
+
+        it("Should require public address", async function () {
+            await expect(Marketplace.deploy([1,2,3,4])).to.be.revertedWith("Bad public key");
         });
     });
     describe("Add contracts", async function(){
@@ -160,8 +193,24 @@ describe("Marketplace", function () {
             await expect(marketplace.connect(accounts[2]).addCourier(accounts[3].address)).to.be.revertedWith("Sender is not an admin!");
             expect(await marketplace.couriers(accounts[3].address)).to.be.false;
         });
+    });
 
+    describe("change public key",async function(){
 
+        it("successfully changes",async function(){
+           let newPublicKey = [];
+           for(let i=0;i<65;i++){
+               newPublicKey.push(i+1);
+           }
+           expect(await marketplace.changePublicKey(newPublicKey)).to.not.throw;
+           expect(await marketplace.publicKey()).to.equal(arrayToHex(newPublicKey));
+        });
+
+        it("Reverts on bad public key",async function(){
+
+            await expect(marketplace.changePublicKey([1,2,3,4])).to.be.revertedWith("Bad public key");
+            expect(await marketplace.publicKey()).to.equal(arrayToHex(publicKey));
+        });
     });
 
 });

@@ -4,6 +4,15 @@ const dotenv = require("dotenv")
 
 dotenv.config();
 
+function hexToArray(hexx) {
+  var hex = hexx.toString().slice(2);
+  var arr = [];
+  for (var i = 0; i < hex.length; i += 2)
+      arr.push(parseInt(hex.substr(i, 2), 16));
+  return arr;
+}
+
+
 async function main() {
   console.log("starting")
   const Marketplace = await hre.ethers.getContractFactory("Marketplace");
@@ -11,8 +20,10 @@ async function main() {
   const SimpleSeller = await hre.ethers.getContractFactory("SimpleSeller");
   const SimpleAuction = await hre.ethers.getContractFactory("SimpleAuction");
   console.log("deploying")
-  
-  const marketplace = await Marketplace.deploy();
+
+  publicKey = await ethers.utils.computePublicKey(process.env.ACCOUNT_PRIVATE_KEY);
+  publicKey = hexToArray(publicKey);
+  marketplace = await Marketplace.deploy(publicKey);
   const agoraToken = await AgoraToken.deploy();
   const simpleSeller = await SimpleSeller.deploy();
   const simpleAuction = await SimpleAuction.deploy();
@@ -36,7 +47,7 @@ async function main() {
   const owner = marketplace.owner();
   //check already deployed
   await marketplace.addAdmin(owner);
-  await marketplace.addAdmin(process.env.ACCOUNT_PUBLIC_KEY);
+  await marketplace.addAdmin(process.env.ACCOUNT_ADDRESS);
 
   await simpleSeller.joinMarketplace(marketplace.address);
   await simpleAuction.joinMarketplace(marketplace.address);
