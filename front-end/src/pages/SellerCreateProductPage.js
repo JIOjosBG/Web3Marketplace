@@ -1,38 +1,49 @@
 import { useState, useEffect } from 'react';
 import {ethers} from 'ethers';
 import axios from 'axios';
+import EthCrypto from 'eth-crypto';
 
 import addressesJSON from '../shared/contractAddresses.json'
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json'
+import MarketplaceJSON from '../shared/ABIs/Marketplace.json'
 
 import {Form, Button, Container,Modal} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 function SellerCreateProductPage(props) {
+    //console.log(Transform)
     const [name,setName] = useState("");
     const [price,setPrice] = useState(0);
+    const [publicKey,setPublicKey] = useState("");
     const [priceInUSD,setPriceInUSD] = useState(0);
     const [linkForMedia,setLinkForMedia] = useState("");
     const [file,setFile] = useState();
     const [ rate, setRate ] = useState(0);
     const [show,setShow] = useState(false);
 
-    //CAUTION: SHOULD MAKE CHANGES IN THE CONTRACT (marketHashOfData bytes32-->bytes)
-    //done but not deployed
     const [marketHashOfData, setMarketHashOfData] = useState("");
     const navigate = useNavigate();
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer );
+    const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider );
     
     useEffect(()=>{
         getRates();
+        getMarketplacePublicKey();
     },[]);
+
+    async function getMarketplacePublicKey(){
+
+        await setPublicKey(hexToBytes(await marketplace.publicKey()));
+    }
+
     //TODO: change all fetches to axios 
     const addProduct = async () => {
         if(simpleSeller){
             try{
                 let data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
-                data = await ethers.utils.keccak256(data);
-                console.log("asd")
+                data = hexToBytes(data);
+                encryptWithPublicKey(data,publicKey)
+            
                 console.log(data)
     
                 await simpleSeller.addProduct(name,price,linkForMedia,data);
@@ -65,7 +76,7 @@ function SellerCreateProductPage(props) {
 
         return ethers.utils.parseEther(eth.toString());
     }
-    //TODO: make function for file upload
+
     async function submitProduct(){
         const formData = new FormData();
         console.log(file)
@@ -84,6 +95,34 @@ function SellerCreateProductPage(props) {
         setShow(true);
     }
 
+    async function encryptWithPublicKey(message,publicKey){
+        console.log("PK", publicKey);
+        console.log(message);
+
+        let pk = new Uint8Array(publicKey)
+        let data = await EthCrypto.encryptWithPublicKey(pk,pk);
+        data = JSON.stringify(data)
+        console.log(data)
+        data = stringToHex(data);
+        console.log(data)
+        return data;
+    }
+
+    function stringToHex(str){
+        var arr1 = ['0','x'];
+        for (var n = 0, l = str.length; n < l; n ++){
+            var hex = Number(str.charCodeAt(n)).toString(16);
+            arr1.push(hex);
+        }
+        return arr1.join('');
+    }
+
+    function hexToBytes(hex) {
+        let bytes=[];
+        for (let i=2;i<hex.length;i+=2)
+            bytes.push(parseInt(hex.substr(i, 2), 16));
+        return bytes;
+    }
 
     return(
         <Container>

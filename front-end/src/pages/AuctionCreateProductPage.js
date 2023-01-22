@@ -3,6 +3,7 @@ import {ethers} from 'ethers';
 import {Form, Button, Container, Modal} from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import EthCrypto from 'eth-crypto';
 
 import addressesJSON from '../shared/contractAddresses.json'
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json'
@@ -13,6 +14,7 @@ function AuctionCreateProductPage(props) {
     const [name,setName] = useState("");
     const [minimalPrice,setMinimalPrice] = useState(0);
     const [priceInUSD,setPriceInUSD] = useState(0);
+    const [publicKey,setPublicKey] = useState("");
     const [file,setFile] = useState(0);
     const [finishDate,setFinishDate] = useState(0);
     const [finishTime,setFinishTime] = useState(0);
@@ -30,7 +32,44 @@ function AuctionCreateProductPage(props) {
     
     useEffect(()=>{
         getRates();
+        getMarketplacePublicKey();
     },[]);
+
+    function hexToBytes(hex) {
+        let bytes=[];
+        for (let i=2;i<hex.length;i+=2)
+            bytes.push(parseInt(hex.substr(i, 2), 16));
+        return bytes;
+    }
+
+    function stringToHex(str){
+        var arr1 = ['0','x'];
+        for (var n = 0, l = str.length; n < l; n ++){
+            var hex = Number(str.charCodeAt(n)).toString(16);
+            arr1.push(hex);
+        }
+        return arr1.join('');
+    }
+
+    async function getMarketplacePublicKey(){
+
+        await setPublicKey(hexToBytes(await marketplace.publicKey()));
+    }
+
+
+    async function encryptWithPublicKey(message,publicKey){
+        console.log("PK", publicKey);
+        console.log(message);
+
+        let pk = new Uint8Array(publicKey)
+        let data = await EthCrypto.encryptWithPublicKey(pk,pk);
+        data = JSON.stringify(data)
+        console.log(data)
+        data = stringToHex(data);
+        console.log(data)
+        return data;
+    }
+
     const getRates = async () => {
         try{
             await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
@@ -81,7 +120,10 @@ function AuctionCreateProductPage(props) {
                 }
 
                 //TODO: check if exists marketHashOfData
-                const data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
+                let data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
+                data = hexToBytes(data);
+                encryptWithPublicKey(data,publicKey)
+                console.log(data)
                 await simpleAuction.addProduct(name,minimalPrice,linkForMedia,await ethers.utils.keccak256(data),date);
                 navigate("/a")
             }catch(e){
