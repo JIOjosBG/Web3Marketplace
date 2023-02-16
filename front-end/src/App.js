@@ -1,16 +1,18 @@
 import React, {useState} from 'react';
- import {ethers} from 'ethers'; 
+import {ethers} from 'ethers'; 
 
- import 'bootstrap/dist/css/bootstrap.min.css';
-import { Button } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { Button, Stack, Container } from 'react-bootstrap';
 import { Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
 
+import HomePage from './pages/HomePage';
 import MyNavbar from './components/MyNavbar';
 import SimpleSellerRoutes from './Routers/SimpleSellerRoutes';
 import SimpleAuctionRoutes from './Routers/SimpleAuctionRoutes';
 import BuyTokensPage from './pages/BuyTokensPage';
 import AdminPage from './pages/AdminPage';
+
+import logo from './media/Metamask_logo.png';
 
 
 function App() {
@@ -69,7 +71,7 @@ function App() {
         <Route path="*" element={<h1>404 not found</h1>} />
       </Route>
     </Routes>
-    :<Button onClick={connectWalletHandler}>Connect</Button>
+    :<ConnectButton onClick={connectWalletHandler}/>
     }
     
 
@@ -85,4 +87,24 @@ function App() {
   );
 }
 
+function ConnectButton(props){
+  const containerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+  };
+
+  return(
+    <Container style={containerStyle}>
+      <Button className="bg-dark border-dark w-100 h-25" onClick={props.onClick}>
+        <Stack className="h-100 w-100" style={{display: 'flex',alignItems: 'center',justifyContent: 'center',}} direction="horizontal">
+
+          <div style={{fontSize:75}}> Connect{' '} </div>
+          <img className='h-100' src={logo} alt={logo}/>
+        </Stack>
+      </Button> 
+    </Container>
+  )
+}
 export default App;
