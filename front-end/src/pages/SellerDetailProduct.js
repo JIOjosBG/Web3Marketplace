@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react';
 import {ethers} from 'ethers';
 import { useParams } from 'react-router-dom';
-import {Button, Form} from 'react-bootstrap';
+import {Button, Form, Container, Stack, Row, Col} from 'react-bootstrap';
 
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 import MarketplaceJSON from '../shared/ABIs/Marketplace.json';
@@ -13,6 +13,7 @@ function SellerDetailProduct(props){
     const [rate,setRate] = useState(0);
     const [isCourier, setIsCourier] = useState(0);
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
+    const [dateAdded,setDateAdded] = useState(new Date());
 
   
     const signer = props.signer;
@@ -53,6 +54,7 @@ function SellerDetailProduct(props){
             // TODO: check if this is bad ID
             const p = await simpleSeller.products(id);
             setProduct(p);
+            setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
             const r = await getRates();
             setPriceInUSD(weiToUsd(p.price,r));
         }catch(e){
@@ -126,42 +128,49 @@ function SellerDetailProduct(props){
     return(
     <>
         {product?
-        <>
-            <h1>{product.name}</h1>
-            <img style={{width:'20%'}}src={product.linkForMedia}/>
-            <h2>Price in wei:{(product.price._hex)}</h2>
-            <h2>Price in USD:{priceInUSD}</h2> 
-            <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
-            {product.approoved
-            ?<h3>Approoved</h3>
-            :<></>
-            }
-            <h4>{product.seller}</h4>
-            {new Date(parseInt(product.addDate._hex)*1000).toString()}
-            {parseInt(product.addDate).toString()}
-
-
-
-
-            {!product.paid
-                ?<>
-                <Form.Group className="mb-3" controlId="formName">
-                    <Form.Label>Delivery Instructions:</Form.Label>
-                    <Form.Control 
-                        onChange={e=>setDeliveryInstructions(e.target.value)} 
-                        type="text" 
-                        placeholder="Delivery instructions"
-                    />
-                </Form.Group>
-                <Button onClick={buyProduct}> Buy now </Button>
-                </>
-                :isCourier
-                    ?product.delivered==false
-                        ?<Button onClick={deliverProduct}>Deliver now </Button>
-                        :<h4>Already delivered</h4>    
+        <Container className="mt-2">
+            <Row>
+                <Col md={6}>
+                    <img className="w-100" src={product.linkForMedia}/>
+                </Col>
+                <Col md={6}>
+                    <h1>{product.name}</h1>
+                    <h2>Price: {Number(ethers.utils.formatUnits(product.price,"ether")).toFixed(5)}AGR</h2>
+                    <h2>Price in USD: ${priceInUSD.toFixed(2)}</h2> 
+                    <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
+                    {product.approoved
+                    ?<h3>Approoved</h3>
                     :<></>
-            }
-        </>
+                    }
+                    <h6>Seller: {product.seller}</h6>
+                    <h6> Added on {dateAdded.getFullYear()+"/"+(dateAdded.getMonth()+1)+"/"+dateAdded.getDate()}</h6>
+                </Col>
+            </Row>
+            <Row>
+                {!product.paid
+                    ?<>
+                    <Form.Group className="mb-3" controlId="formName">
+                        <Form.Label>Delivery Instructions:</Form.Label>
+                        <Form.Control 
+                            onChange={e=>setDeliveryInstructions(e.target.value)} 
+                            type="text" 
+                            placeholder="Delivery instructions"
+                        />
+                    </Form.Group>
+                    <Button onClick={buyProduct}> Buy now </Button>
+                    </>
+                    :isCourier
+                        ?product.delivered==false
+                            ?<Button onClick={deliverProduct}>Deliver now </Button>
+                            :<h4>Already delivered</h4>    
+                        :<></>
+                }
+            </Row>
+
+
+
+
+        </Container>
         :<h1>Loading</h1>
         }
         
