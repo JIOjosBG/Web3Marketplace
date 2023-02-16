@@ -15,7 +15,7 @@ function AuctionCreateProductPage(props) {
     const [minimalPrice,setMinimalPrice] = useState(0);
     const [priceInUSD,setPriceInUSD] = useState(0);
     const [publicKey,setPublicKey] = useState("");
-    const [file,setFile] = useState(0);
+    const [file,setFile] = useState();
     const [finishDate,setFinishDate] = useState(0);
     const [finishTime,setFinishTime] = useState(0);
 
@@ -94,9 +94,9 @@ function AuctionCreateProductPage(props) {
 
     async function submitProduct(){
         const formData = new FormData();
-        console.log(file)
+        if(file==null) return
         formData.append("image", file);
-        console.log(formData)
+
         const response = await axios({
             method: "post",
             url: "http://localhost:5000/i",
@@ -140,9 +140,14 @@ function AuctionCreateProductPage(props) {
                 <Modal.Title>{name}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    Price is {priceInUSD} (will remain to be {minimalPrice._hex} wei even in fluctuation of eth)
-                    <img style={{width:'50%'}} src={linkForMedia} />
-                    <h3>{finishDate}</h3>
+                    <h3>{minimalPrice
+                        ?ethers.utils.formatUnits(minimalPrice._hex,"ether")
+                        :0
+                    } AGR</h3>
+                    <p>Currently ${priceInUSD}</p>
+                    
+                    <img className="w-100" src={linkForMedia} />
+                    <h3>Finish date: {finishDate}</h3>
                 </Modal.Body>
                 <Modal.Footer>
                 <Button variant="secondary" onClick={()=>setShow(false)}>
