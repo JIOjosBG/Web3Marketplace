@@ -52,7 +52,7 @@ return (
     {props.provider
       ?<Container className='mt-1'>
       <Button variant='secondary' onClick={updateProducts}>Update</Button>{' '}
-      <Link to="/u/c"><Button variant='secondary'> Create product</Button></Link>
+      <Link to="/a/c"><Button variant='secondary'> Create product</Button></Link>
         <h1>Products for auction</h1>
         <Row  style={containerStyle}>
           {productCards}
