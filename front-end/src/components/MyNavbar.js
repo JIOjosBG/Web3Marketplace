@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {ethers} from "ethers";
-import logo from '../media/logo.png';
-import {Navbar,Container,Row, Col, Button} from 'react-bootstrap';
+import logo from '../media/logo_white.png';
+import {Navbar,Container, Row, Col, Button, Stack} from 'react-bootstrap';
 import {Link, Outlet} from 'react-router-dom';
 
 
@@ -30,32 +30,36 @@ function MyNavbar(props) {
   },[])
   return (
     <>
-
-    <Navbar bg="light" expand="lg">
+    <Navbar className="bg-dark text-light border-light" style={{}}>
       <Container>
-        <Row>
-          <Col>
-            <img style={{width:'50%'}} src={logo} alt={logo}/>
-            {props.account
-              ?<h6 className="ml">Account: {props.account ? props.account.substr(0,10) : 0}...</h6>
-              :<></>
-            }
-          </Col>
+        {props.account
+          ?<h6>Account: {props.account ? props.account.substr(0,10) : 0}</h6>
+          :<></>
+        }
+        <h6>Available tokens { Number(ethers.utils.formatUnits(tokens, "ether")).toFixed(3)}{' '}</h6>
+      </Container>
+    </Navbar>
 
-          <Col>
-            <Link to="/s"><Button>Simple Seller </Button></Link>
-            <Link to="/a"><Button>Simple Auction </Button></Link>
-          </Col>
-          <Col>
-            <Link to="/t"><Button>Buy Tokens</Button></Link>
-            <h3>Available tokens { Number(ethers.utils.formatUnits(tokens, "ether")).toFixed(5) }</h3>
-          </Col>
-          {isAdmin
-            ?<Col> <Link to="admin/"><Button>Admin page</Button></Link></Col>
-            :<></>
-          }
-          {/* TODO: add available tokens display */}
-        </Row>
+    <Navbar bg="dark" expand="lg">
+      <Container>
+          <Row>
+            <Col md={6} ><img style={{width:'50%'}} src={logo} alt={logo}/></Col>
+            <Col md={3}>
+              <Stack direction="horizontal">
+                <Link className='m-1' to="/s"><Button variant='secondary'>Simple Seller </Button></Link>{' '}
+                <Link className='m-1'to="/a"><Button variant='secondary'>Simple Auction </Button></Link>{' '}
+              </Stack>
+            </Col>
+            <Col md={3}>
+              <Stack direction="horizontal">
+                <Link className='m-1'to="/t"><Button variant='secondary' >Buy Tokens</Button></Link>
+                {isAdmin
+                  ?<Col> <Link className='m-1' to="admin/"><Button variant='secondary' >Admin page</Button></Link></Col>
+                  :<></>
+                }
+              </Stack>
+            </Col>
+          </Row>
       </Container>
     </Navbar> 
     <Outlet/>
