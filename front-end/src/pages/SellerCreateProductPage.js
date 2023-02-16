@@ -79,6 +79,7 @@ function SellerCreateProductPage(props) {
 
     async function submitProduct(){
         const formData = new FormData();
+        if(file==null) return
         formData.append("image", file);
         console.log(formData)
         const response = await axios({
@@ -126,8 +127,12 @@ function SellerCreateProductPage(props) {
                 <Modal.Title>{name}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    Price is {priceInUSD} (will remain to be {price._hex} wei even in fluctuation of eth)
-                    <img style={{width:'50%'}} src={linkForMedia} />
+                    <h3>{price
+                        ?ethers.utils.formatUnits(price._hex,"ether")
+                        :0
+                    } AGR</h3>
+                    <p>Currently ${priceInUSD}</p>
+                    <img className="w-100" src={linkForMedia} />
                 </Modal.Body>
                 <Modal.Footer>
                 <Button variant="secondary" onClick={()=>setShow(false)}>
