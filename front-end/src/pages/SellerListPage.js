@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import {Button, Container, Row, Card} from 'react-bootstrap';
+import {Button, Container, Row, Col, Card} from 'react-bootstrap';
 import { ethers } from 'ethers';
 import {Navigate, Link} from 'react-router-dom';
 
@@ -33,23 +33,33 @@ function SellerProductList(props) {
     setCount(c);
   }
 
-  const productCards = products.map((p) =><SellerProductCard 
-    key={p[1]} product={p[0]} id={p[1]}
-  />);
-
+  const productCards = products.map((p) =>
+    <Col className="h-25" md={3} style={{margin:'auto', marginTop:10}}>
+      <SellerProductCard
+        key={p[1]} product={p[0]} id={p[1]}
+      />
+    </Col>
+  );
+  
+  const containerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100vh',
+  };
   return (
     <>
-      
+
       {props.provider
-      ?<Container>
-      <Button onClick={updateProducts}>{count} products found; click to update</Button>
-      <Link to="/s/c"><Button> Create product</Button></Link>
-        <h1>Products for seller</h1>
-        <Row>
-          {productCards}
-        </Row>
-      </Container>
-      :<Navigate to="/"/>  
+        ?<Container className='mt-1'>
+        <Button variant='secondary' onClick={updateProducts}>Update</Button>{' '}
+        <Link to="/s/c"><Button variant='secondary'> Create product</Button></Link>
+          <h1>Products for sale</h1>
+          <Row  style={containerStyle}>
+            {productCards}
+          </Row>
+        </Container>
+        :<Navigate to="/"/>  
       }
     </>
   );
@@ -59,20 +69,18 @@ function SellerProductList(props) {
 function SellerProductCard(props) {
   const p = props.product;
   return (
-    <Card style={{ width: '12rem' }}>
+    <Link to={`/s/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
+    <Card>
       <Card.Img variant="top" src={p.linkForMedia} />
       <Card.Body>
         <Card.Title>{p.name}</Card.Title>
         <Card.Text>
-          Price: {parseInt(p.price)}
-          Seller: {p.seller}
+          <p>{ Number(ethers.utils.formatUnits(p.price._hex, "ether")).toFixed(5)}AGR</p>
           {p.approved ? "approved":""}
         </Card.Text>
-        <Link to={`/s/${props.id}`}>
-          <Button variant="primary">Go to product detail</Button>
-        </Link>
       </Card.Body>
     </Card>
+    </Link>
   );
 }
 
