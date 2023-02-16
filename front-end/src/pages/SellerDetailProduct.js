@@ -13,7 +13,7 @@ function SellerDetailProduct(props){
     const [rate,setRate] = useState(0);
     const [isCourier, setIsCourier] = useState(0);
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
-    const [dateAdded,setDateAdded] = useState(new Date());
+    const [dateAdded,setDateAdded] = useState();
 
   
     const signer = props.signer;

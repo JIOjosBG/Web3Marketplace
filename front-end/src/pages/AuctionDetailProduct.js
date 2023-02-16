@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react';
 import {ethers} from 'ethers';
 import { useParams } from 'react-router-dom';
-import {Button, Form} from 'react-bootstrap';
+import {Button, Form, Container, Row, Col, Card} from 'react-bootstrap';
 
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
 import MarketplaceJSON from '../shared/ABIs/Marketplace.json';
@@ -22,6 +22,9 @@ function AuctionDetailProduct(props){
     const [myBid,setMyBid] = useState(0);
     const [myBidInUSD,setMyBidInUSD] = useState(0);
     const [isCourier,setIsCourier] = useState(0);
+    const [dateAdded,setDateAdded] = useState();
+    const [dateFinishes,setDateFinishes] = useState();
+        
     const signer = props.signer;
     const { id } = useParams();
     //TODO: make popup for that form with amount eth to usd convertion
@@ -55,6 +58,9 @@ function AuctionDetailProduct(props){
             // TODO: check if this is bad ID
             const p = await simpleAuction.products(id);
             setProduct(p);
+            setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
+            setDateFinishes(new Date(parseInt(p.finishDate._hex)*1000))
+
             const r =await getRates();
 
         await setMinimalPriceInUSD(weiToUsd(parseInt(p.minimalPrice),r));
@@ -197,30 +203,36 @@ function AuctionDetailProduct(props){
     return(
     <>
         {product?
-        <>
-            <h1>{product.name}</h1>
-            <img style={{width:'20%'}}src={product.linkForMedia}/>
-            {product.minimalPrice.gt(product.bidAmount)
-            ?<>
-                <h2>Minimal price in wei: { (product.minimalPrice._hex)}</h2>
-                <h6>Minimal in USD: {minimalPriceInUSD}</h6>
-            </>
-            :<>
-                <h2>Highest bid: { (product.bidAmount._hex)}</h2>
-                <h6>Bid in USD: {highestBidInUSD}</h6>
-            </>
-            }
-            <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
-           
-            {product.approoved
-            ?<h3>Approoved</h3>
-            :<></>
-            }
-            <h4>{product.seller}</h4>
-            <h4>Added {new Date(parseInt(product.addDate._hex)*1000).toString()}</h4>
-            <h4>Finishes {new Date(parseInt(product.finishDate._hex)*1000).toString()}</h4>
-            <h6>Bids</h6>
-            {bidsList}
+
+          <Container className="mt-2">
+            <Row>
+                <Col md={6}>
+                    <img className="w-100" src={product.linkForMedia}/>
+                </Col>
+                <Col md={6}>
+                    <h1>{product.name}</h1>
+                    {product.minimalPrice.gt(product.bidAmount)
+                    ?<>
+                        <h2>Minimal price in wei: { (product.minimalPrice._hex)}</h2>
+                        <h6>Minimal in USD: ${minimalPriceInUSD.toFixed(2)}</h6>
+                    </>
+                    :<>
+                        <h2>Highest bid: { (product.bidAmount._hex)}</h2>
+                        <h6>Bid in USD: ${highestBidInUSD.toFixed(2)}</h6>
+                    </>
+                    }
+                    <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
+                
+                    {product.approoved
+                    ?<h3>Approoved</h3>
+                    :<></>
+                    }
+                    <h4>{product.seller}</h4>
+                    <h6> Added on {dateAdded.getFullYear()+"/"+(dateAdded.getMonth()+1)+"/"+dateAdded.getDate()}</h6>
+                    <h6> Finishes on {dateFinishes.getFullYear()+"/"+(dateFinishes.getMonth()+1)+"/"+dateFinishes.getDate()}</h6>
+                </Col>
+            </Row>
+
             {parseInt(product.finishDate._hex)*1000>new Date().getTime()
                 ?<>
                 <Form.Group className="mb-3" controlId="formName">
@@ -234,8 +246,8 @@ function AuctionDetailProduct(props){
 
                 </Form.Group>
 
-                    <Button onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>
-                    <Button onClick={handleBidViaBackend }>Bid via backend ${myBidInUSD} </Button>
+                    <Button variant="secondary" onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>{' '}
+                    <Button variant="secondary" onClick={handleBidViaBackend }>Bid via backend ${myBidInUSD} </Button>
                 </>
                 :isCourier
                     ?product.delivered==false
@@ -243,8 +255,10 @@ function AuctionDetailProduct(props){
                         :<h4>Already delivered</h4>    
                     :<></>
             }
+            <h6>Bids</h6>
+            {bidsList}
 
-            </>
+        </Container>
         :<h1>Loading</h1>
         }
         
@@ -256,11 +270,13 @@ function AuctionDetailProduct(props){
 
 function BidCard(props){
     return(
-    <>
-        <h6>{props.bid.bidder}</h6>
-        <h6>{props.bid.amount}</h6>
+        <Card>
+            <Card.Body>
+                <h6>Bid from {props.bid.bidder}</h6>
+                <h6>Amount { Number(ethers.utils.formatUnits(props.bid.amount, "ether")).toFixed(5)}{' '}</h6>
 
-    </>
+            </Card.Body>
+        </Card>
     );
 }
 
