@@ -85,15 +85,28 @@ describe("SimpleSeller", async function () {
         sigData = {
             "currentTime": Math.floor(Date.now()/1000),
             "futureTime":  Math.floor(Date.now()/1000)+1000,
-            "nonce0": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,0])),
-            "nonce1": await ethers.utils.keccak256(await ethers.utils.solidityPack(["address","uint"],[simpleSeller.address,1])),  
+            "nonce0": await ethers.utils.keccak256(
+                await ethers.utils.solidityPack(
+                    ["address","uint"],
+                    [simpleSeller.address,0]
+                    )
+                ),
+            "nonce1": await ethers.utils.keccak256(
+                await ethers.utils.solidityPack(
+                    ["address","uint"],
+                    [simpleSeller.address,1]
+                    )
+                ),  
         }
 
         const identity = EthCrypto.createIdentity();
         testingPubliCKey = identity.publicKey
         testingPrivateKey = identity.privateKey
         hashedData = await encryptWithPublicKey(secretMessage,testingPubliCKey);
-        encryptedDeliveryInstructions = encryptWithPublicKey(deliveryInstructions, testingPubliCKey);
+        encryptedDeliveryInstructions = encryptWithPublicKey(
+            deliveryInstructions, 
+            testingPubliCKey
+        );
 
     });
     
@@ -181,7 +194,12 @@ describe("SimpleSeller", async function () {
         it("Pays for products successfully",async function(){
             expect( (await simpleSeller.products(0)).paid).to.be.false;
 
-            const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
+            const message =await ethers.utils.arrayify(
+                await ethers.utils.keccak256(await ethers.utils.solidityPack(
+                    ['uint','bytes32','uint','address','address'],
+                    [sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address]
+                    )
+                ));
             const signature = accounts[1].signMessage(message);
             expect(await simpleSeller.payProduct(0,encryptedDeliveryInstructions,sigData.futureTime,accounts[1].address,signature)).to.not.throw;
 

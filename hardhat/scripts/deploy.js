@@ -1,5 +1,5 @@
 
-const hre = require("hardhat");
+const {ethers} = require("hardhat");
 const dotenv = require("dotenv")
 
 dotenv.config();
@@ -15,23 +15,20 @@ function hexToArray(hexx) {
 
 async function main() {
   console.log("starting")
-  const Marketplace = await hre.ethers.getContractFactory("Marketplace");
-  const AgoraToken = await hre.ethers.getContractFactory("AgoraToken");
-  const SimpleSeller = await hre.ethers.getContractFactory("SimpleSeller");
-  const SimpleAuction = await hre.ethers.getContractFactory("SimpleAuction");
+  const Marketplace = await ethers.getContractFactory("Marketplace");
+  const AgoraToken = await ethers.getContractFactory("AgoraToken");
+  const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
+  const SimpleAuction = await ethers.getContractFactory("SimpleAuction");
   console.log("deploying")
 
   publicKey = await ethers.utils.computePublicKey(process.env.ACCOUNT_PRIVATE_KEY);
   publicKey = hexToArray(publicKey);
-  marketplace = await Marketplace.deploy(publicKey);
+  const marketplace = await Marketplace.deploy(publicKey);
   const agoraToken = await AgoraToken.deploy();
   const simpleSeller = await SimpleSeller.deploy();
   const simpleAuction = await SimpleAuction.deploy();
 
-
-
-
-  console.log("not deployed")
+  console.log("deploying...")
   await marketplace.deployed();
   console.log("deployed marketplace")
   await agoraToken.deployed();
@@ -43,9 +40,8 @@ async function main() {
 
   await marketplace.setToken(agoraToken.address);
   await marketplace.addContract(simpleSeller.address,"Simple Seller");
-  await marketplace.addContract(simpleAuction.resolvedAddress,"Simple Auction");
+  await marketplace.addContract(simpleAuction.address,"Simple Auction");
   const owner = marketplace.owner();
-  //check already deployed
   await marketplace.addAdmin(owner);
   await marketplace.addAdmin(process.env.ACCOUNT_ADDRESS);
 

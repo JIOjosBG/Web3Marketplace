@@ -24,7 +24,6 @@ contract SimpleAuction is Ownable{
 
         address currentBidder;
         uint bidAmount;
-        //uint startDate;
         uint finishDate; 
     }
 
@@ -37,12 +36,6 @@ contract SimpleAuction is Ownable{
     mapping(address => mapping(uint => uint)) public owedMoneyToBidders;
 
     uint public productCount=0;
-
-    modifier onlyCourier {
-        require(address(ownerMarketplace)!=address(0),"No owner marketplace");
-        require(Marketplace(ownerMarketplace).couriers(msg.sender),"Not an authorized courier");
-        _;
-    }
 
     function productInit(
         string calldata name,
@@ -94,15 +87,12 @@ contract SimpleAuction is Ownable{
         //require(p.startDate<block.timestamp,"Auction hasnt started");
         require(amount>=p.minimalPrice, "Bid must be larger");
         require(amount>p.bidAmount, "Bid must be larger");
-
         require(deliveryInstructions.length!=0, "No delivery instructions");
         //require(nonce==keccak256(abi.encodePacked(address(this),index,amount)),"Wrong nonce");
-        bytes32 nonce = keccak256(abi.encodePacked(address(this),index,amount));
         require(address(ownerMarketplace)!=address(0),"No marketplace");
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
-
+        bytes32 nonce = keccak256(abi.encodePacked(address(this),index,amount));
         p.deliveryInstructions = deliveryInstructions;
-
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
         token.transactiWithSignature(p.finishDate,nonce,amount,from,address(this),sig);
         //RETURN PREV BID MONEY
@@ -110,7 +100,6 @@ contract SimpleAuction is Ownable{
             owedMoneyToBidders[p.currentBidder][index] = 0;
             token.transfer(p.currentBidder,p.bidAmount);
         }
-
         owedMoneyToBidders[from][index] = amount;
         p.bidAmount=amount;
         p.currentBidder=from;
@@ -118,7 +107,10 @@ contract SimpleAuction is Ownable{
         emit auctionProductBid(index, from, amount);
     }
 
-    function deliverProduct(uint index) public onlyCourier{
+    function deliverProduct(uint index) public {
+        require(address(ownerMarketplace)!=address(0),"No owner marketplace");
+        require(Marketplace(ownerMarketplace).couriers(msg.sender),"Not an authorized courier");
+        
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.finishDate<block.timestamp,"Auction not finished");

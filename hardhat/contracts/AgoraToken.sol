@@ -4,17 +4,16 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "hardhat/console.sol";
 
-
 contract AgoraToken is ERC20 {
     mapping(bytes32 => bool) nonces;
     constructor() ERC20("AgoraToken", "AGR") {
         //_mint(msg.sender, initialSupply);
     }
+    
     function buyTokens() external payable{
         require(msg.value>0,"Should send some eth");
         _mint(msg.sender, msg.value);
     }
-
 
     function sellTokens(uint amount) external {
         require(amount>0,"Amount must be >0");
@@ -32,11 +31,8 @@ contract AgoraToken is ERC20 {
         require(sig.length == 65,"Signature has bad length");
 
         assembly {
-            // first 32 bytes, after the length prefix.
             r := mload(add(sig, 32))
-            // second 32 bytes.
             s := mload(add(sig, 64))
-            // final byte (first byte of the next 32 bytes).
             v := byte(0, mload(add(sig, 96)))
         }
     }
@@ -45,11 +41,12 @@ contract AgoraToken is ERC20 {
         bytes32 prefixedHashMessage = prefixed(_hashedMessage);
         (uint8 v, bytes32 r, bytes32 s) = splitSignature(signature);
         address signer = ecrecover(prefixedHashMessage, v, r, s);
-
         return signer;
     }
 
-    function transactiWithSignature(uint expiration, bytes32 nonce, uint amount, address from, address to, bytes memory signature ) public{
+    function transactiWithSignature (
+        uint expiration, bytes32 nonce, uint amount, 
+        address from, address to, bytes memory signature ) public{
 
         require(expiration>block.timestamp,"Signature expired");
         require(nonces[nonce]==false,"Nonce used");

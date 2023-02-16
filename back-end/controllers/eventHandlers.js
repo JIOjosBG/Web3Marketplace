@@ -89,11 +89,9 @@ async function deliverSellerProduct(index, courier){
 //TODO: create cron job for submiting bids from the db
 async function createAuctionProduct(name,minimalPrice,seller,index){
     index = parseInt(index);
-    console.log("okokokok")
     try{
         const bci = await simpleAuction.products(index);
         let marketHashOfData=hexToBytes(bci.marketHashOfData);
-
         await AuctionProduct.create({
             instanceId:index,
             name,
@@ -109,7 +107,6 @@ async function createAuctionProduct(name,minimalPrice,seller,index){
         console.log(e);
         return;
     }
-    console.log("\n\n\n\n",typeof(index),index,"\n\n\n\n")
     scheduleBidExecution(index)
     console.log(`Created auction for ${name} index ${index}`)
 }

@@ -89,7 +89,6 @@ function AuctionDetailProduct(props){
     const usdToWei = (usd,r) => {
         let eth = usd/r;
         eth = parseFloat(eth).toFixed( 18 );
-
         return ethers.utils.parseEther(eth.toString());
     }
 
@@ -102,9 +101,7 @@ function AuctionDetailProduct(props){
 
         setMyBidInUSD(amount);
 
-        console.log("a");
         const bidInWei = usdToWei(amount,rate);
-        console.log("aa");
         console.log(amount,rate,myBidInUSD);
         setMyBid(bidInWei);
     }

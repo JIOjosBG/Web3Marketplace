@@ -27,14 +27,15 @@ function SellerDetailProduct(props){
 
     const getRates = async () => {
         try{
-            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
-                method: 'GET',
-
-            });
+            const response = await fetch(
+                'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', 
+                {
+                    method: 'GET',
+                }
+            );
             let r = (await response.json()).ethereum.usd;
             setRate(r);
             return r;
-            
         }catch(e){
             console.log(e);
         }
@@ -51,9 +52,9 @@ function SellerDetailProduct(props){
         try{
             // TODO: check if this is bad ID
             const p = await simpleSeller.products(id);
-            await setProduct(p);
+            setProduct(p);
             const r = await getRates();
-            await setPriceInUSD(weiToUsd(p.price,r));
+            setPriceInUSD(weiToUsd(p.price,r));
         }catch(e){
             console.log(e);           
         }
@@ -64,8 +65,6 @@ function SellerDetailProduct(props){
         nonce = await ethers.utils.keccak256(nonce);
         const expiration = Math.floor(Date.now()/1000)+3600;
         const signerAddress = await signer.getAddress();
-        
-
 
         console.log(expiration,nonce,product.price,signerAddress,simpleSeller.address);
         const message = await ethers.utils.solidityPack(
@@ -83,8 +82,8 @@ function SellerDetailProduct(props){
     }
 
     const buyProduct = async () => {
-        //TODO: check if sufficient funds
         let nonce,expiration,sig;
+        //TODO: check if sufficient funds
         try{
             const sigData = await makeSignature();
             nonce=await sigData['nonce'];
@@ -102,7 +101,6 @@ function SellerDetailProduct(props){
             deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(deliveryData));
             
             try{
-                console.log(id,deliveryData,expiration,nonce,product.price,await signer.getAddress(),sig);
                 await simpleSeller.payProduct(id,deliveryData,expiration,await signer.getAddress(),sig);
             }catch(e){
                 console.log(e);
@@ -127,16 +125,13 @@ function SellerDetailProduct(props){
 
     return(
     <>
-    
         {product?
         <>
-
-
             <h1>{product.name}</h1>
             <img style={{width:'20%'}}src={product.linkForMedia}/>
             <h2>Price in wei:{(product.price._hex)}</h2>
-            <h2>Price in USD:{priceInUSD}</h2> <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
-            
+            <h2>Price in USD:{priceInUSD}</h2> 
+            <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
             {product.approoved
             ?<h3>Approoved</h3>
             :<></>
@@ -152,7 +147,11 @@ function SellerDetailProduct(props){
                 ?<>
                 <Form.Group className="mb-3" controlId="formName">
                     <Form.Label>Delivery Instructions:</Form.Label>
-                    <Form.Control onChange={e=>setDeliveryInstructions(e.target.value)} type="text" placeholder="Delivery instructions"/>
+                    <Form.Control 
+                        onChange={e=>setDeliveryInstructions(e.target.value)} 
+                        type="text" 
+                        placeholder="Delivery instructions"
+                    />
                 </Form.Group>
                 <Button onClick={buyProduct}> Buy now </Button>
                 </>
@@ -162,7 +161,7 @@ function SellerDetailProduct(props){
                         :<h4>Already delivered</h4>    
                     :<></>
             }
-            </>
+        </>
         :<h1>Loading</h1>
         }
         

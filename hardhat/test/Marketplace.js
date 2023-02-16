@@ -1,7 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const dotenv = require("dotenv");
-
 dotenv.config();
 
 
@@ -107,8 +106,8 @@ describe("Marketplace", function () {
             expect( await marketplace.marketCount()).equal(3);
             
             expect((await marketplace.markets(simpleSeller1.address)).addedBy).equal(accounts[0].address);
-            expect((await marketplace.markets(simpleSeller1.address)).addedBy).equal(accounts[0].address);
-            expect((await marketplace.markets(simpleSeller1.address)).addedBy).equal(accounts[0].address);
+            expect((await marketplace.markets(simpleSeller2.address)).addedBy).equal(accounts[0].address);
+            expect((await marketplace.markets(simpleSeller3.address)).addedBy).equal(accounts[0].address);
 
 
         });

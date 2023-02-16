@@ -67,7 +67,10 @@ contract SimpleSeller is Ownable{
         token.transfer(address(ownerMarketplace),belongsToContract);
         belongsToContract=0;
     }
-    function payProduct(uint index, bytes calldata deliveryInstructions,uint expiration,address from,bytes memory sig) public{
+    
+    function payProduct(
+        uint index, bytes calldata deliveryInstructions,
+        uint expiration,address from,bytes memory sig) public{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==false,"Product already bought");
@@ -81,13 +84,11 @@ contract SimpleSeller is Ownable{
         owedMoneyToSellers[p.seller][index] = p.price*99/100;
         owedMoneyToBuyers[from][index] = p.price;
         products[index].buyer = from;
-        //???to move before setting delivery instructions etc. ????
+
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
         token.transactiWithSignature(expiration,nonce,p.price,from,address(this),sig);
         
         emit sellerProductSold(index, from);
-
-
     }
 
     function deliverProduct(uint index) public  /* onlyDelivery */{
@@ -95,8 +96,12 @@ contract SimpleSeller is Ownable{
         require(p.seller!=address(0), "No such product");
         require(p.paid==true,"Product not paid");
         require(p.delivered==false,"Product already delivered");
-        //check if caller is courier only if there is an owner marketplace, else revert with false
-        require(address(ownerMarketplace)!=address(0) ? ownerMarketplace.couriers(msg.sender)==true : false,"Not an authorized courier");
+        //check if caller is courier only if there is an owner marketplace,
+        // else revert with false
+        require(
+            address(ownerMarketplace)!=address(0) 
+            ? ownerMarketplace.couriers(msg.sender)==true 
+            : false,"Not an authorized courier");
         uint pay = owedMoneyToSellers[p.seller][index];
         belongsToContract+=p.price-pay;
         owedMoneyToSellers[p.seller][index] = 0;

@@ -33,9 +33,6 @@ const scheduleBidExecution = async (index) => {
     }
 
     const executeTime = new Date((bci.finishDate-60*60)*1000)
-    //const executeTime = new Date(new Date().getTime()+5000)
-    
-
     var j = schedule.scheduleJob(executeTime,()=> makeBidsForProduct(index));
 }
 
@@ -59,15 +56,12 @@ async function makeBidsForProduct(index){
     }
 
     console.log(`In cron job with index ${index}`)
+    
     try{
 
         bids = await AuctionBid.findAll({
-            order: [
-                ['amount', 'DESC']
-            ],
-            where:{
-                instanceId:index
-            }
+            order: [['amount', 'DESC']],
+            where:{instanceId:index}
         });
     }catch(e){
         console.log("Schedule job: err on finding bids");
@@ -75,15 +69,17 @@ async function makeBidsForProduct(index){
     }
     try{
         for(let i=0;i<bids.length;i++){
-
             if(
-            (await agoraToken.balanceOf(bids[i].bidder)).gt(bids[i].amount) &&
-            !(bci.bidAmount.gt(bids[i].amount))
+                (await agoraToken.balanceOf(bids[i].bidder)).gt(bids[i].amount) &&
+                !(bci.bidAmount.gt(bids[i].amount))
             ){  
-                const preHashedNonce = await ethers.utils.solidityPack(["address","uint","uint"],[simpleAuction.address,index,bids[i].amount])
-                const nonce = await ethers.utils.arrayify(await ethers.utils.keccak256(preHashedNonce));
-                const expiration = bci.finishDate;
-                await simpleAuction.bidForProduct(index,bids[i].deliveryInstructions, bids[i].amount, bids[i].bidder, bids[i].signature);
+                await simpleAuction.bidForProduct(
+                    index,
+                    bids[i].deliveryInstructions, 
+                    bids[i].amount, 
+                    bids[i].bidder, 
+                    bids[i].signature
+                );
                 console.log(`Schedule jobs: successfully bid for product ${index}`)
                 flag=1;
                 break

@@ -79,7 +79,6 @@ function SellerCreateProductPage(props) {
 
     async function submitProduct(){
         const formData = new FormData();
-        console.log(file)
         formData.append("image", file);
         console.log(formData)
         const response = await axios({
@@ -96,15 +95,10 @@ function SellerCreateProductPage(props) {
     }
 
     async function encryptWithPublicKey(message,publicKey){
-        console.log("PK", publicKey);
-        console.log(message);
-
         let pk = new Uint8Array(publicKey)
-        let data = await EthCrypto.encryptWithPublicKey(pk,pk);
+        let data = await EthCrypto.encryptWithPublicKey(pk,message);
         data = JSON.stringify(data)
-        console.log(data)
         data = stringToHex(data);
-        console.log(data)
         return data;
     }
 

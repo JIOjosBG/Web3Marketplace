@@ -20,5 +20,10 @@ module.exports = {
       accounts: [process.env.ACCOUNT_PRIVATE_KEY],
       allowUnlimitedContractSize: true
     }
+  },
+  etherscan: {
+    apiKey: {
+      goerli: process.env.ETHERSCAN_API_KEY
+    }
   }
 };

@@ -67,7 +67,6 @@ function App() {
         <Route path="admin/" element={<AdminPage provider={provider} signer={signer}/>} />
         
         <Route path="*" element={<h1>404 not found</h1>} />
-
       </Route>
     </Routes>
     :<Button onClick={connectWalletHandler}>Connect</Button>

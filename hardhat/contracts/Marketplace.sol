@@ -78,3 +78,14 @@ contract Marketplace is Ownable {
 
     receive() external  payable {}
 }
+
+
+//goerli
+/*
+{
+      "marketplace":"0xe23B3b13FC68Ff5547EB358EBe84a7f523CF2CBA",
+      "agoraToken":"0xc1D4d8C5BF1E7287Ce85045E371df8469F9FDaCa",
+      "simpleSeller":"0x5458235389799169aBD57CBfEE00A08351e1656a",
+      "simpleAuction":"0xe3DBc37A4318E5f9D77975981D1B81131ebB5301"
+    }
+*/

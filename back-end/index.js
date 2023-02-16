@@ -2,7 +2,6 @@ const express = require('express');
 const ethers = require("ethers");
 const bodyParser = require('body-parser')
 require("dotenv").config();
-const multer  = require('multer')
 
 
 const simpleSellerABI = require("./contracts/ABIs/SimpleSeller.json").abi;
@@ -20,17 +19,17 @@ const provider = require("./controllers/shared.js")
 const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerABI, provider);  
 const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionABI, provider);  
 
-
-
 const app = express();
-const PORT = 5000
+const PORT = 5000;
 
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
 app.use((req,res,next)=>{
     res.header('Access-Control-Allow-Origin','http://localhost:3000');
-    res.header('Access-Control-Allow-Headers','Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     if(req.method === "OPTIONS"){
         res.header('Access-Control-Allow-Methods','PUT, PATCH, DELETE, GET, POST');
         return res.status(200).json({})
@@ -44,8 +43,6 @@ app.use("/a", auctionRoutes);
 app.use("/i", imageRoutes);
 
 app.all("*", (req, res) =>res.send("404"));
-
-
 //TODO: add the graph querying on startup
 app.listen(PORT, async () => console.log(`Server running on port: http://localhost:${PORT}`));
 
