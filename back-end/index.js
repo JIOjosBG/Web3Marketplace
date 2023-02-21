@@ -3,6 +3,7 @@ const ethers = require("ethers");
 const bodyParser = require('body-parser')
 require("dotenv").config();
 
+const db = require('./models')
 
 const simpleSellerABI = require("./contracts/ABIs/SimpleSeller.json").abi;
 const simpleAuctionABI = require("./contracts/ABIs/SimpleAuction.json").abi;
@@ -44,6 +45,7 @@ app.use("/i", imageRoutes);
 
 app.all("*", (req, res) =>res.send("404"));
 //TODO: add the graph querying on startup
+//db.sequelize.sync();
 app.listen(PORT, async () => console.log(`Server running on port: http://localhost:${PORT}`));
 
 simpleSeller.on("sellerProductAdded", createSellerProduct);

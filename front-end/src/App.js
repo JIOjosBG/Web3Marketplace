@@ -67,7 +67,6 @@ function App() {
         <Route path="a/*" element={<SimpleAuctionRoutes provider={provider} signer={signer}/>} />
         <Route path="t/" element={<BuyTokensPage provider={provider} signer={signer}/>} />
         <Route path="admin/" element={<AdminPage provider={provider} signer={signer}/>} />
-        
         <Route path="*" element={<h1>404 not found</h1>} />
       </Route>
     </Routes>
