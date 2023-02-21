@@ -27,7 +27,12 @@ contract SimpleAuction is Ownable{
         uint finishDate; 
     }
 
-
+    modifier correctlyInstantiated{
+        require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
+        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
+        _;
+    }
+    
     Marketplace public  ownerMarketplace;
     uint public belongsToContract=0;
 
@@ -36,7 +41,7 @@ contract SimpleAuction is Ownable{
     mapping(address => mapping(uint => uint)) public owedMoneyToBidders;
 
     uint public productCount=0;
-
+    
     function productInit(
         string calldata name,
         uint minimalPrice,
@@ -46,17 +51,15 @@ contract SimpleAuction is Ownable{
         )private view returns(Product memory){
             return Product(
                 name,minimalPrice,msg.sender,block.timestamp,linkForMedia,marketHashOfData, false,false,"",
-                address(0),0,/*startDate,*/endDate
+                address(0),0,endDate
             );
     }
 
     function addProduct(string calldata name, uint minimalPrice, string calldata link, bytes calldata marketHashOfData, uint finishDate) public {
         require(bytes(name).length != 0,"Name shouldn't be empty");
         require(minimalPrice>=2000000,"Price should be >=2000000");
-        //require(startDate>=block.timestamp,"Start should be in the future");
         require(finishDate>=block.timestamp,"End should be in the future");
-        //require(startDate<finishDate,"Start should be before end");
-        products[productCount]=productInit(name, minimalPrice, link, marketHashOfData,/*startDate,*/finishDate);
+        products[productCount]=productInit(name, minimalPrice, link, marketHashOfData,finishDate);
         sellerToProductIndexes[msg.sender].push(productCount);
         emit auctionProductAdded(name, minimalPrice, msg.sender,productCount);
         productCount+=1;
@@ -72,25 +75,20 @@ contract SimpleAuction is Ownable{
         ownerMarketplace =Marketplace(marketplace);
     }
     
-    function transferFunds() public onlyOwner{
-        require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
+    function transferFunds() public onlyOwner correctlyInstantiated{
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
-        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
         token.transfer(address(ownerMarketplace),belongsToContract);
         belongsToContract=0;
     }
 
-    function bidForProduct(uint index,bytes calldata deliveryInstructions, uint amount, address from,bytes memory sig) public payable{
+    function bidForProduct(uint index,bytes calldata deliveryInstructions, uint amount, address from,bytes memory sig) public payable correctlyInstantiated{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.finishDate>block.timestamp,"Auction already finished");
-        //require(p.startDate<block.timestamp,"Auction hasnt started");
         require(amount>=p.minimalPrice, "Bid must be larger");
         require(amount>p.bidAmount, "Bid must be larger");
         require(deliveryInstructions.length!=0, "No delivery instructions");
         //require(nonce==keccak256(abi.encodePacked(address(this),index,amount)),"Wrong nonce");
-        require(address(ownerMarketplace)!=address(0),"No marketplace");
-        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
         bytes32 nonce = keccak256(abi.encodePacked(address(this),index,amount));
         p.deliveryInstructions = deliveryInstructions;
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
@@ -107,8 +105,7 @@ contract SimpleAuction is Ownable{
         emit auctionProductBid(index, from, amount);
     }
 
-    function deliverProduct(uint index) public {
-        require(address(ownerMarketplace)!=address(0),"No owner marketplace");
+    function deliverProduct(uint index) public correctlyInstantiated{
         require(Marketplace(ownerMarketplace).couriers(msg.sender),"Not an authorized courier");
         
         Product memory p = products[index];

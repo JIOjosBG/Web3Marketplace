@@ -289,7 +289,7 @@ describe("SimpleSeller", async function () {
 
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0,oneETH,accounts[1].address,simpleSeller.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,accounts[1].address,signature)).to.be.revertedWith("No marketplace");
+            await expect(simpleSeller.payProduct(0,stringToHex("Deliver here"),sigData.futureTime,accounts[1].address,signature)).to.be.revertedWith("Doesn't have owner marketplace");
             expect( (await simpleSeller.products(0)).paid).to.be.false;
             expect(await simpleSeller.owedMoneyToSellers(accounts[0].address,0)).equal(0);
             expect(await simpleSeller.owedMoneyToBuyers(accounts[0].address,0)).equal(0);

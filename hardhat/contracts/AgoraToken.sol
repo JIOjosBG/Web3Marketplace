@@ -7,7 +7,6 @@ import "hardhat/console.sol";
 contract AgoraToken is ERC20 {
     mapping(bytes32 => bool) nonces;
     constructor() ERC20("AgoraToken", "AGR") {
-        //_mint(msg.sender, initialSupply);
     }
     
     function buyTokens() external payable{

@@ -108,8 +108,6 @@ describe("Marketplace", function () {
             expect((await marketplace.markets(simpleSeller1.address)).addedBy).equal(accounts[0].address);
             expect((await marketplace.markets(simpleSeller2.address)).addedBy).equal(accounts[0].address);
             expect((await marketplace.markets(simpleSeller3.address)).addedBy).equal(accounts[0].address);
-
-
         });
 
         it("Gets the address of the added contract", async function () {

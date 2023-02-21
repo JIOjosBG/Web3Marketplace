@@ -25,6 +25,12 @@ contract SimpleSeller is Ownable{
         bytes deliveryInstructions; 
     }
 
+    modifier correctlyInstantiated{
+        require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
+        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
+        _;
+    }
+
     uint public belongsToContract=0;
 
     Marketplace public  ownerMarketplace;
@@ -59,25 +65,21 @@ contract SimpleSeller is Ownable{
         ownerMarketplace =Marketplace(marketplace);
     }
 
-    function transferFunds() public onlyOwner{
-        require(address(ownerMarketplace)!=address(0),"Doesn't have owner marketplace");
-        //payable(ownerMarketplace).transfer(address(this).balance);
+    function transferFunds() public onlyOwner correctlyInstantiated{
         AgoraToken token = AgoraToken(ownerMarketplace.myToken());
-        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
         token.transfer(address(ownerMarketplace),belongsToContract);
         belongsToContract=0;
     }
     
     function payProduct(
         uint index, bytes calldata deliveryInstructions,
-        uint expiration,address from,bytes memory sig) public{
+        uint expiration,address from,bytes memory sig
+    ) public correctlyInstantiated{
         Product storage p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==false,"Product already bought");
         require(deliveryInstructions.length!=0, "No delivery instructions");
         bytes32 nonce=keccak256(abi.encodePacked(address(this),index));
-        require(address(ownerMarketplace)!=address(0),"No marketplace");
-        require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
 
         p.deliveryInstructions = deliveryInstructions;
         p.paid=true;
@@ -91,17 +93,13 @@ contract SimpleSeller is Ownable{
         emit sellerProductSold(index, from);
     }
 
-    function deliverProduct(uint index) public  /* onlyDelivery */{
+    function deliverProduct(uint index) public  correctlyInstantiated{
         Product memory p = products[index];
         require(p.seller!=address(0), "No such product");
         require(p.paid==true,"Product not paid");
         require(p.delivered==false,"Product already delivered");
-        //check if caller is courier only if there is an owner marketplace,
-        // else revert with false
-        require(
-            address(ownerMarketplace)!=address(0) 
-            ? ownerMarketplace.couriers(msg.sender)==true 
-            : false,"Not an authorized courier");
+        require(ownerMarketplace.couriers(msg.sender)==true,"Not an authorized courier");
+        
         uint pay = owedMoneyToSellers[p.seller][index];
         belongsToContract+=p.price-pay;
         owedMoneyToSellers[p.seller][index] = 0;

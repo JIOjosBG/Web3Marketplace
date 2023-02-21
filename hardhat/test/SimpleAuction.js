@@ -356,7 +356,7 @@ describe("SimpleAuction", async function () {
         it("Without marketplace or token",async function(){
             const message =await ethers.utils.arrayify( await ethers.utils.keccak256(await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[sigData.futureTime,sigData.nonce0oneETH,oneETH,accounts[1].address,simpleAuction.address])));
             const signature = accounts[1].signMessage(message);
-            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.be.revertedWith("No marketplace");
+            await expect(simpleAuction.bidForProduct(0,stringToHex("Deliver here"),oneETH,accounts[1].address,signature)).to.be.revertedWith("Doesn't have owner marketplace");
             
             expect( await simpleAuction.owedMoneyToBidders(accounts[1].address,0)).equal(0);
             expect( (await simpleAuction.products(0)).currentBidder).equal(ethers.constants.AddressZero);
@@ -464,7 +464,7 @@ describe("SimpleAuction", async function () {
 
         it("No marketplace",async function(){
             simpleAuctionNoMP = await SimpleAuction.deploy();
-            await expect(simpleAuctionNoMP.deliverProduct(0)).to.be.revertedWith("No owner marketplace");
+            await expect(simpleAuctionNoMP.deliverProduct(0)).to.be.revertedWith("Doesn't have owner marketplace");
 
         });
 

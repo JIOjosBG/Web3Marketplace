@@ -41,34 +41,34 @@ contract Marketplace is Ownable {
         return marketAddresses;
     }
 
-    function addContract(address contractAddress, string calldata name) public onlyOwner {
-        require(contractAddress!=address(0),"Address shouldn't be 0");
-        require(bytes(name).length != 0, "Name length shouldn't be 0");
-        require(markets[contractAddress].contractAddress == address(0),"Market already added");
+    function addContract(address _contractAddress, string calldata _name) public onlyOwner {
+        require(_contractAddress!=address(0),"Address shouldn't be 0");
+        require(bytes(_name).length != 0, "Name length shouldn't be 0");
+        require(markets[_contractAddress].contractAddress == address(0),"Market already added");
         
-        markets[contractAddress] = ( Market(contractAddress,msg.sender,name,block.timestamp));
-        marketAddresses.push(contractAddress);
+        markets[_contractAddress] = ( Market(_contractAddress,msg.sender,_name,block.timestamp));
+        marketAddresses.push(_contractAddress);
         marketCount+=1;
     }
 
-    function addCourier(address courier) public onlyAdmin{
-        require(courier!=address(0),"Address shouldn't be 0");
-        couriers[courier]=true;
-        emit addedCourier(msg.sender,courier);
+    function addCourier(address _courier) public onlyAdmin{
+        require(_courier!=address(0),"Address shouldn't be 0");
+        couriers[_courier]=true;
+        emit addedCourier(msg.sender,_courier);
     }
 
-    function removeCourier(address courier) public onlyAdmin{
-        couriers[courier]=false;
-        emit removedCourier(msg.sender,courier);
+    function removeCourier(address _courier) public onlyAdmin{
+        couriers[_courier]=false;
+        emit removedCourier(msg.sender,_courier);
     }
 
-    function addAdmin(address admin) public onlyOwner{
-        require(admin!=address(0),"Address shouldn't be 0");
-        admins[admin]=true;
+    function addAdmin(address _admin) public onlyOwner{
+        require(_admin!=address(0),"Address shouldn't be 0");
+        admins[_admin]=true;
     }
 
-    function removeAdmin(address admin) public onlyOwner{
-        admins[admin]=false;
+    function removeAdmin(address _admin) public onlyOwner{
+        admins[_admin]=false;
     }
     
     function changePublicKey(bytes memory _publicKey) public onlyOwner{
@@ -78,14 +78,3 @@ contract Marketplace is Ownable {
 
     receive() external  payable {}
 }
-
-
-//goerli
-/*
-{
-      "marketplace":"0xe23B3b13FC68Ff5547EB358EBe84a7f523CF2CBA",
-      "agoraToken":"0xc1D4d8C5BF1E7287Ce85045E371df8469F9FDaCa",
-      "simpleSeller":"0x5458235389799169aBD57CBfEE00A08351e1656a",
-      "simpleAuction":"0xe3DBc37A4318E5f9D77975981D1B81131ebB5301"
-    }
-*/
