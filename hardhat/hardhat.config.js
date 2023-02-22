@@ -12,7 +12,7 @@ module.exports = {
   solidity: "0.8.13",
   networks: {
     goerli: {
-      url: `https://goerli.infura.io/v3/${process.env.API_KEY}`,
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [process.env.ACCOUNT_PRIVATE_KEY]
     },
     ganache: {

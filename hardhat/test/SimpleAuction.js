@@ -462,7 +462,7 @@ describe("SimpleAuction", async function () {
             expect(await simpleAuction.belongsToContract()).equal(0);
         });
 
-        it("No marketplace",async function(){
+        it("Doesn't have owner marketplace",async function(){
             simpleAuctionNoMP = await SimpleAuction.deploy();
             await expect(simpleAuctionNoMP.deliverProduct(0)).to.be.revertedWith("Doesn't have owner marketplace");
 
@@ -551,7 +551,7 @@ describe("SimpleAuction", async function () {
             await expect(simpleAuction.transferFunds()).to.be.revertedWith("No token specified");
         });
 
-        it("No owner marketplace",async function(){
+        it("Doesn't have owner marketplace",async function(){
             expect(await marketplace.setToken(agoraToken.address)).to.not.throw;
             await expect(simpleAuction.transferFunds()).to.be.revertedWith("Doesn't have owner marketplace");
         

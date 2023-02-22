@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.8.0",
+    "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.0.3",
     "eth-crypto": "^2.5.0"
