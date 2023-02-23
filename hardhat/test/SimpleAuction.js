@@ -464,6 +464,7 @@ describe("SimpleAuction", async function () {
 
         it("Doesn't have owner marketplace",async function(){
             simpleAuctionNoMP = await SimpleAuction.deploy();
+            expect(await simpleAuctionNoMP.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
             await expect(simpleAuctionNoMP.deliverProduct(0)).to.be.revertedWith("Doesn't have owner marketplace");
 
         });
@@ -585,6 +586,27 @@ describe("SimpleAuction", async function () {
             await network.provider.send("evm_increaseTime", [-3600]);
         });
 
+    });
+
+    describe("Approve products", async function(){
+        beforeEach(async function(){
+            expect(await simpleAuction.addProduct("Product1",oneETH,"asd1",hashedData,finishDate)).to.not.throw;
+            expect((await simpleAuction.products(0)).approved).to.be.false;
+        });
+        it("Approve successfully",async function(){
+            expect(await simpleAuction.approveProduct(0)).to.not.throw;
+            expect((await simpleAuction.products(0)).approved).to.be.true;
+        });
+        it("Not owner",async function(){
+            await expect(simpleAuction.connect(accounts[1]).approveProduct(0)).to.be.revertedWith("Ownable: caller is not the owner");
+            expect((await simpleAuction.products(0)).approved).to.be.false;
+        });
+        it("Not such product",async function(){
+            await expect(simpleAuction.approveProduct(1)).to.be.revertedWith("No such product");
+            expect((await simpleAuction.products(0)).approved).to.be.false;
+            expect((await simpleAuction.products(1)).approved).to.be.false;
+
+        });
     });
 
 });

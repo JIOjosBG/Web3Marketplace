@@ -31,6 +31,11 @@ contract SimpleSeller is Ownable{
         _;
     }
 
+    modifier productExists(uint index){
+        require(products[index].seller!=address(0),"No such product");
+        _;
+    }
+
     uint public belongsToContract=0;
 
     Marketplace public  ownerMarketplace;
@@ -74,9 +79,8 @@ contract SimpleSeller is Ownable{
     function payProduct(
         uint index, bytes calldata deliveryInstructions,
         uint expiration,address from,bytes memory sig
-    ) public correctlyInstantiated{
+    ) public productExists(index) correctlyInstantiated{
         Product storage p = products[index];
-        require(p.seller!=address(0), "No such product");
         require(p.paid==false,"Product already bought");
         require(deliveryInstructions.length!=0, "No delivery instructions");
         bytes32 nonce=keccak256(abi.encodePacked(address(this),index));
@@ -93,9 +97,8 @@ contract SimpleSeller is Ownable{
         emit sellerProductSold(index, from);
     }
 
-    function deliverProduct(uint index) public  correctlyInstantiated{
+    function deliverProduct(uint index) public productExists(index) correctlyInstantiated{
         Product memory p = products[index];
-        require(p.seller!=address(0), "No such product");
         require(p.paid==true,"Product not paid");
         require(p.delivered==false,"Product already delivered");
         require(ownerMarketplace.couriers(msg.sender)==true,"Not an authorized courier");
@@ -108,6 +111,10 @@ contract SimpleSeller is Ownable{
         AgoraToken(ownerMarketplace.myToken()).transfer(p.seller,pay);
         //payable(p.seller).transfer(pay);
         emit sellerProductDelivered(index, p.seller, msg.sender);
+    }
+
+    function approveProduct(uint index) public productExists(index) onlyOwner{
+        products[index].approved=true;
     }
 
 }

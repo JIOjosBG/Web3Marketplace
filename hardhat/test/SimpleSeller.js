@@ -485,6 +485,27 @@ describe("SimpleSeller", async function () {
 
     });
 
+    describe("Approve products", async function(){
+        beforeEach(async function(){
+            expect(await simpleSeller.addProduct("Product1",oneETH,"asd1",hashedData)).to.not.throw;
+            expect((await simpleSeller.products(0)).approved).to.be.false;
+        });
+        it("Approve successfully",async function(){
+            expect(await simpleSeller.approveProduct(0)).to.not.throw;
+            expect((await simpleSeller.products(0)).approved).to.be.true;
+        });
+        it("Not owner",async function(){
+            await expect(simpleSeller.connect(accounts[1]).approveProduct(0)).to.be.revertedWith("Ownable: caller is not the owner");
+            expect((await simpleSeller.products(0)).approved).to.be.false;
+        });
+        it("Not such product",async function(){
+            await expect(simpleSeller.approveProduct(1)).to.be.revertedWith("No such product");
+            expect((await simpleSeller.products(0)).approved).to.be.false;
+            expect((await simpleSeller.products(1)).approved).to.be.false;
+
+        });
+    });
+
 
 });
 

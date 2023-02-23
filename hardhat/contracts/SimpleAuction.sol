@@ -32,6 +32,11 @@ contract SimpleAuction is Ownable{
         require(address(ownerMarketplace.myToken())!=address(0),"No token specified");
         _;
     }
+
+    modifier productExists(uint index){
+        require(products[index].seller!=address(0),"No such product");
+        _;
+    }
     
     Marketplace public  ownerMarketplace;
     uint public belongsToContract=0;
@@ -81,9 +86,8 @@ contract SimpleAuction is Ownable{
         belongsToContract=0;
     }
 
-    function bidForProduct(uint index,bytes calldata deliveryInstructions, uint amount, address from,bytes memory sig) public payable correctlyInstantiated{
+    function bidForProduct(uint index,bytes calldata deliveryInstructions, uint amount, address from,bytes memory sig) public productExists(index) correctlyInstantiated{
         Product storage p = products[index];
-        require(p.seller!=address(0), "No such product");
         require(p.finishDate>block.timestamp,"Auction already finished");
         require(amount>=p.minimalPrice, "Bid must be larger");
         require(amount>p.bidAmount, "Bid must be larger");
@@ -105,11 +109,10 @@ contract SimpleAuction is Ownable{
         emit auctionProductBid(index, from, amount);
     }
 
-    function deliverProduct(uint index) public correctlyInstantiated{
+    function deliverProduct(uint index) public productExists(index) correctlyInstantiated{
         require(Marketplace(ownerMarketplace).couriers(msg.sender),"Not an authorized courier");
         
         Product memory p = products[index];
-        require(p.seller!=address(0), "No such product");
         require(p.finishDate<block.timestamp,"Auction not finished");
         require(p.currentBidder!=address(0),"No bids, therefore can't deliver");
         require(p.delivered==false,"Product already delivered");
@@ -119,5 +122,9 @@ contract SimpleAuction is Ownable{
         products[index].delivered=true;
         AgoraToken(ownerMarketplace.myToken()).transfer(p.seller,pay);
         emit auctionProductDelivered(index, p.currentBidder, msg.sender);
+    }
+    
+    function approveProduct(uint index) public onlyOwner productExists(index){
+        products[index].approved=true;
     }
 }
