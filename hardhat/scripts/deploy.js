@@ -20,9 +20,8 @@ async function main() {
   const SimpleSeller = await ethers.getContractFactory("SimpleSeller");
   const SimpleAuction = await ethers.getContractFactory("SimpleAuction");
   console.log("deploying")
-
-  publicKey = await ethers.utils.computePublicKey(process.env.ACCOUNT_PRIVATE_KEY);
-  publicKey = hexToArray(publicKey);
+  const wallet = new ethers.Wallet(process.env.ACCOUNT_PRIVATE_KEY);
+  publicKey = wallet.publicKey;
   const marketplace = await Marketplace.deploy(publicKey);
   const agoraToken = await AgoraToken.deploy();
   const simpleSeller = await SimpleSeller.deploy();
@@ -43,7 +42,7 @@ async function main() {
   await marketplace.addContract(simpleAuction.address,"Simple Auction");
   const owner = marketplace.owner();
   await marketplace.addAdmin(owner);
-  await marketplace.addAdmin(process.env.ACCOUNT_ADDRESS);
+  await marketplace.addAdmin(wallet.address);
 
   await simpleSeller.joinMarketplace(marketplace.address);
   await simpleAuction.joinMarketplace(marketplace.address);

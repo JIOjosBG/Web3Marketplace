@@ -75,7 +75,7 @@ function SellerProductCard(props) {
       <Card.Body>
         <Card.Title>{p.name}</Card.Title>
         <Card.Text>
-          <p>{ Number(ethers.utils.formatUnits(p.price._hex, "ether")).toFixed(5)}AGR</p>
+          <p>{ Number(ethers.utils.formatUnits(p.price._hex, "ether")).toFixed(5).toString()}AGR</p>
           {p.approved ? "approved":""}
         </Card.Text>
       </Card.Body>
