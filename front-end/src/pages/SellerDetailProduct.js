@@ -4,9 +4,10 @@ import { useParams } from 'react-router-dom';
 import {Button, Form, Container, Row, Col} from 'react-bootstrap';
 
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
-import MarketplaceJSON from '../shared/ABIs/Marketplace.json';
 
 import addressesJSON from '../shared/contractAddresses.json';
+import {getCourierStatus, getAdminStatus} from '../utils/getUserStatus';
+
 function SellerDetailProduct(props){
     const [product,setProduct] = useState(null);
     const [priceInUSD,setPriceInUSD] = useState(0);
@@ -19,17 +20,10 @@ function SellerDetailProduct(props){
   
     const signer = props.signer;
 
-    const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , props.signer);
-    const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider);
-    
-    const { id } = useParams();
-    const getIsCourierStatus = async () => {
-        setIsCourier(await marketplace.couriers(await signer.getAddress()))
-    }
+    const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , signer);
 
-    const getIsAdminStatus = async () => {
-        setIsAdmin(await marketplace.admins(await signer.getAddress()))
-    }
+    const { id } = useParams();
+
 
     const getRates = async () => {
         try{
@@ -71,7 +65,7 @@ function SellerDetailProduct(props){
         let nonce = await ethers.utils.solidityPack(['address','uint'],[simpleSeller.address,id]);
         nonce = await ethers.utils.keccak256(nonce);
         const expiration = Math.floor(Date.now()/1000)+3600;
-        const signerAddress = await signer.getAddress();
+        const signerAddress = await props.signer.getAddress();
 
         //console.log(expiration,nonce,product.price,signerAddress,simpleSeller.address);
         const message = await ethers.utils.solidityPack(
@@ -82,7 +76,7 @@ function SellerDetailProduct(props){
             //[expired,nonce,oneETH,accounts[1].address,accounts[0].address]);
         
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
-        let signature = signer.signMessage(hashedMessage);
+        let signature = props.signer.signMessage(hashedMessage);
             
 
         return {"expiration":expiration,"signature":signature};
@@ -107,7 +101,7 @@ function SellerDetailProduct(props){
             deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(deliveryData));
             
             try{
-                await simpleSeller.payProduct(id,deliveryData,expiration,await signer.getAddress(),sig);
+                await simpleSeller.payProduct(id,deliveryData,expiration,await props.signer.getAddress(),sig);
             }catch(e){
                 console.log(e);
             }
@@ -131,13 +125,15 @@ function SellerDetailProduct(props){
     }
     //TODO: add account to update list
     useEffect(()=>{
-        getProduct();
-        //TODO: ???? check in DB if there is more data about the product
-        getIsCourierStatus();
-        getIsAdminStatus();
+        initData()
     },[]);
-
-
+    
+    const initData = async () => {
+        //TODO: ???? check in DB if there is more data about the product
+        setIsCourier(await getCourierStatus(await signer.getAddress()));
+        setIsAdmin(await getAdminStatus(await signer.getAddress()));
+        getProduct();
+    }
     return(
     <>
         {product!=null

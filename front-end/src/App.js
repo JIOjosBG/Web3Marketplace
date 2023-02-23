@@ -50,7 +50,6 @@ function App() {
     let tempProvider = new ethers.providers.Web3Provider(window.ethereum);
     setProvider(tempProvider);
     let tempSigner = tempProvider.getSigner();
-    
     setSigner(tempSigner);
   }
 

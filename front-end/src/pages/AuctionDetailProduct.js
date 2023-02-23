@@ -4,9 +4,9 @@ import { useParams } from 'react-router-dom';
 import {Button, Form, Container, Row, Col, Card} from 'react-bootstrap';
 
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
-import MarketplaceJSON from '../shared/ABIs/Marketplace.json';
 
 import addressesJSON from '../shared/contractAddresses.json';
+import {getCourierStatus, getAdminStatus} from '../utils/getUserStatus';
 
 function AuctionDetailProduct(props){
     const [product,setProduct] = useState(null);
@@ -15,9 +15,9 @@ function AuctionDetailProduct(props){
     const [highestBidInUSD,setHighestBidInUSD] = useState(0);
     const [bids,setBids] = useState([]);
 
-    const simpleAuction= new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , props.signer);
-    const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider);
-    
+    const signer = props.signer;
+    const simpleAuction= new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , signer);
+
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
     const [myBid,setMyBid] = useState(0);
     const [myBidInUSD,setMyBidInUSD] = useState(0);
@@ -26,7 +26,6 @@ function AuctionDetailProduct(props){
     const [dateAdded,setDateAdded] = useState();
     const [dateFinishes,setDateFinishes] = useState();
         
-    const signer = props.signer;
     const { id } = useParams();
     //TODO: make popup for that form with amount eth to usd convertion
 
@@ -34,11 +33,15 @@ function AuctionDetailProduct(props){
     // simpleAuction.on("auctionProductDelivered", getProduct);
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
-        getIsCourierStatus();
-        getIsAdminStatus();
+        initData();
+    },[]);
+    
+    const initData = async () => {
+        setIsCourier(await getCourierStatus(await signer.getAddress()));
+        setIsAdmin(await getAdminStatus(await signer.getAddress()));
         getProduct();
         getBids();
-    },[]);
+    }
 
     const getBids = async () => {
         try{
@@ -47,16 +50,9 @@ function AuctionDetailProduct(props){
             });
             let b = (await response.json());
             setBids(b);
-            console.log("aaa",b[0])
         }catch(e){
             console.log(e);
         }
-    }
-    const getIsCourierStatus = async () => {
-        setIsCourier(await marketplace.couriers(await signer.getAddress()))
-    }
-    const getIsAdminStatus = async () => {
-        setIsAdmin(await marketplace.admins(await signer.getAddress()))
     }
 
     const approveProduct = async() => {
@@ -131,10 +127,10 @@ function AuctionDetailProduct(props){
     const makeSignature = async () => {
         let nonce = await ethers.utils.solidityPack(['address','uint','uint'],[simpleAuction.address,id,myBid]);
         nonce = await ethers.utils.keccak256(nonce);
-        const signerAddress = await signer.getAddress();
+        const signerAddress = await props.signer.getAddress();
         let message = await ethers.utils.solidityPack(['uint','bytes32','uint','address','address'],[product.finishDate,nonce,myBid,signerAddress,simpleAuction.address]);
         let hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
-        let signature =  signer.signMessage(hashedMessage);
+        let signature =  props.signer.signMessage(hashedMessage);
         return {"nonce":nonce,"signature":signature};
     }
 
@@ -158,7 +154,7 @@ function AuctionDetailProduct(props){
             
             try{
                 // await simpleAuction.bidForProduct(id,deliveryData,product.finishDate,nonce,myBid,await signer.getAddress(),sig);
-                await simpleAuction.bidForProduct(id,deliveryData,myBid,await signer.getAddress(),sig);
+                await simpleAuction.bidForProduct(id,deliveryData,myBid,await props.signer.getAddress(),sig);
                 
             }catch(e){
                 console.log(e);
@@ -190,7 +186,7 @@ function AuctionDetailProduct(props){
                 method: 'POST',
                 body:JSON.stringify({
                     "instanceId":id,
-                    "bidder":await signer.getAddress(),
+                    "bidder":await props.signer.getAddress(),
                     "amount":myBid._hex,
                     "deliveryInstructions":deliveryData,
                     "signature":sig
