@@ -8,6 +8,7 @@ import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 import addressesJSON from '../shared/contractAddresses.json';
 import {getCourierStatus, getAdminStatus} from '../utils/getUserStatus';
 import {weiToUsd} from '../utils/convertion';
+import {getRates} from '../utils/apiCalls';
 
 function SellerDetailProduct(props){
     const [product,setProduct] = useState(null);
@@ -25,32 +26,29 @@ function SellerDetailProduct(props){
 
     const { id } = useParams();
 
+    //TODO: add account to update list
+    useEffect(()=>{
+        initData()
+    },[]);
 
-    const getRates = async () => {
-        try{
-            const response = await fetch(
-                'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', 
-                {
-                    method: 'GET',
-                }
-            );
-            let r = (await response.json()).ethereum.usd;
-            setRate(r);
-            return r;
-        }catch(e){
-            console.log(e);
-        }
+    const initData = async () => {
+        //TODO: ???? check in DB if there is more data about the product
+        setIsCourier(await getCourierStatus(await signer.getAddress()));
+        setIsAdmin(await getAdminStatus(await signer.getAddress()));
+        setRate(await getRates());
+        getProduct();
+
     }
-
 
     async function getProduct(){
         try{
             // TODO: check if this is bad ID
             const p = await simpleSeller.products(id);
-            setProduct(p);
-            setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
             const r = await getRates();
+            setProduct(p);
             setPriceInUSD(weiToUsd(p.price,r));
+
+            setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
         }catch(e){
             console.log(e);           
         }
@@ -62,13 +60,9 @@ function SellerDetailProduct(props){
         const expiration = Math.floor(Date.now()/1000)+3600;
         const signerAddress = await props.signer.getAddress();
 
-        //console.log(expiration,nonce,product.price,signerAddress,simpleSeller.address);
         const message = await ethers.utils.solidityPack(
             ['uint','bytes32','uint','address','address'],
             [expiration,nonce,product.price._hex,signerAddress,simpleSeller.address]);
-        //console.log(simpleSeller.address);
-            //[expiration,nonce,product.price,signerAddress,simpleSeller.address]);
-            //[expired,nonce,oneETH,accounts[1].address,accounts[0].address]);
         
             const hashedMessage = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
         let signature = props.signer.signMessage(hashedMessage);
@@ -118,17 +112,7 @@ function SellerDetailProduct(props){
             console.log(e)
         }
     }
-    //TODO: add account to update list
-    useEffect(()=>{
-        initData()
-    },[]);
-    
-    const initData = async () => {
-        //TODO: ???? check in DB if there is more data about the product
-        setIsCourier(await getCourierStatus(await signer.getAddress()));
-        setIsAdmin(await getAdminStatus(await signer.getAddress()));
-        getProduct();
-    }
+
     return(
     <>
         {product!=null

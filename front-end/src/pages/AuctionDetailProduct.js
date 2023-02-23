@@ -8,6 +8,7 @@ import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
 import addressesJSON from '../shared/contractAddresses.json';
 import {getCourierStatus, getAdminStatus} from '../utils/getUserStatus';
 import {weiToUsd,usdToWei} from '../utils/convertion';
+import {getRates, getBids} from '../utils/apiCalls';
 
 function AuctionDetailProduct(props){
     const [product,setProduct] = useState(null);
@@ -35,25 +36,18 @@ function AuctionDetailProduct(props){
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
         initData();
+        setTimeout(() => {
+            getProduct();
+        }, 10000);
     },[]);
     
     const initData = async () => {
         setIsCourier(await getCourierStatus(await signer.getAddress()));
         setIsAdmin(await getAdminStatus(await signer.getAddress()));
+        setRate(await getRates());
         getProduct();
-        getBids();
-    }
-
-    const getBids = async () => {
-        try{
-            const response = await fetch(`http://localhost:5000/a/b/${id}`, {
-                method: 'GET',
-            });
-            let b = (await response.json());
-            setBids(b);
-        }catch(e){
-            console.log(e);
-        }
+        setBids(await getBids(id));    
+        console.log(bids)    
     }
 
     const approveProduct = async() => {
@@ -69,34 +63,17 @@ function AuctionDetailProduct(props){
         try{
             // TODO: check if this is bad ID
             const p = await simpleAuction.products(id);
+            const r = await getRates();
             setProduct(p);
+
+            setHighestBidInUSD(weiToUsd(p.bidAmount,r))
+            setMinimalPriceInUSD(weiToUsd(p.minimalPrice,r))
             setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
             setDateFinishes(new Date(parseInt(p.finishDate._hex)*1000))
-
-            const r =await getRates();
-
-        await setMinimalPriceInUSD(weiToUsd(parseInt(p.minimalPrice),r));
-        await setHighestBidInUSD(weiToUsd(parseInt(p.bidAmount),r));
-        
         }catch(e){
-            console.log(e);
+            console.log(e);           
         }
     }
-
-    const getRates = async () => {
-        try{
-            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
-                method: 'GET',
-            });
-            let r = (await response.json()).ethereum.usd;
-            setRate(r);
-            return r;
-            
-        }catch(e){
-            console.log(e);
-        }
-    }
-    
 
 
     const handleBidInput = async (amount) => {
