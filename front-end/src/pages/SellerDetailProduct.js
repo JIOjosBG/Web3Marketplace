@@ -7,6 +7,7 @@ import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 
 import addressesJSON from '../shared/contractAddresses.json';
 import {getCourierStatus, getAdminStatus} from '../utils/getUserStatus';
+import {weiToUsd} from '../utils/convertion';
 
 function SellerDetailProduct(props){
     const [product,setProduct] = useState(null);
@@ -39,12 +40,6 @@ function SellerDetailProduct(props){
         }catch(e){
             console.log(e);
         }
-    }
-
-    const weiToUsd = (wei,r) => {
-        let usd = 1/r;
-        const priceInEth = ethers.utils.formatEther(wei);
-        return priceInEth/usd;
     }
 
 

@@ -7,6 +7,7 @@ import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
 
 import addressesJSON from '../shared/contractAddresses.json';
 import {getCourierStatus, getAdminStatus} from '../utils/getUserStatus';
+import {weiToUsd,usdToWei} from '../utils/convertion';
 
 function AuctionDetailProduct(props){
     const [product,setProduct] = useState(null);
@@ -95,19 +96,7 @@ function AuctionDetailProduct(props){
             console.log(e);
         }
     }
-
-    const weiToUsd = (wei,r) => {
-        if(wei===0) return 0;
-        let usd = 1/r;
-        const priceInEth = ethers.utils.formatEther(wei);
-        
-        return priceInEth/usd;
-    }
-    const usdToWei = (usd,r) => {
-        let eth = usd/r;
-        eth = parseFloat(eth).toFixed( 18 );
-        return ethers.utils.parseEther(eth.toString());
-    }
+    
 
 
     const handleBidInput = async (amount) => {
