@@ -18,8 +18,12 @@ function MyNavbar(props) {
   const marketplace = new ethers.Contract(addresses.marketplace, MarketplaceJSON.abi, provider);  
 
   async function getContractValues(){
-    const t = await agoraToken.balanceOf(props.account)
-    setTokens(t)
+    if(props.account){
+      console.log("aaaaaa")
+      console.log(props.account+"\n\n\n\n\n")
+      const t = await agoraToken.balanceOf(props.account)
+      setTokens(t)
+    }
     const a = await marketplace.admins(props.account);
     console.log(a);
     await setIsAdmin(a);

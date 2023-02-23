@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react';
 import {ethers} from 'ethers';
 import { useParams } from 'react-router-dom';
-import {Button, Form, Container, Stack, Row, Col} from 'react-bootstrap';
+import {Button, Form, Container, Row, Col} from 'react-bootstrap';
 
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 import MarketplaceJSON from '../shared/ABIs/Marketplace.json';
@@ -11,6 +11,7 @@ function SellerDetailProduct(props){
     const [product,setProduct] = useState(null);
     const [priceInUSD,setPriceInUSD] = useState(0);
     const [rate,setRate] = useState(0);
+    const [isAdmin,setIsAdmin] = useState(0);
     const [isCourier, setIsCourier] = useState(0);
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
     const [dateAdded,setDateAdded] = useState();
@@ -24,6 +25,10 @@ function SellerDetailProduct(props){
     const { id } = useParams();
     const getIsCourierStatus = async () => {
         setIsCourier(await marketplace.couriers(await signer.getAddress()))
+    }
+
+    const getIsAdminStatus = async () => {
+        setIsAdmin(await marketplace.admins(await signer.getAddress()))
     }
 
     const getRates = async () => {
@@ -80,15 +85,14 @@ function SellerDetailProduct(props){
         let signature = signer.signMessage(hashedMessage);
             
 
-        return {"nonce":nonce,"expiration":expiration,"signature":signature};
+        return {"expiration":expiration,"signature":signature};
     }
 
     const buyProduct = async () => {
-        let nonce,expiration,sig;
+        let expiration,sig;
         //TODO: check if sufficient funds
         try{
             const sigData = await makeSignature();
-            nonce=await sigData['nonce'];
             expiration=await sigData['expiration'];
             sig=await sigData['signature'];
         }catch(e){
@@ -117,10 +121,19 @@ function SellerDetailProduct(props){
             console.log(e);
         }
     }
+
+    const approveProduct = async() => {
+        try{
+            await simpleSeller.approveProduct(id);
+        }catch(e){
+            console.log(e)
+        }
+    }
     //TODO: add account to update list
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
-        getIsCourierStatus()
+        getIsCourierStatus();
+        getIsAdminStatus();
         getProduct();
     },[]);
 
@@ -157,19 +170,19 @@ function SellerDetailProduct(props){
                             placeholder="Delivery instructions"
                         />
                     </Form.Group>
-                    <Button onClick={buyProduct}> Buy now </Button>
+                    
+                    <Button className='mb-1' onClick={buyProduct}> Buy now </Button>
+                    {isAdmin
+                        ?<Button onClick={approveProduct}>Approve product </Button>
+                        :<></>}
                     </>
                     :isCourier
-                        ?product.delivered==false
+                        ?product.delivered===false
                             ?<Button onClick={deliverProduct}>Deliver now </Button>
                             :<h4>Already delivered</h4>    
-                        :<></>
+                :<></>
                 }
             </Row>
-
-
-
-
         </Container>
         :<h1>Loading</h1>
         }

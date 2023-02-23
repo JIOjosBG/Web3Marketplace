@@ -45,7 +45,7 @@ app.use("/i", imageRoutes);
 
 app.all("*", (req, res) =>res.send("404"));
 //TODO: add the graph querying on startup
-//db.sequelize.sync();
+db.sequelize.sync();
 app.listen(PORT, async () => console.log(`Server running on port: http://localhost:${PORT}`));
 
 simpleSeller.on("sellerProductAdded", createSellerProduct);

@@ -35,8 +35,14 @@ function BuyTokensPage(props) {
 	}
 
     const getOwnedTokens = async () => {
- 		const t = await agoraToken.balanceOf(await props.signer.getAddress());
-   		setOwnedTokens(t);
+        console.log(await props.signer.getAddress())
+        try{
+            const t = await agoraToken.balanceOf(await props.signer.getAddress());
+
+            setOwnedTokens(t);
+        }catch(e){
+            console.log(e)
+        }
     }
     
     return(
