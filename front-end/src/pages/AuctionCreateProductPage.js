@@ -9,7 +9,7 @@ import addressesJSON from '../shared/contractAddresses.json'
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json'
 import marketplaceJSON from '../shared/ABIs/Marketplace.json'
 
-import {usdToWei} from '../utils/convertion'
+import {usdToWei, hexToBytes} from '../utils/convertion'
 import {getRates} from '../utils/apiCalls'
 import {encryptWithPublicKey} from '../utils/encrypt';
 //TODO: convert all hex wei price values to decimal eth
@@ -34,26 +34,13 @@ function AuctionCreateProductPage(props) {
     const marketplace = new ethers.Contract( addressesJSON.marketplace, marketplaceJSON.abi , props.provider );
     
     useEffect(()=>{
-        getRates();
-        getMarketplacePublicKey();
+        initDate();
     },[]);
 
-    function hexToBytes(hex) {
-        let bytes=[];
-        for (let i=2;i<hex.length;i+=2)
-            bytes.push(parseInt(hex.substr(i, 2), 16));
-        return bytes;
+    const initDate = async () => {
+        setRate(await getRates());
+        getMarketplacePublicKey();
     }
-
-    function stringToHex(str){
-        var arr1 = ['0','x'];
-        for (var n = 0, l = str.length; n < l; n ++){
-            var hex = Number(str.charCodeAt(n)).toString(16);
-            arr1.push(hex);
-        }
-        return arr1.join('');
-    }
-
     async function getMarketplacePublicKey(){
 
         await setPublicKey(hexToBytes(await marketplace.publicKey()));
@@ -72,7 +59,7 @@ function AuctionCreateProductPage(props) {
         });
         setLinkForMedia("http://localhost:5000"+response.data.pathToImage);
         await getRates();
-        setMinimalPrice(usdToWei(priceInUSD));
+        setMinimalPrice(usdToWei(priceInUSD,rate));
         setShow(true);
     }
 
@@ -89,8 +76,7 @@ function AuctionCreateProductPage(props) {
                 //TODO: check if exists marketHashOfData
                 let data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
                 data = hexToBytes(data);
-                encryptWithPublicKey(data,publicKey)
-                console.log(data)
+                data = await encryptWithPublicKey(data,publicKey)
                 await simpleAuction.addProduct(name,minimalPrice,linkForMedia,await ethers.utils.keccak256(data),date);
                 navigate("/a")
             }catch(e){
@@ -136,7 +122,7 @@ function AuctionCreateProductPage(props) {
 
                 <Form.Group>
                     <Form.Label>Price in USD</Form.Label>
-                    <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setMinimalPrice(usdToWei(e.target.value));}} type="number" placeholder="Price in USD" />
+                    <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setMinimalPrice(usdToWei(e.target.value,rate));}} type="number" placeholder="Price in USD" />
                     <Form.Text className="text-muted">
                     I{minimalPrice._hex} in wei (powered by <a href='https://www.coingecko.com/'> Coingecko </a>)
                     </Form.Text>

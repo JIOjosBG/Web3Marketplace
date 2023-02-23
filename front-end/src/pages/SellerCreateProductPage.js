@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {ethers} from 'ethers';
 import axios from 'axios';
+import EthCrypto from 'eth-crypto';
 
 import addressesJSON from '../shared/contractAddresses.json'
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json'
@@ -11,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 
 import {usdToWei, hexToBytes} from '../utils/convertion';
 import {encryptWithPublicKey} from '../utils/encrypt';
+import {getRates} from '../utils/apiCalls';
 
 function SellerCreateProductPage(props) {
     //console.log(Transform)
@@ -29,9 +31,13 @@ function SellerCreateProductPage(props) {
     const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider );
     
     useEffect(()=>{
-        getRates();
-        getMarketplacePublicKey();
+        initDate();
     },[]);
+
+    const initDate = async () => {
+        setRate( await getRates());
+        getMarketplacePublicKey();
+    }
 
     async function getMarketplacePublicKey(){
 
@@ -44,9 +50,10 @@ function SellerCreateProductPage(props) {
             try{
                 let data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
                 data = hexToBytes(data);
-                encryptWithPublicKey(data,publicKey)
+                console.log("1"+data)
+                data = encryptWithPublicKey(data,publicKey)
             
-                console.log(data)
+                console.log("2"+data)
     
                 await simpleSeller.addProduct(name,price,linkForMedia,data);
 
@@ -57,21 +64,6 @@ function SellerCreateProductPage(props) {
         }
     }
 
-
-    const getRates = async () => {
-        try{
-            await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
-                method: 'GET',
-            })
-            .then(async (response) => {
-                let r = (await response.json()).ethereum.usd;
-                setRate(r);
-                return r;
-            });
-        }catch(e){
-            console.log(e);
-        }
-    }
 
 
     async function submitProduct(){
@@ -88,7 +80,7 @@ function SellerCreateProductPage(props) {
         setLinkForMedia("http://localhost:5000"+response.data.pathToImage);
         console.log(linkForMedia);
         await getRates();
-        setPrice(usdToWei(priceInUSD));
+        setPrice(usdToWei(priceInUSD,rate));
         setShow(true);
     }
 
@@ -125,7 +117,7 @@ function SellerCreateProductPage(props) {
 
                 <Form.Group>
                     <Form.Label>Price in usd</Form.Label>
-                    <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setPrice(usdToWei(e.target.value));}} type="number" placeholder="Price in usd" />
+                    <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setPrice(usdToWei(e.target.value,rate));}} type="number" placeholder="Price in usd" />
                     <Form.Text className="text-muted">
                     {price._hex} in wei (powered by <a href='https://www.coingecko.com/'> Coingecko </a>)
                     </Form.Text>
