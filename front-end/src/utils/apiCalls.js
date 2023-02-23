@@ -14,9 +14,6 @@ export const getBids = async (id) => {
     try{
         const res = await axios.get(`http://localhost:5000/a/b/${id}`);
 
-        // const response = await fetch(`http://localhost:5000/a/b/${id}`, {
-        //     method: 'GET',
-        // });
         let b = await res.data;
         console.log(b)
         return b

@@ -9,6 +9,9 @@ import addressesJSON from '../shared/contractAddresses.json'
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json'
 import marketplaceJSON from '../shared/ABIs/Marketplace.json'
 
+import {usdToWei} from '../utils/convertion'
+import {getRates} from '../utils/apiCalls'
+import {encryptWithPublicKey} from '../utils/encrypt';
 //TODO: convert all hex wei price values to decimal eth
 function AuctionCreateProductPage(props) {
     const [name,setName] = useState("");
@@ -54,42 +57,6 @@ function AuctionCreateProductPage(props) {
     async function getMarketplacePublicKey(){
 
         await setPublicKey(hexToBytes(await marketplace.publicKey()));
-    }
-
-
-    async function encryptWithPublicKey(message,publicKey){
-        console.log("PK", publicKey);
-        console.log(message);
-
-        let pk = new Uint8Array(publicKey)
-        let data = await EthCrypto.encryptWithPublicKey(pk,pk);
-        data = JSON.stringify(data)
-        console.log(data)
-        data = stringToHex(data);
-        console.log(data)
-        return data;
-    }
-
-    const getRates = async () => {
-        try{
-            await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd', {
-                method: 'GET',
-
-            })
-            .then(async (response) => {
-                let r = (await response.json()).ethereum.usd;
-                setRate(r);
-                return r;
-            });
-        }catch(e){
-            console.log(e);
-        }
-    }
-    const usdToWei = (usd) => {
-        let eth = usd/rate;
-        eth = parseFloat(eth).toFixed( 18 );
-
-        return ethers.utils.parseEther(eth.toString());
     }
 
     async function submitProduct(){
