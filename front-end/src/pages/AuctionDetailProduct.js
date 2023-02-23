@@ -22,6 +22,7 @@ function AuctionDetailProduct(props){
     const [myBid,setMyBid] = useState(0);
     const [myBidInUSD,setMyBidInUSD] = useState(0);
     const [isCourier,setIsCourier] = useState(0);
+    const [isAdmin,setIsAdmin] = useState(0);
     const [dateAdded,setDateAdded] = useState();
     const [dateFinishes,setDateFinishes] = useState();
         
@@ -33,7 +34,8 @@ function AuctionDetailProduct(props){
     // simpleAuction.on("auctionProductDelivered", getProduct);
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
-        getIsCourierStatus()
+        getIsCourierStatus();
+        getIsAdminStatus();
         getProduct();
         getBids();
     },[]);
@@ -53,6 +55,19 @@ function AuctionDetailProduct(props){
     const getIsCourierStatus = async () => {
         setIsCourier(await marketplace.couriers(await signer.getAddress()))
     }
+    const getIsAdminStatus = async () => {
+        setIsAdmin(await marketplace.admins(await signer.getAddress()))
+    }
+
+    const approveProduct = async() => {
+        try{
+            await simpleAuction.approveProduct(id);
+        }catch(e){
+            console.log(e)
+        }
+    }
+
+
     async function getProduct(){
         try{
             // TODO: check if this is bad ID
@@ -223,7 +238,7 @@ function AuctionDetailProduct(props){
                     }
                     <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
                 
-                    {product.approoved
+                    {product.approved
                     ?<h3>Approoved</h3>
                     :<></>
                     }
@@ -248,7 +263,11 @@ function AuctionDetailProduct(props){
 
                     <Button variant="secondary" onClick={handleBidViaContract }>Bid via contract ${myBidInUSD} </Button>{' '}
                     <Button variant="secondary" onClick={handleBidViaBackend }>Bid via backend ${myBidInUSD} </Button>
+                    {isAdmin && !product.approved
+                    ?<Button onClick={approveProduct}>Approve product </Button>
+                    :<></>}
                 </>
+                
                 :isCourier
                     ?product.delivered==false
                         ?<Button onClick={deliverProduct}>Deliver now </Button>

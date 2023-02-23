@@ -73,11 +73,11 @@ function SellerDetailProduct(props){
         const expiration = Math.floor(Date.now()/1000)+3600;
         const signerAddress = await signer.getAddress();
 
-        console.log(expiration,nonce,product.price,signerAddress,simpleSeller.address);
+        //console.log(expiration,nonce,product.price,signerAddress,simpleSeller.address);
         const message = await ethers.utils.solidityPack(
             ['uint','bytes32','uint','address','address'],
             [expiration,nonce,product.price._hex,signerAddress,simpleSeller.address]);
-        console.log(simpleSeller.address);
+        //console.log(simpleSeller.address);
             //[expiration,nonce,product.price,signerAddress,simpleSeller.address]);
             //[expired,nonce,oneETH,accounts[1].address,accounts[0].address]);
         
@@ -131,17 +131,17 @@ function SellerDetailProduct(props){
     }
     //TODO: add account to update list
     useEffect(()=>{
+        getProduct();
         //TODO: ???? check in DB if there is more data about the product
         getIsCourierStatus();
         getIsAdminStatus();
-        getProduct();
     },[]);
 
 
     return(
     <>
-        {product?
-        <Container className="mt-2">
+        {product!=null
+        ?<Container className="mt-2">
             <Row>
                 <Col md={6}>
                     <img className="w-100" src={product.linkForMedia}/>
@@ -151,7 +151,7 @@ function SellerDetailProduct(props){
                     <h2>Price: {Number(ethers.utils.formatUnits(product.price,"ether")).toFixed(5)}AGR</h2>
                     <h2>Price in USD: ${priceInUSD.toFixed(2)}</h2> 
                     <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
-                    {product.approoved
+                    {product.approved
                     ?<h3>Approoved</h3>
                     :<></>
                     }
@@ -172,7 +172,7 @@ function SellerDetailProduct(props){
                     </Form.Group>
                     
                     <Button className='mb-1' onClick={buyProduct}> Buy now </Button>
-                    {isAdmin
+                    {isAdmin && !product.approved
                         ?<Button onClick={approveProduct}>Approve product </Button>
                         :<></>}
                     </>
