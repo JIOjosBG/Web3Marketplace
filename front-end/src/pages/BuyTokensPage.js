@@ -29,13 +29,11 @@ function BuyTokensPage(props) {
 		}
 		setMsg("");
 		await agoraToken.buyTokens({value:amount});
-		console.log('buy');
 		// TODO: add message for successfully bought tokens
 		navigate("/");
 	}
 
     const getOwnedTokens = async () => {
-        console.log(await props.signer.getAddress())
         try{
             const t = await agoraToken.balanceOf(await props.signer.getAddress());
 

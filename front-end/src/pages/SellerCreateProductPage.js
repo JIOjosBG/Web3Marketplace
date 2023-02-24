@@ -15,7 +15,6 @@ import {encryptWithPublicKey} from '../utils/encrypt';
 import {getRates} from '../utils/apiCalls';
 
 function SellerCreateProductPage(props) {
-    //console.log(Transform)
     const [name,setName] = useState("");
     const [price,setPrice] = useState(0);
     const [publicKey,setPublicKey] = useState("");
@@ -46,10 +45,8 @@ function SellerCreateProductPage(props) {
             try{
                 let data  = await ethers.utils.solidityPack(["string"],[marketHashOfData]);
                 data = hexToBytes(data);
-                console.log("1"+data)
                 data = encryptWithPublicKey(data,publicKey)
             
-                console.log("2"+data)
     
                 await simpleSeller.addProduct(name,price,linkForMedia,data);
 
@@ -66,7 +63,6 @@ function SellerCreateProductPage(props) {
         const formData = new FormData();
         if(file==null) return
         formData.append("image", file);
-        console.log(formData)
         const response = await axios({
             method: "post",
             url: "http://localhost:5000/i",
@@ -74,7 +70,6 @@ function SellerCreateProductPage(props) {
             headers: { "Content-Type": "multipart/form-data" },
         });
         setLinkForMedia("http://localhost:5000"+response.data.pathToImage);
-        console.log(linkForMedia);
         await getRates();
         setPrice(usdToWei(priceInUSD,rate));
         setShow(true);

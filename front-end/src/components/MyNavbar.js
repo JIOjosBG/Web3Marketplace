@@ -19,13 +19,10 @@ function MyNavbar(props) {
 
   async function getContractValues(){
     if(props.account){
-      console.log("aaaaaa")
-      console.log(props.account+"\n\n\n\n\n")
       const t = await agoraToken.balanceOf(props.account)
       setTokens(t)
     }
     const a = await marketplace.admins(props.account);
-    console.log(a);
     await setIsAdmin(a);
   }
   

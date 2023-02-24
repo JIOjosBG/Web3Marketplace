@@ -82,7 +82,6 @@ function SellerDetailProduct(props){
         if(sig===null || deliveryInstructions===""){
             //TODO: open modal
             //TODO: encrypt delivery instructions with public key of seller
-            console.log("not okay with sig and delivery instructions");
         }else{
             let deliveryData = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
             deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(deliveryData));
@@ -96,7 +95,6 @@ function SellerDetailProduct(props){
     }
     const deliverProduct = async() => {
         try{
-            console.log(simpleSeller)
             await simpleSeller.deliverProduct(id);
         }catch(e){
             console.log(e);

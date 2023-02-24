@@ -81,14 +81,12 @@ function AuctionDetailProduct(props){
 
     const handleBidInput = async (amount) => {
         //TODO: check if it is higher than prev bid and open modal
-        console.log(amount,typeof(amount));
         if(amount==="") amount="0";
         amount = parseFloat(amount);
 
         setMyBidInUSD(amount);
 
         const bidInWei = usdToWei(amount,rate);
-        console.log(amount,rate,myBidInUSD);
         setMyBid(bidInWei);
     }
 
@@ -105,7 +103,6 @@ function AuctionDetailProduct(props){
 
     const handleBidViaContract = async () => {
         let nonce,sig;
-        console.log("in");
         try{
             const sigData = await makeSignature();
             nonce=await sigData['nonce'];
@@ -116,7 +113,6 @@ function AuctionDetailProduct(props){
         if(sig===null || deliveryInstructions==""){
             //TODO: open modal
             //TODO: encrypt delivery instructions with public key of seller
-            console.log("not okay with sig and delivery instructions");
         }else{
             const message = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
             const deliveryData = await ethers.utils.arrayify(await ethers.utils.keccak256(message));
@@ -133,7 +129,6 @@ function AuctionDetailProduct(props){
 
     const handleBidViaBackend = async () => {
         let nonce,sig;
-        console.log("in");
         try{
             const sigData = await makeSignature();
             nonce=await sigData['nonce'];
@@ -143,7 +138,6 @@ function AuctionDetailProduct(props){
         }
         if(sig==null || deliveryInstructions==""){
             //TODO: open modal
-            console.log("not okay with sig and delivery instructions");
         }else{
             //TODO: encrypt delivery instructions with public key of seller
             const message = await ethers.utils.solidityPack(['string'],[deliveryInstructions]);
@@ -165,7 +159,6 @@ function AuctionDetailProduct(props){
                 },
 
                 });
-                console.log(await response.status);
             }catch(e){
                 console.log(e);
             }
