@@ -35,20 +35,29 @@ function AuctionDetailProduct(props){
     // simpleAuction.on("auctionProductDelivered", getProduct);
     useEffect(()=>{
         //TODO: ???? check in DB if there is more data about the product
-        initData();
-        setTimeout(() => {
-            getProduct();
-        }, 10000);
+        signer.getAddress()
+        .then((address)=>{
+            getCourierStatus(address).then( s => setIsCourier(s))
+            getAdminStatus(address).then( s => setIsAdmin(s))
+        })
+        getProduct()
+        .then(p => {
+            setProduct(p)
+            getRates()
+            .then(r=>{
+                setHighestBidInUSD(weiToUsd(p.bidAmount,r))
+                setMinimalPriceInUSD(weiToUsd(p.minimalPrice,r))
+                setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
+                setDateFinishes(new Date(parseInt(p.finishDate._hex)*1000))
+            })
+            return p
+        })
+
+        getBids(id)
+        .then(b=>{setBids(b)});  
+
     },[]);
-    
-    const initData = async () => {
-        setIsCourier(await getCourierStatus(await signer.getAddress()));
-        setIsAdmin(await getAdminStatus(await signer.getAddress()));
-        setRate(await getRates());
-        getProduct();
-        setBids(await getBids(id));    
-        console.log(bids)    
-    }
+
 
     const approveProduct = async() => {
         try{
@@ -63,13 +72,7 @@ function AuctionDetailProduct(props){
         try{
             // TODO: check if this is bad ID
             const p = await simpleAuction.products(id);
-            const r = await getRates();
-            setProduct(p);
-
-            setHighestBidInUSD(weiToUsd(p.bidAmount,r))
-            setMinimalPriceInUSD(weiToUsd(p.minimalPrice,r))
-            setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
-            setDateFinishes(new Date(parseInt(p.finishDate._hex)*1000))
+            return p;
         }catch(e){
             console.log(e);           
         }
@@ -205,8 +208,14 @@ function AuctionDetailProduct(props){
                     :<></>
                     }
                     <h4>{product.seller}</h4>
-                    <h6> Added on {dateAdded.getFullYear()+"/"+(dateAdded.getMonth()+1)+"/"+dateAdded.getDate()}</h6>
-                    <h6> Finishes on {dateFinishes.getFullYear()+"/"+(dateFinishes.getMonth()+1)+"/"+dateFinishes.getDate()}</h6>
+                    {dateAdded && dateFinishes
+                        
+                        ?<>
+                            <h6> Added on {dateAdded.getFullYear()+"/"+(dateAdded.getMonth()+1)+"/"+dateAdded.getDate()}</h6>
+                            <h6> Finishes on {dateFinishes.getFullYear()+"/"+(dateFinishes.getMonth()+1)+"/"+dateFinishes.getDate()}</h6>
+                        </>
+                        :<></>
+                    }
                 </Col>
             </Row>
 

@@ -13,42 +13,40 @@ import {getRates} from '../utils/apiCalls';
 function SellerDetailProduct(props){
     const [product,setProduct] = useState(null);
     const [priceInUSD,setPriceInUSD] = useState(0);
-    const [rate,setRate] = useState(0);
     const [isAdmin,setIsAdmin] = useState(0);
     const [isCourier, setIsCourier] = useState(0);
+
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
     const [dateAdded,setDateAdded] = useState();
 
   
     const signer = props.signer;
-
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , signer);
 
     const { id } = useParams();
 
     //TODO: add account to update list
     useEffect(()=>{
-        initData()
+        signer.getAddress()
+        .then((address)=>{
+            getCourierStatus(address).then( s => setIsCourier(s))
+            getAdminStatus(address).then( s => setIsAdmin(s))
+        })
+    
+        getProduct()
+        .then(p => {setProduct(p); return p})
+        .then(p => {setDateAdded(new Date(parseInt(p.addDate._hex)*1000)); return p})
+        .then(p => {
+            getRates()
+            .then(r=>{setPriceInUSD(weiToUsd(p.price,r)); return p})
+        })
     },[]);
-
-    const initData = async () => {
-        //TODO: ???? check in DB if there is more data about the product
-        setIsCourier(await getCourierStatus(await signer.getAddress()));
-        setIsAdmin(await getAdminStatus(await signer.getAddress()));
-        setRate(await getRates());
-        getProduct();
-
-    }
 
     async function getProduct(){
         try{
             // TODO: check if this is bad ID
             const p = await simpleSeller.products(id);
-            const r = await getRates();
-            setProduct(p);
-            setPriceInUSD(weiToUsd(p.price,r));
-
-            setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
+            return p;
         }catch(e){
             console.log(e);           
         }
@@ -115,7 +113,7 @@ function SellerDetailProduct(props){
 
     return(
     <>
-        {product!=null
+        {product
         ?<Container className="mt-2">
             <Row>
                 <Col md={6}>
