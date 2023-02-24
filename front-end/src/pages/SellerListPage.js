@@ -20,7 +20,7 @@ function SellerProductList(props) {
   useEffect(()=>{
     updateProducts();
   },[]);
-
+  
   async function updateProducts (){
     let c =parseInt(await simpleSeller.productCount());
 
@@ -32,11 +32,9 @@ function SellerProductList(props) {
     setProducts(tmpProducts);
     setCount(c);
   }
-
   const productCards = products.map((p) =>
-    <Col className="h-25" md={3} style={{margin:'auto', marginTop:10}}>
-      <SellerProductCard
-        key={p[1]} product={p[0]} id={p[1]}
+    <Col key={p[1]} className="h-25" md={3} style={{margin:'auto', marginTop:10}}>
+      <SellerProductCard product={p[0]} id={p[1]}
       />
     </Col>
   );
@@ -75,7 +73,7 @@ function SellerProductCard(props) {
       <Card.Body>
         <Card.Title>{p.name}</Card.Title>
         <Card.Text>
-          <p>{ Number(ethers.utils.formatUnits(p.price._hex, "ether")).toFixed(5).toString()}AGR</p>
+          {Number(ethers.utils.formatUnits(p.price._hex, "ether")).toFixed(5).toString()}AGR
           {p.approved ? "approved":""}
         </Card.Text>
       </Card.Body>
