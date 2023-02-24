@@ -4,8 +4,10 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AgoraToken.sol";
 contract Marketplace is Ownable {
-    event addedCourier(address adder, address courier);
-    event removedCourier(address remover, address courier);
+    event addedCourier(address indexed adder, address indexed courier);
+    event removedCourier(address indexed remover, address indexed courier);
+    event addedAdmin(address indexed adder, address indexed admin);
+    event removedAdmin(address indexed remover, address indexed admin);
 
     constructor(bytes memory _publicKey) Ownable() {
         require(_publicKey.length==65,"Bad public key");
@@ -65,10 +67,12 @@ contract Marketplace is Ownable {
     function addAdmin(address admin) public onlyOwner{
         require(admin!=address(0),"Address shouldn't be 0");
         admins[admin]=true;
+        emit addedAdmin(msg.sender,admin);
     }
 
     function removeAdmin(address admin) public onlyOwner{
         admins[admin]=false;
+        emit removedAdmin(msg.sender,admin);
     }
     
     function changePublicKey(bytes memory _publicKey) public onlyOwner{

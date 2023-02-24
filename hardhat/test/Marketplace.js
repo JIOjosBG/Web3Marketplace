@@ -151,10 +151,16 @@ describe("Marketplace", function () {
     describe("Add and remove admin",async function(){
         it("successfully adds and removes",async function(){
             expect(await marketplace.admins(accounts[0].address)).to.be.false;
-            expect(await marketplace.addAdmin(accounts[0].address)).to.not.throw;
-            expect(await marketplace.admins(accounts[0].address)).to.be.true;
-            expect(await marketplace.removeAdmin(accounts[0].address)).to.not.throw;
-            expect(await marketplace.admins(accounts[0].address)).to.be.false;
+            expect(await marketplace.addAdmin(accounts[1].address))
+            .to.emit(marketplace, "addAdmin")
+            .withArgs(accounts[0].address,accounts[1].address);
+
+            expect(await marketplace.admins(accounts[1].address)).to.be.true;
+            expect(await marketplace.removeAdmin(accounts[1].address))
+            .to.emit(marketplace, "removeAdmin")
+            .withArgs(accounts[0].address,accounts[1].address);
+
+            expect(await marketplace.admins(accounts[1].address)).to.be.false;
         });
         it("0 address from owner",async function (){
             await expect( marketplace.addAdmin(ethers.constants.AddressZero)).to.be.revertedWith("Address shouldn't be 0");
