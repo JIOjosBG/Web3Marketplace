@@ -31,18 +31,14 @@ function SellerCreateProductPage(props) {
     const marketplace= new ethers.Contract( addressesJSON.marketplace, MarketplaceJSON.abi , props.provider );
     
     useEffect(()=>{
-        initDate();
+        getRates()
+        .then(r=>setRate(r))
+
+        marketplace.publicKey()
+        .then(pk => {
+            setPublicKey(hexToBytes(pk))
+        })
     },[]);
-
-    const initDate = async () => {
-        setRate( await getRates());
-        getMarketplacePublicKey();
-    }
-
-    async function getMarketplacePublicKey(){
-
-        await setPublicKey(hexToBytes(await marketplace.publicKey()));
-    }
 
     //TODO: change all fetches to axios 
     const addProduct = async () => {

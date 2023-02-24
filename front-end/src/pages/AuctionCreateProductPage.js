@@ -34,17 +34,15 @@ function AuctionCreateProductPage(props) {
     const marketplace = new ethers.Contract( addressesJSON.marketplace, marketplaceJSON.abi , props.provider );
     
     useEffect(()=>{
-        initDate();
+        getRates()
+        .then(r=>setRate(r))
+
+        marketplace.publicKey()
+        .then(pk => {
+            setPublicKey(hexToBytes(pk))
+        })
     },[]);
 
-    const initDate = async () => {
-        setRate(await getRates());
-        getMarketplacePublicKey();
-    }
-    async function getMarketplacePublicKey(){
-
-        await setPublicKey(hexToBytes(await marketplace.publicKey()));
-    }
 
     async function submitProduct(){
         const formData = new FormData();
