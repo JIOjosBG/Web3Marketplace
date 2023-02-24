@@ -491,7 +491,8 @@ describe("SimpleSeller", async function () {
             expect((await simpleSeller.products(0)).approved).to.be.false;
         });
         it("Approve successfully",async function(){
-            expect(await simpleSeller.approveProduct(0)).to.not.throw;
+            expect(await simpleSeller.approveProduct(0))
+            .to.emit(simpleSeller,"sellerProductApproved")
             expect((await simpleSeller.products(0)).approved).to.be.true;
         });
         it("Not owner",async function(){

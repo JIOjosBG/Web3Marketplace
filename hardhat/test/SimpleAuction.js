@@ -594,7 +594,9 @@ describe("SimpleAuction", async function () {
             expect((await simpleAuction.products(0)).approved).to.be.false;
         });
         it("Approve successfully",async function(){
-            expect(await simpleAuction.approveProduct(0)).to.not.throw;
+            expect(await simpleAuction.approveProduct(0))
+            .to.emit(simpleAuction,"simpleAuctionApproved")
+
             expect((await simpleAuction.products(0)).approved).to.be.true;
         });
         it("Not owner",async function(){
