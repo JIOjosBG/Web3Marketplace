@@ -15,10 +15,13 @@ function SellerProductList(props) {
     simpleSellerJSON.abi, 
     props.provider
   );
-  simpleSeller.on("sellerProductAdded", updateProducts);
   
   useEffect(()=>{
+    simpleSeller.on("sellerProductAdded", updateProducts);
     updateProducts();
+    return ()=>{
+      simpleSeller.removeListener("sellerProductAdded", updateProducts);
+    }
   },[]);
   
   async function updateProducts (){
