@@ -28,7 +28,8 @@ function BuyTokensPage(props) {
 			return;
 		}
 		setMsg("");
-		await agoraToken.buyTokens({value:amount});
+        const amountOfTokens = ethers.utils.parseEther(amount);
+		await agoraToken.buyTokens({value:amountOfTokens});
 		// TODO: add message for successfully bought tokens
 		navigate("/");
 	}
@@ -45,10 +46,10 @@ function BuyTokensPage(props) {
     
     return(
         <Container>
-            <h1>Tokens</h1>
-            <h3>{ownedTokens._hex}</h3>
+            <h1>AgoraToken</h1>
+            <h3>Available: { ethers.utils.formatUnits(ownedTokens,"ether")}</h3>
             <Form.Group className="mb-3" controlId="formName">
-                <Form.Label>Amount of tokens in wei:</Form.Label>
+                <Form.Label>Amount of tokens to buy:</Form.Label>
             	<Form.Control onChange={e=>setAmount(e.target.value)} type="number" placeholder="Amount"/>
             </Form.Group>
             <h6 style={{color:"red"}} >{msg}</h6>
