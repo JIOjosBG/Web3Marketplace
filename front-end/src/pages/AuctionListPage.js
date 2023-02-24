@@ -83,7 +83,7 @@ function AuctionProductCard(props) {
           <Card.Title>{p.name}</Card.Title>
           <Card.Text>
             { Number(ethers.utils.formatUnits(price, "ether")).toFixed(5).toString()}AGR
-            
+            <br/>
             {p.approved ? "approved":""}
           </Card.Text>
         </Card.Body>
