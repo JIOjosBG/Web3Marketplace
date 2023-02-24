@@ -7,9 +7,10 @@ import "hardhat/console.sol";
 import "./AgoraToken.sol";
 
 contract SimpleSeller is Ownable{
-    event sellerProductAdded(string name, uint price, address seller, uint index);
-    event sellerProductSold(uint index, address buyer);
-    event sellerProductDelivered(uint index, address seller, address courier);
+    event sellerProductAdded(string indexed name, uint price, address indexed seller, uint indexed index);
+    event sellerProductSold(uint indexed index, address indexed buyer);
+    event sellerProductDelivered(uint indexed index, address indexed seller, address indexed courier);
+    event sellerProductApproved(uint indexed index);
 
     struct Product{
         string name;
@@ -115,6 +116,7 @@ contract SimpleSeller is Ownable{
 
     function approveProduct(uint index) public productExists(index) onlyOwner{
         products[index].approved=true;
+        emit sellerProductApproved(index);
     }
 
 }
