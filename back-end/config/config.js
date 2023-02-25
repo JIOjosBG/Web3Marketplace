@@ -7,7 +7,9 @@ module.exports = {
     "password": process.env.SQL_PASS,
     "database": "web3marketplace_db",
     "host": "127.0.0.1",
-    "dialect": "mysql"
+    "dialect": "mysql",
+    "logging": false
+
   },
   "test": {
     "username": "root",
