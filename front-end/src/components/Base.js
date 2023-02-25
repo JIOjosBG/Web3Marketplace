@@ -15,7 +15,7 @@ function Base(props) {
     <>
     <MyNavbar provider={provider} account={account} />
     <Row className="mx-5 mt-2">
-        <Col className="bg-dark text-light" md={2}>
+        <Col md={2}>
             <MySidebar/>
         </Col>
         <Col>

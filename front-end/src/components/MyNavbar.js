@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {ethers} from "ethers";
 import logo from '../media/logo_white.png';
 import {Navbar,Container, Row, Col, Button, Stack} from 'react-bootstrap';
-import {Link, Outlet} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 
 
 import addresses from "../shared/contractAddresses.json";
