@@ -62,9 +62,7 @@ function MyNavbar(props) {
             </Col>
           </Row>
       </Container>
-    </Navbar> 
-    <Outlet/>
-   
+    </Navbar>
     </>
   );
 }

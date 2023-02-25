@@ -6,7 +6,7 @@ import { Button, Stack, Container } from 'react-bootstrap';
 import { Routes, Route } from 'react-router-dom';
 
 import HomePage from './pages/HomePage';
-import MyNavbar from './components/MyNavbar';
+import Base from './components/Base';
 import SimpleSellerRoutes from './Routers/SimpleSellerRoutes';
 import SimpleAuctionRoutes from './Routers/SimpleAuctionRoutes';
 import BuyTokensPage from './pages/BuyTokensPage';
@@ -60,7 +60,7 @@ function App() {
     { account && provider
     ? 
     <Routes>
-      <Route path="/" element={<MyNavbar provider={provider} account={account} />}>
+      <Route path="/" element={<Base provider={provider} account={account} />}>
         <Route index element={<HomePage update/>} />
         <Route path="s/*" element={<SimpleSellerRoutes provider={provider} signer={signer}/>} />
         <Route path="a/*" element={<SimpleAuctionRoutes provider={provider} signer={signer}/>} />
