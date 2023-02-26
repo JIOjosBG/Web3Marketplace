@@ -43,24 +43,14 @@ function MyNavbar(props) {
 
     <Navbar bg="dark" expand="lg">
       <Container>
-          <Row>
-            <Col md={6} ><img style={{width:'50%'}} src={logo} alt={logo}/></Col>
-            <Col md={3}>
-              <Stack direction="horizontal">
-                <Link className='m-1' to="/s"><Button variant='secondary'>Simple Seller </Button></Link>{' '}
-                <Link className='m-1'to="/a"><Button variant='secondary'>Simple Auction </Button></Link>{' '}
-              </Stack>
-            </Col>
-            <Col md={3}>
-              <Stack direction="horizontal">
-                <Link className='m-1'to="/t"><Button variant='secondary' >Buy Tokens</Button></Link>
+            <img style={{width:'25%'}} src={logo} alt={logo}/>
+              <Stack  direction="horizontal">
+                <Link className='me-2'to="/t"><Button variant='secondary' >Buy Tokens</Button></Link>
                 {isAdmin
-                  ?<Col> <Link className='m-1' to="admin/"><Button variant='secondary' >Admin page</Button></Link></Col>
+                  ?<Col> <Link to="admin/"><Button variant='secondary' >Admin page</Button></Link></Col>
                   :<></>
                 }
-              </Stack>
-            </Col>
-          </Row>
+                </Stack>
       </Container>
     </Navbar>
     </>
