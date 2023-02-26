@@ -6,6 +6,8 @@ import {Navigate, Link} from 'react-router-dom';
 import addresses from '../shared/contractAddresses.json';
 import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 
+import "../css/card.css";
+
 function SellerProductList(props) {
   const [count, setCount] = useState(0);
   const [products, setProducts] = useState([]);
@@ -66,13 +68,12 @@ function SellerProductList(props) {
   );
 }
 
-
 function SellerProductCard(props) {
   const p = props.product;
   return (
     <Link to={`/s/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
-    <Card>
-      <Card.Img variant="top" src={p.linkForMedia} />
+    <Card className="itemCard">
+      <Card.Img src={p.linkForMedia} />
       <Card.Body>
         <Card.Title>{p.name}</Card.Title>
         <Card.Text>

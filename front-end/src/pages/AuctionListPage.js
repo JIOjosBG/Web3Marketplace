@@ -6,6 +6,8 @@ import {Navigate, Link} from 'react-router-dom';
 import addresses from '../shared/contractAddresses.json';
 import simpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
 
+import "../css/card.css";
+
 function AuctionProductList(props) {
 
   const [count, setCount] = useState(0);
@@ -77,7 +79,7 @@ function AuctionProductCard(props) {
 
   return (
     <Link to={`/a/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
-      <Card>
+      <Card className="itemCard">
         <Card.Img variant="top" src={p.linkForMedia} />
         <Card.Body>
           <Card.Title>{p.name}</Card.Title>
