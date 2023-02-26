@@ -13,15 +13,18 @@ function Base(props) {
 
   return (
     <>
+
     <MyNavbar provider={provider} account={account} />
-    <Row className="mx-5 mt-2">
-        <Col md={2}>
-            <MySidebar/>
-        </Col>
-        <Col>
-            <Outlet/>
-        </Col>
-    </Row>
+    <div className='mt-4'>
+        <Row className="mx-5">
+            <Col md={2}>
+                <MySidebar/>
+            </Col>
+            <Col>
+                <Outlet/>
+            </Col>
+        </Row>
+    </div>
     </>
   );
 }

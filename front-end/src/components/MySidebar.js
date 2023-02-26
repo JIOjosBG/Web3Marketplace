@@ -5,13 +5,13 @@ function MySidebar(props) {
 
   return (
     <>
-        <div className="p-3 bg-light border border-dark rounded">
+        <div className="p-2 bg-light border border-2 rounded-2">
 
-            <Link to="/s">
-                <Button className="m-1 w-100" variant="outline-secondary">Simple Seller </Button>{' '}
+            <Link className="w-100" to="/s">
+                <Button className="w-100" variant="outline">Simple Seller </Button>{' '}
             </Link>{' '}
-            <Link to="/a">
-                <Button className="m-1 w-100" variant="outline-secondary">Simple Auction </Button>
+            <Link className="w-100" to="/a">
+                <Button className="w-100" variant="outline">Simple Auction </Button>
             </Link>{' '}
         </div>
     </>
