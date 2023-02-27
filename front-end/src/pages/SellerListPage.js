@@ -9,7 +9,6 @@ import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 import "../css/card.css";
 
 function SellerProductList(props) {
-  const [count, setCount] = useState(0);
   const [products, setProducts] = useState([]);
   
   const simpleSeller = new ethers.Contract(
@@ -35,20 +34,16 @@ function SellerProductList(props) {
       tmpProducts.push([p,i]);
     }
     setProducts(tmpProducts);
-    setCount(c);
   }
   const productCards = products.map((p) =>
-    <Col key={p[1]} className="h-25" md={3} style={{margin:'auto', marginTop:10}}>
-      <SellerProductCard product={p[0]} id={p[1]}
-      />
+    <Col key={p[1]} md={3} >
+      <SellerProductCard className="mt-3" product={p[0]} id={p[1]}/>
     </Col>
   );
   
   const containerStyle = {
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100vh',
+    height: '90vh',
   };
   return (
     <>
@@ -58,7 +53,7 @@ function SellerProductList(props) {
         <Button variant='secondary' onClick={updateProducts}>Update</Button>{' '}
         <Link to="/s/c"><Button variant='secondary'> Create product</Button></Link>
           <h1>Products for sale</h1>
-          <Row  style={containerStyle}>
+          <Row style={containerStyle}>
             {productCards}
           </Row>
         </Container>
@@ -71,9 +66,9 @@ function SellerProductList(props) {
 function SellerProductCard(props) {
   const p = props.product;
   return (
-    <Link to={`/s/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
     <Card className="itemCard">
-      <Card.Img src={p.linkForMedia} />
+      <Link to={`/s/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
+      <Card.Img className="h-50" src={p.linkForMedia} />
       <Card.Body>
         <Card.Title>{p.name}</Card.Title>
         <Card.Text>
@@ -82,8 +77,8 @@ function SellerProductCard(props) {
           {p.approved ? "approved":""}
         </Card.Text>
       </Card.Body>
-    </Card>
     </Link>
+    </Card>
   );
 }
 

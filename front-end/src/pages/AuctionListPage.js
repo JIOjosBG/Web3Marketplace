@@ -9,8 +9,6 @@ import simpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
 import "../css/card.css";
 
 function AuctionProductList(props) {
-
-  const [count, setCount] = useState(0);
   const [products, setProducts] = useState([]);
   const simpleAuction = new ethers.Contract(addresses.simpleAuction, simpleAuctionJSON.abi, props.provider);
   
@@ -31,13 +29,12 @@ function AuctionProductList(props) {
       tmpProducts.push([p,i]);
     }
     setProducts(tmpProducts);
-    setCount(c);
   }
   
 
   const productCards = products.map((p) =>
-  <Col key={p[1]} className="h-25" md={3} style={{margin:'auto', marginTop:10}}>
-    <AuctionProductCard product={p[0]} id={p[1]}
+  <Col key={p[1]} md={3}>
+    <AuctionProductCard className="mt-3" product={p[0]} id={p[1]}
     />
   </Col>
 );
@@ -45,9 +42,7 @@ function AuctionProductList(props) {
 
 const containerStyle = {
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  height: '100vh',
+  height: '90vh',
 };
 return (
   <>
@@ -78,9 +73,9 @@ function AuctionProductCard(props) {
   }
 
   return (
-    <Link to={`/a/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
-      <Card className="itemCard">
-        <Card.Img variant="top" src={p.linkForMedia} />
+    <Card className="itemCard">
+        <Card.Img className="h-100" src={p.linkForMedia} />
+        <Link to={`/a/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
         <Card.Body>
           <Card.Title>{p.name}</Card.Title>
           <Card.Text>
@@ -89,8 +84,8 @@ function AuctionProductCard(props) {
             {p.approved ? "approved":""}
           </Card.Text>
         </Card.Body>
-      </Card>
     </Link>
+      </Card>
   );
 }
 
