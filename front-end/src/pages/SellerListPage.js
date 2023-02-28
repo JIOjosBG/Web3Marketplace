@@ -5,6 +5,7 @@ import {Navigate, Link} from 'react-router-dom';
 
 import addresses from '../shared/contractAddresses.json';
 import simpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
+import checkedGIF from "../media/approved.gif";
 
 import "../css/card.css";
 
@@ -74,8 +75,10 @@ function SellerProductCard(props) {
         <Card.Text>
           {Number(ethers.utils.formatUnits(p.price._hex, "ether")).toFixed(5).toString()}AGR
           <br/>
-          {p.approved ? "approved":""}
         </Card.Text>
+        {p.approved 
+          ?<img style={{height:35}} src={checkedGIF}/> 
+          :""}
       </Card.Body>
     </Link>
     </Card>

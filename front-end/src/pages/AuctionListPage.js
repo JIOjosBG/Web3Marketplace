@@ -5,6 +5,8 @@ import {Navigate, Link} from 'react-router-dom';
 
 import addresses from '../shared/contractAddresses.json';
 import simpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
+import checkedGIF from "../media/approved.gif";
+
 
 import "../css/card.css";
 
@@ -81,8 +83,10 @@ function AuctionProductCard(props) {
           <Card.Text>
             { Number(ethers.utils.formatUnits(price, "ether")).toFixed(5).toString()}AGR
             <br/>
-            {p.approved ? "approved":""}
           </Card.Text>
+          {p.approved 
+          ?<img style={{height:35}} src={checkedGIF}/> 
+          :""}
         </Card.Body>
     </Link>
       </Card>
