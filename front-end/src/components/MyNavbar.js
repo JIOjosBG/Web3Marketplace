@@ -43,7 +43,9 @@ function MyNavbar(props) {
 
     <Navbar bg="dark" expand="lg">
       <Container>
-            <img style={{width:'25%'}} src={logo} alt={logo}/>
+            <Link to="/" style={{width:'25%'}}>
+            <img  style={{width:'100%'}} src={logo} alt={logo}/>
+            </Link>
               <Stack  direction="horizontal">
                 <Link className='me-2'to="/t"><Button variant='secondary' >Buy Tokens</Button></Link>
                 {isAdmin
