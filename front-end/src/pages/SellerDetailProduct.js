@@ -114,13 +114,13 @@ function SellerDetailProduct(props){
         {product
         ?<Container className="mt-2">
             <Row>
-                <Col md={6}>
+                <Col md={4}>
                     <img className="w-100" src={product.linkForMedia}/>
                 </Col>
-                <Col md={6}>
-                    <h1>{product.name}</h1>
-                    <h2>Price: {Number(ethers.utils.formatUnits(product.price,"ether")).toFixed(5)}AGR</h2>
-                    <h2>Price in USD: ${priceInUSD.toFixed(2)}</h2> 
+                <Col md={8}>
+                    <h2>{product.name}</h2>
+                    <h3>Price: {Number(ethers.utils.formatUnits(product.price,"ether")).toFixed(5)}AGR</h3>
+                    <h4>Price in USD: ${priceInUSD.toFixed(2)}</h4> 
                     <h6>(powered by <a href='https://www.coingecko.com/'> Coingecko </a>)</h6>
                     {product.approved
                     ?<h3>Approoved</h3>

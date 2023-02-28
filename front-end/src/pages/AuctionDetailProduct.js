@@ -179,18 +179,18 @@ function AuctionDetailProduct(props){
 
           <Container className="mt-2">
             <Row>
-                <Col md={6}>
+                <Col md={4}>
                     <img className="w-100" src={product.linkForMedia}/>
                 </Col>
-                <Col md={6}>
-                    <h1>{product.name}</h1>
+                <Col md={8}>
+                    <h2>{product.name}</h2>
                     {product.minimalPrice.gt(product.bidAmount)
                     ?<>
-                        <h2>Minimal price in wei: { (product.minimalPrice._hex)}</h2>
+                        <h3>Minimal price in wei: { (product.minimalPrice._hex)}</h3>
                         <h6>Minimal in USD: ${minimalPriceInUSD.toFixed(2)}</h6>
                     </>
                     :<>
-                        <h2>Highest bid: { (product.bidAmount._hex)}</h2>
+                        <h3>Highest bid: { (product.bidAmount._hex)}</h3>
                         <h6>Bid in USD: ${highestBidInUSD.toFixed(2)}</h6>
                     </>
                     }
