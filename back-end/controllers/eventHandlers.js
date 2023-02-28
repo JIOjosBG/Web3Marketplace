@@ -86,6 +86,27 @@ async function deliverSellerProduct(index, courier){
     product.save();
 }
 
+
+async function approveSellerProduct(index){
+    console.log(`Product with index ${index} approved`);
+    let product = await SellerProduct.findOne({ where: { instanceId: index } });
+    if (product === null) {
+        //blockchain instance (bci)
+        try{
+            const bci = await simpleSeller.products(index);
+            await createSellerProduct(bci.name,bci.price,bci.seller,index);
+            product = await SellerProduct.findOne({ where: { instanceId: index } });
+
+            console.log('Not found, but creating!');
+        }catch(e){
+            console.log(e)
+        }
+    }
+    product.approved = true;
+    product.save();
+}
+
+
 //TODO: create cron job for submiting bids from the db
 async function createAuctionProduct(name,minimalPrice,seller,index){
     index = parseInt(index);
@@ -162,5 +183,25 @@ async function deliverAuctionProduct(index, courier){
     product.save();
 }
 
+async function approveAuctionProduct(index, courier){
+    console.log(`Auction Product with index ${index} approved`);
+    let product = await AuctionProduct.findOne({ where: { instanceId: index } });
+    if (product === null) {
+        try{
+            const bci = await simpleAuction.products(index);
+            await createAuctionProduct(bci.name,bci.minimalPrice,bci.seller,index);
+            product = await AuctionProduct.findOne({ where: { instanceId: index } });
 
-module.exports = { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct }
+            product.currentBidder = bci.currentBidder;
+            product.bidAmount = bci.bidAmount._hex;
+
+            console.log('Not found, but creating!');
+        }catch(e){
+            console.log(e)
+        }
+    }
+    product.approved = true;
+    product.save();
+}
+
+module.exports = { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct, approveSellerProduct, approveAuctionProduct }

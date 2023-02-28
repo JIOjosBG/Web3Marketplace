@@ -14,7 +14,7 @@ const auctionRoutes = require('./routes/auctionProducts.js');
 const imageRoutes = require('./routes/images.js');
 
 
-const { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct } = require('./controllers/eventHandlers');
+const { createSellerProduct, sellSellerProduct, deliverSellerProduct, createAuctionProduct, bidAuctionProduct, deliverAuctionProduct, approveSellerProduct, approveAuctionProduct} = require('./controllers/eventHandlers');
 const provider = require("./controllers/shared.js")
 
 const simpleSeller = new ethers.Contract(addresses.simpleSeller, simpleSellerABI, provider);  
@@ -51,7 +51,11 @@ app.listen(PORT, async () => console.log(`Server running on port: http://localho
 simpleSeller.on("sellerProductAdded", createSellerProduct);
 simpleSeller.on("sellerProductSold", sellSellerProduct);
 simpleSeller.on("sellerProductDelivered", deliverSellerProduct);
+simpleSeller.on("sellerProductApproved", approveSellerProduct);
+
 simpleAuction.on("auctionProductAdded", createAuctionProduct);
 simpleAuction.on("auctionProductBid", bidAuctionProduct);
 simpleAuction.on("auctionProductDelivered", deliverAuctionProduct);
+simpleAuction.on("auctionProductApproved", approveAuctionProduct);
+
 console.log("set up listeners");
