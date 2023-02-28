@@ -187,12 +187,12 @@ function AuctionDetailProduct(props){
                     <h2>{product.name}</h2>
                     {product.minimalPrice.gt(product.bidAmount)
                     ?<>
-                        <h3> Minimal price in wei: {Number(ethers.utils.formatUnits(product.minimalPrice,"ether")).toFixed(5)}AGR</h3>
+                        <h3> Minimal price: {Number(ethers.utils.formatUnits(product.minimalPrice,"ether")).toFixed(5)}AGR</h3>
 
                         <h6>Minimal in USD: ${minimalPriceInUSD.toFixed(2)}</h6>
                     </>
                     :<>
-                        <h3> Minimal price in wei: {Number(ethers.utils.formatUnits(product.bidAmount,"ether")).toFixed(5)}AGR</h3>
+                        <h3> Minimal bid: {Number(ethers.utils.formatUnits(product.bidAmount,"ether")).toFixed(5)}AGR</h3>
                         <h6>Bid in USD: ${highestBidInUSD.toFixed(2)}</h6>
                     </>
                     }
