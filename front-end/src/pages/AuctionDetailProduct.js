@@ -45,6 +45,7 @@ function AuctionDetailProduct(props){
             setProduct(p)
             getRates()
             .then(r=>{
+                setRate(r)
                 setHighestBidInUSD(weiToUsd(p.bidAmount,r))
                 setMinimalPriceInUSD(weiToUsd(p.minimalPrice,r))
                 setDateAdded(new Date(parseInt(p.addDate._hex)*1000))
@@ -186,11 +187,12 @@ function AuctionDetailProduct(props){
                     <h2>{product.name}</h2>
                     {product.minimalPrice.gt(product.bidAmount)
                     ?<>
-                        <h3>Minimal price in wei: { (product.minimalPrice._hex)}</h3>
+                        <h3> Minimal price in wei: {Number(ethers.utils.formatUnits(product.minimalPrice,"ether")).toFixed(5)}AGR</h3>
+
                         <h6>Minimal in USD: ${minimalPriceInUSD.toFixed(2)}</h6>
                     </>
                     :<>
-                        <h3>Highest bid: { (product.bidAmount._hex)}</h3>
+                        <h3> Minimal price in wei: {Number(ethers.utils.formatUnits(product.bidAmount,"ether")).toFixed(5)}AGR</h3>
                         <h6>Bid in USD: ${highestBidInUSD.toFixed(2)}</h6>
                     </>
                     }
