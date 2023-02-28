@@ -74,8 +74,8 @@ function AuctionProductCard(props) {
 
   return (
     <Card className="itemCard">
-        <Card.Img className="h-100" src={p.linkForMedia} />
         <Link to={`/a/${props.id}`} style={{textDecoration: 'none', color: 'black'}}>
+        <Card.Img className="h-100" src={p.linkForMedia} />
         <Card.Body>
           <Card.Title>{p.name}</Card.Title>
           <Card.Text>
