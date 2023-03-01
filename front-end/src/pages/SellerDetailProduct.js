@@ -124,8 +124,20 @@ function SellerDetailProduct(props){
     }
     
     const updateDescription = async () => {
-        axios
-        .put(`http://localhost:5000/s/d/${id}`,{description})
+        const message = ethers.utils.keccak256(
+            ethers.utils.solidityPack(
+                ['address','uint256','string'],
+                [simpleSeller.address,id,description]
+            ));
+        try{
+            const signature = await signer.signMessage(message)
+            axios
+            .put(`http://localhost:5000/s/d/${id}`,{description,signature})
+        }catch(e){
+            console.log(e)
+            alert("not updated")
+            return
+        }
     }
     return(
     <>

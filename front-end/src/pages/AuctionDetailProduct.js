@@ -188,8 +188,20 @@ function AuctionDetailProduct(props){
         }
     }
     const updateDescription = async () => {
-        axios
-        .put(`http://localhost:5000/a/d/${id}`,{description})
+        const message = ethers.utils.keccak256(
+            ethers.utils.solidityPack(
+                ['address','uint256','string'],
+                [simpleAuction.address,id,description]
+            ));
+        try{
+            const signature = await signer.signMessage(message)
+            axios
+            .put(`http://localhost:5000/a/d/${id}`,{description,signature})
+        }catch(e){
+            console.log(e)
+            alert("not updated")
+            return
+        }
     }
     //TODO: make timed getter for rates
     return(

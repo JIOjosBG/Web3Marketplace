@@ -219,7 +219,6 @@ const setDescription = async (req,res) => {
     console.log('aasaaa')
     
     const new_description = req.body.description;
-    console.log(req.body)
 
     product.description = new_description;
     product.save();
