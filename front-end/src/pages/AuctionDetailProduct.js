@@ -2,6 +2,7 @@ import {useState, useEffect} from 'react';
 import {ethers} from 'ethers';
 import { useParams } from 'react-router-dom';
 import {Button, Form, Container, Row, Col, Card} from 'react-bootstrap';
+import axios from "axios";
 
 import SimpleAuctionJSON from '../shared/ABIs/SimpleAuction.json';
 
@@ -16,6 +17,7 @@ function AuctionDetailProduct(props){
     const [minimalPriceInUSD,setMinimalPriceInUSD] = useState(0);
     const [highestBidInUSD,setHighestBidInUSD] = useState(0);
     const [bids,setBids] = useState([]);
+    const [description, setDescription] = useState("");
 
     const signer = props.signer;
     const simpleAuction= new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , signer);
@@ -40,6 +42,10 @@ function AuctionDetailProduct(props){
             getCourierStatus(address).then( s => setIsCourier(s))
             getAdminStatus(address).then( s => setIsAdmin(s))
         })
+
+        getDescription()
+        .then(d => setDescription(d))
+        
         getProduct()
         .then(p => {
             setProduct(p)
@@ -172,6 +178,15 @@ function AuctionDetailProduct(props){
 
     const bidsList = bids.length>0 ? bids.map((b) =><BidCard key={b.id} bid={b} />) : <></>;
 
+    const getDescription = async() => {
+        const res = await axios.get(`http://localhost:5000/a/p/${id}`)
+        .catch(function(error) {
+            console.log(error);
+        });
+        if(res){
+            return res.data.description
+        }
+    }
 
     //TODO: make timed getter for rates
     return(
@@ -213,7 +228,9 @@ function AuctionDetailProduct(props){
                     }
                 </Col>
             </Row>
-
+            <Row>
+                {description}
+            </Row>
             {parseInt(product.finishDate._hex)*1000>new Date().getTime()
                 ?<>
                 <Form.Group className="mb-3" controlId="formName">

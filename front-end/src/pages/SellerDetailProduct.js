@@ -2,6 +2,7 @@ import {useState, useEffect} from 'react';
 import {ethers} from 'ethers';
 import { useParams } from 'react-router-dom';
 import {Button, Form, Container, Row, Col} from 'react-bootstrap';
+import axios from "axios";
 
 import SimpleSellerJSON from '../shared/ABIs/SimpleSeller.json';
 
@@ -15,7 +16,7 @@ function SellerDetailProduct(props){
     const [priceInUSD,setPriceInUSD] = useState(0);
     const [isAdmin,setIsAdmin] = useState(0);
     const [isCourier, setIsCourier] = useState(0);
-
+    const [description, setDescription] = useState("");
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
     const [dateAdded,setDateAdded] = useState();
 
@@ -24,7 +25,7 @@ function SellerDetailProduct(props){
     const simpleSeller= new ethers.Contract( addressesJSON.simpleSeller, SimpleSellerJSON.abi , signer);
 
     const { id } = useParams();
-
+    
     //TODO: add account to update list
     useEffect(()=>{
         signer.getAddress()
@@ -32,7 +33,10 @@ function SellerDetailProduct(props){
             getCourierStatus(address).then( s => setIsCourier(s))
             getAdminStatus(address).then( s => setIsAdmin(s))
         })
-    
+        
+        getDescription()
+        .then(d => setDescription(d))
+        
         getProduct()
         .then(p => {setProduct(p); return p})
         .then(p => {setDateAdded(new Date(parseInt(p.addDate._hex)*1000)); return p})
@@ -109,6 +113,16 @@ function SellerDetailProduct(props){
         }
     }
 
+    const getDescription = async() => {
+        const res = await axios.get(`http://localhost:5000/s/p/${id}`)
+        .catch(function(error) {
+            console.log(error);
+        });
+        if(res){
+            return res.data.description
+        }
+    }
+    
     return(
     <>
         {product
@@ -129,6 +143,9 @@ function SellerDetailProduct(props){
                     <h6>Seller: {product.seller}</h6>
                     <h6> Added on {dateAdded.getFullYear()+"/"+(dateAdded.getMonth()+1)+"/"+dateAdded.getDate()}</h6>
                 </Col>
+            </Row>
+            <Row>
+                {description}
             </Row>
             <Row>
                 {!product.paid
