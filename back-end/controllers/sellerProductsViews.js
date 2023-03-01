@@ -126,6 +126,44 @@ const setDescription = async (req,res) => {
         return;
     }
 
+    const message = ethers.utils.keccak256(
+        ethers.utils.solidityPack(
+            ['address','uint','string'],
+            [simpleSeller.address,id,req.body.description]
+        )
+    )
+    
+    try{
+        bci = await simpleSeller.products(id);
+    }catch(e){
+        console.log("PUT /s/d/:id",e)
+        console.log("cant get bci")
+        res.status(500)
+        res.send({"message":"Internal server error"})
+        return
+    }
+    if(bci.name==""){
+        console.log(`PUT /s/d/:id no such product with id ${id}`);
+        res.status(404)
+        res.send({"message":"Cant find product in contract"})
+        return
+    } 
+    try{
+        const signerAddr = ethers.utils.verifyMessage(message, req.body.signature);
+        if (signerAddr !== bci.seller) {
+          console.log("PUT /s/d/:id")
+          console.log("Incorrect sgnature")
+          res.status(401)
+          res.send({"message":"Unauthorized"})
+        }
+
+    }catch(e){
+        console.log("PUT /s/d/:id",e)
+        console.log("err on signature check")
+        res.status(500)
+        res.send({"message":"Internal server error"})
+    }
+
     const product = await SellerProduct.findOne({ where: { instanceId: id } });
 
     if(product===null || product.name==""){
@@ -134,8 +172,7 @@ const setDescription = async (req,res) => {
         res.send({"message":`404 not found with ${id}`});
         return;
     }
-    console.log('aasaaa')
-    
+        
     const new_description = req.body.description;
 
     product.description = new_description;
