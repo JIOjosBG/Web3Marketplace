@@ -24,6 +24,7 @@ const app = express();
 const PORT = 5000;
 
 app.use(bodyParser.urlencoded());
+app.use(express.urlencoded());
 app.use(bodyParser.json());
 
 app.use((req,res,next)=>{
@@ -39,7 +40,7 @@ app.use((req,res,next)=>{
 })
 
 app.get("/", (req, res) => res.send("Welcome to the API!"));
-app.use("/s/p", sellerProductRoutes);
+app.use("/s", sellerProductRoutes);
 app.use("/a", auctionRoutes);
 app.use("/i", imageRoutes);
 

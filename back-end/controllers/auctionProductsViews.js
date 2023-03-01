@@ -198,4 +198,34 @@ const bidForProduct = async (req, res,next) => {
     
 }
 
-module.exports = { getProduct, instantiateOrUpdateProduct, getProducts, getBidsForProduct, bidForProduct};
+const setDescription = async (req,res) => {
+    const id = req.params.id;
+
+    if(id==null || isNaN(id)){
+        console.log("PUT /s/d/:id : id is null or NaN");
+        res.status(400);
+        res.send({"messsage":"id is null or nan"});
+        return;
+    }
+
+    const product = await AuctionProduct.findOne({ where: { instanceId: id } });
+
+    if(product===null || product.name==""){
+        console.log(`PUT /a/d/:id : not found ${id}`);
+        res.status(404);
+        res.send({"message":`404 not found with ${id}`});
+        return;
+    }
+    console.log('aasaaa')
+    
+    const new_description = req.body.description;
+    console.log(req.body)
+
+    product.description = new_description;
+    product.save();
+
+    console.log(`PUT /a/d/:id : updated description on id ${id}`)
+    res.send(product.toJSON());
+}
+
+module.exports = { getProduct, instantiateOrUpdateProduct, getProducts, getBidsForProduct, bidForProduct, setDescription};

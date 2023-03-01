@@ -114,10 +114,37 @@ const instantiateOrUpdateProduct = async (req, res) => {
     console.log(`POST /s/p/:id : created with bci id ${id}`)
     res.send(dbProduct.toJSON());
     
-
-    
 }
 
+const setDescription = async (req,res) => {
+    const id = req.params.id;
+
+    if(id==null || isNaN(id)){
+        console.log("PUT /s/d/:id : id is null or NaN");
+        res.status(400);
+        res.send({"messsage":"id is null or nan"});
+        return;
+    }
+
+    const product = await SellerProduct.findOne({ where: { instanceId: id } });
+
+    if(product===null || product.name==""){
+        console.log(`PUT /s/d/:id : not found ${id}`);
+        res.status(404);
+        res.send({"message":`404 not found with ${id}`});
+        return;
+    }
+    console.log('aasaaa')
+    
+    const new_description = req.body.description;
+    console.log(req.body)
+
+    product.description = new_description;
+    product.save();
+
+    console.log(`PUT /s/d/:id : updated description on id ${id}`)
+    res.send(product.toJSON());
+}
 //TODO: make update product
 // const updateProduct = async (req, res) => {   
 //     console.log(req.params.id);
@@ -126,4 +153,4 @@ const instantiateOrUpdateProduct = async (req, res) => {
 // }
 
 
-module.exports = { getProduct, instantiateOrUpdateProduct, getProducts};
+module.exports = { getProduct, instantiateOrUpdateProduct, getProducts, setDescription};

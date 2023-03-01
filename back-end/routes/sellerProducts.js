@@ -1,12 +1,11 @@
 const express  = require( 'express');
 
-const { getProducts, instantiateOrUpdateProduct, getProduct }  = require( '../controllers/sellerProductsViews.js');
+const { getProducts, instantiateOrUpdateProduct, getProduct, setDescription }  = require( '../controllers/sellerProductsViews.js');
 
 const router = express.Router();
-router.get('/', getProducts);
-router.get('/:id', getProduct);
+router.get('/p', getProducts);
+router.get('/p/:id', getProduct);
+router.post('/p/:id', instantiateOrUpdateProduct);
 
-router.post('/:id', instantiateOrUpdateProduct);
-//router.patch('/:id', updateProduct);
-
+router.put('/d/:id',setDescription)
 module.exports = router;
