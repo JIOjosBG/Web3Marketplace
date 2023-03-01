@@ -123,6 +123,10 @@ function SellerDetailProduct(props){
         }
     }
     
+    const updateDescription = async () => {
+        axios
+        .put(`http://localhost:5000/s/d/${id}`,{description})
+    }
     return(
     <>
         {product
@@ -145,7 +149,10 @@ function SellerDetailProduct(props){
                 </Col>
             </Row>
             <Row>
-                {description}
+                <Form.Group className="mb-3" controlId="formName">
+                    <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Delivery instructions"/>
+                    <Button onClick={updateDescription} > Update description </Button>
+                </Form.Group>
             </Row>
             <Row>
                 {!product.paid

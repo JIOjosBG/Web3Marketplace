@@ -187,7 +187,10 @@ function AuctionDetailProduct(props){
             return res.data.description
         }
     }
-
+    const updateDescription = async () => {
+        axios
+        .put(`http://localhost:5000/a/d/${id}`,{description})
+    }
     //TODO: make timed getter for rates
     return(
     <>
@@ -229,7 +232,10 @@ function AuctionDetailProduct(props){
                 </Col>
             </Row>
             <Row>
-                {description}
+                <Form.Group className="mb-3" controlId="formName">
+                    <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Delivery instructions"/>
+                    <Button onClick={updateDescription} > Update description </Button>
+                </Form.Group>
             </Row>
             {parseInt(product.finishDate._hex)*1000>new Date().getTime()
                 ?<>
