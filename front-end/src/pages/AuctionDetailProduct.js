@@ -18,6 +18,7 @@ function AuctionDetailProduct(props){
     const [highestBidInUSD,setHighestBidInUSD] = useState(0);
     const [bids,setBids] = useState([]);
     const [description, setDescription] = useState("");
+    const [userAddress,setUserAddress] = useState("");
 
     const signer = props.signer;
     const simpleAuction= new ethers.Contract( addressesJSON.simpleAuction, SimpleAuctionJSON.abi , signer);
@@ -39,6 +40,7 @@ function AuctionDetailProduct(props){
         //TODO: ???? check in DB if there is more data about the product
         signer.getAddress()
         .then((address)=>{
+            setUserAddress(address)
             getCourierStatus(address).then( s => setIsCourier(s))
             getAdminStatus(address).then( s => setIsAdmin(s))
         })
@@ -244,10 +246,13 @@ function AuctionDetailProduct(props){
                 </Col>
             </Row>
             <Row>
-                <Form.Group className="mb-3" controlId="formName">
+                {userAddress===product.seller
+                ?<Form.Group className="mb-3" controlId="formName">
                     <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Delivery instructions"/>
                     <Button onClick={updateDescription} > Update description </Button>
                 </Form.Group>
+                :<h6>{description}</h6>
+                }
             </Row>
             {parseInt(product.finishDate._hex)*1000>new Date().getTime()
                 ?<>

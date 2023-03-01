@@ -19,6 +19,8 @@ function SellerDetailProduct(props){
     const [description, setDescription] = useState("");
     const [deliveryInstructions,setDeliveryInstructions] = useState("");
     const [dateAdded,setDateAdded] = useState();
+    const [userAddress,setUserAddress] = useState("");
+
 
   
     const signer = props.signer;
@@ -30,6 +32,7 @@ function SellerDetailProduct(props){
     useEffect(()=>{
         signer.getAddress()
         .then((address)=>{
+            setUserAddress(address)
             getCourierStatus(address).then( s => setIsCourier(s))
             getAdminStatus(address).then( s => setIsAdmin(s))
         })
@@ -161,10 +164,13 @@ function SellerDetailProduct(props){
                 </Col>
             </Row>
             <Row>
-                <Form.Group className="mb-3" controlId="formName">
+                {userAddress===product.seller
+                ?<Form.Group className="mb-3" controlId="formName">
                     <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Delivery instructions"/>
                     <Button onClick={updateDescription} > Update description </Button>
                 </Form.Group>
+                :<h6>{description}</h6>
+                }
             </Row>
             <Row>
                 {!product.paid
