@@ -50,7 +50,6 @@ contract SimpleSeller is Ownable{
 
     function productInit(string calldata name, uint price, string calldata link, bytes calldata marketHashOfData) private view returns(Product memory){
         return Product(name,price,msg.sender,address(0),block.timestamp,link,marketHashOfData,false,false,false,"");
-
     }
 
     function addProduct(string calldata name, uint price, string calldata link, bytes calldata marketHashOfData) public {
