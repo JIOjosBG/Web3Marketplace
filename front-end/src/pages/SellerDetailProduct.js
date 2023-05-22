@@ -166,7 +166,7 @@ function SellerDetailProduct(props){
             <Row>
                 {userAddress===product.seller
                 ?<Form.Group className="mb-3" controlId="formName">
-                    <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Delivery instructions"/>
+                    <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Desciption"/>
                     <Button onClick={updateDescription} > Update description </Button>
                 </Form.Group>
                 :<h6>{description}</h6>
