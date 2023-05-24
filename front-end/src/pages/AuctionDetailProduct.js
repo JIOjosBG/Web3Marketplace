@@ -263,7 +263,7 @@ function AuctionDetailProduct(props){
                 <Form.Group className="mb-3" controlId="formName">
                     <Form.Label>Bid for product:</Form.Label>
                     <Form.Control onChange={e=>handleBidInput(e.target.value)} type="number" placeholder="Your bid"/>
-                    <Form.Text className="text-muted">{myBid?ethers.utils.formatEther(myBid._hex):0} in AGR</Form.Text>
+                    <Form.Text className="text-muted">{myBid?ethers.utils.formatEther(myBid._hex).substring(0,6):0} in AGR</Form.Text>
 
                 </Form.Group>
 

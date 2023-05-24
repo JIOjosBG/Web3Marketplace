@@ -110,7 +110,7 @@ function SellerCreateProductPage(props) {
                     <Form.Label>Price in usd</Form.Label>
                     <Form.Control onChange={e=>{setPriceInUSD(e.target.value); setPrice(usdToWei(e.target.value,rate));}} type="number" placeholder="Price in usd" />
                     <Form.Text className="text-muted">
-                    {price?ethers.utils.formatEther(price._hex):0} in AGR (powered by <a href='https://www.coingecko.com/'> Coingecko </a>)
+                    {price?ethers.utils.formatEther(price._hex).substring(0,6):0} in AGR (powered by <a href='https://www.coingecko.com/'> Coingecko </a>)
                     </Form.Text>
                 </Form.Group>
                 <Form.Group>
