@@ -248,7 +248,7 @@ function AuctionDetailProduct(props){
             <Row>
                 {userAddress===product.seller
                 ?<Form.Group className="mb-3" controlId="formName">
-                    <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Delivery instructions"/>
+                    <Form.Control as="textarea" defaultValue={description} onChange={e=>setDescription(e.target.value)} type="text" placeholder="Description"/>
                     <Button onClick={updateDescription} > Update description </Button>
                 </Form.Group>
                 :<h6>{description}</h6>
@@ -263,7 +263,7 @@ function AuctionDetailProduct(props){
                 <Form.Group className="mb-3" controlId="formName">
                     <Form.Label>Bid for product:</Form.Label>
                     <Form.Control onChange={e=>handleBidInput(e.target.value)} type="number" placeholder="Your bid"/>
-                    <Form.Text className="text-muted">{myBid._hex} in Wei</Form.Text>
+                    <Form.Text className="text-muted">{myBid?ethers.utils.formatEther(myBid._hex).substring(0,6):0} in AGR</Form.Text>
 
                 </Form.Group>
 
